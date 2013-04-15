@@ -1,5 +1,5 @@
 Package: quadstor-vtl-itf
-Version: 3.0.26 
+Version: 2.2.0 
 Section: base
 Priority: optional
 Architecture: amd64 

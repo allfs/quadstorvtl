@@ -29,6 +29,6 @@ mkdir -p $htdocs/quadstor
 cp -fr /quadstor/httpd/www/quadstor/* $htdocs/quadstor/
 cp -f /quadstor/httpd/cgi-bin/* $cgibin/
 mkdir -p /quadstor/etc
-echo "3.0.26 for FreeBSD 9.0" > /quadstor/etc/quadstor-vtl-core-version
+echo "2.2.0 for FreeBSD 9.0" > /quadstor/etc/quadstor-vtl-core-version
 
 exit 0

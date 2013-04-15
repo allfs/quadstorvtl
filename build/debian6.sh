@@ -1,6 +1,6 @@
 #!/bin/sh
 set -x
-version="3.0.26"
+version="2.2.0"
 sh buildinit.sh debian6
 sh debiancore.sh
 mv debian.deb quadstor-vtl-core-$version-x86_64.deb
