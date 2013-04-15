@@ -1,0 +1,9 @@
+Package: quadstor-vtl-core
+Version: 3.0.26 
+Section: base
+Priority: optional
+Architecture: amd64 
+Depends: uuid-runtime, sg3-utils
+Conflicts: quadstor-client
+Maintainer: QUADStor Support <support@quadstor.com>
+Description: QUADStor storage virtualization, data deduplication 

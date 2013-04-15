@@ -1,0 +1,217 @@
+Index: kernel/iscsi.h
+===================================================================
+--- kernel/iscsi.h	(revision 105)
++++ kernel/iscsi.h	(working copy)
+@@ -238,8 +238,8 @@ struct iscsi_conn {
+ 	u32 write_offset;
+ 	int write_state;
+ 
+-	struct hash_desc rx_hash;
+-	struct hash_desc tx_hash;
++	struct crypto_tfm *rx_digest_tfm;
++	struct crypto_tfm *tx_digest_tfm;
+ 	struct scatterlist hash_sg[ISCSI_CONN_IOV_MAX];
+ };
+ 
+Index: kernel/digest.c
+===================================================================
+--- kernel/digest.c	(revision 105)
++++ kernel/digest.c	(working copy)
+@@ -13,8 +13,7 @@
+ 
+ void digest_alg_available(unsigned int *val)
+ {
+-	if (*val & DIGEST_CRC32C &&
+-	    !crypto_has_alg("crc32c", 0, CRYPTO_ALG_ASYNC)) {
++	if (*val & DIGEST_CRC32C && !crypto_alg_available("crc32c", 0)) {
+ 		printk("CRC32C digest algorithm not available in kernel\n");
+ 		*val |= ~DIGEST_CRC32C;
+ 	}
+@@ -38,22 +37,15 @@ int digest_init(struct iscsi_conn *conn)
+ 	if (!(conn->ddigest_type & DIGEST_ALL))
+ 		conn->ddigest_type = DIGEST_NONE;
+ 
+-	if (conn->hdigest_type & DIGEST_CRC32C ||
+-	    conn->ddigest_type & DIGEST_CRC32C) {
+-		conn->rx_hash.tfm = crypto_alloc_hash("crc32c", 0,
+-						      CRYPTO_ALG_ASYNC);
+-		conn->rx_hash.flags = 0;
+-		if (IS_ERR(conn->rx_hash.tfm)) {
+-			conn->rx_hash.tfm = NULL;
++	if (conn->hdigest_type & DIGEST_CRC32C || conn->ddigest_type & DIGEST_CRC32C) {
++		conn->rx_digest_tfm = crypto_alloc_tfm("crc32c", 0);
++		if (!conn->rx_digest_tfm) {
+ 			err = -ENOMEM;
+ 			goto out;
+ 		}
+ 
+-		conn->tx_hash.tfm = crypto_alloc_hash("crc32c", 0,
+-						      CRYPTO_ALG_ASYNC);
+-		conn->tx_hash.flags = 0;
+-		if (IS_ERR(conn->tx_hash.tfm)) {
+-			conn->tx_hash.tfm = NULL;
++		conn->tx_digest_tfm = crypto_alloc_tfm("crc32c", 0);
++		if (!conn->tx_digest_tfm) {
+ 			err = -ENOMEM;
+ 			goto out;
+ 		}
+@@ -74,10 +66,10 @@ out:
+  */
+ void digest_cleanup(struct iscsi_conn *conn)
+ {
+-	if (conn->tx_hash.tfm)
+-		crypto_free_hash(conn->tx_hash.tfm);
+-	if (conn->rx_hash.tfm)
+-		crypto_free_hash(conn->rx_hash.tfm);
++	if (conn->tx_digest_tfm)
++		crypto_free_tfm(conn->tx_digest_tfm);
++	if (conn->rx_digest_tfm)
++		crypto_free_tfm(conn->rx_digest_tfm);
+ }
+ 
+ /**
+@@ -168,28 +160,28 @@ static inline void __dbg_simulate_data_d
+ 	(sg).length = (l);					\
+ } while (0)
+ 
+-static void digest_header(struct hash_desc *hash, struct iscsi_pdu *pdu,
+-			  u8 *crc)
++static void digest_header(struct crypto_tfm *tfm, struct iscsi_pdu *pdu, u8 *crc)
+ {
+ 	struct scatterlist sg[2];
+-	unsigned int nbytes = sizeof(struct iscsi_hdr);
++	int i = 0;
+ 
+-	SETSG(sg[0], &pdu->bhs, nbytes);
++	SETSG(sg[i], &pdu->bhs, sizeof(struct iscsi_hdr));
++	i++;
+ 	if (pdu->ahssize) {
+-		SETSG(sg[1], pdu->ahs, pdu->ahssize);
+-		nbytes += pdu->ahssize;
++		SETSG(sg[i], pdu->ahs, pdu->ahssize);
++		i++;
+ 	}
+ 
+-	crypto_hash_init(hash);
+-	crypto_hash_update(hash, sg, nbytes);
+-	crypto_hash_final(hash, crc);
++	crypto_digest_init(tfm);
++	crypto_digest_update(tfm, sg, i);
++	crypto_digest_final(tfm, crc);
+ }
+ 
+ int digest_rx_header(struct iscsi_cmnd *cmnd)
+ {
+ 	u32 crc;
+ 
+-	digest_header(&cmnd->conn->rx_hash, &cmnd->pdu, (u8 *) &crc);
++	digest_header(cmnd->conn->rx_digest_tfm, &cmnd->pdu, (u8 *) &crc);
+ 	if (crc != cmnd->hdigest)
+ 		return -EIO;
+ 
+@@ -198,19 +190,18 @@ int digest_rx_header(struct iscsi_cmnd *
+ 
+ void digest_tx_header(struct iscsi_cmnd *cmnd)
+ {
+-	digest_header(&cmnd->conn->tx_hash, &cmnd->pdu, (u8 *) &cmnd->hdigest);
++	digest_header(cmnd->conn->tx_digest_tfm, &cmnd->pdu, (u8 *) &cmnd->hdigest);
+ }
+ 
+-static void digest_data(struct hash_desc *hash, struct iscsi_cmnd *cmnd,
++static void digest_data(struct crypto_tfm *tfm, struct iscsi_cmnd *cmnd,
+ 			struct tio *tio, u32 offset, u8 *crc)
+ {
+ 	struct scatterlist *sg = cmnd->conn->hash_sg;
+ 	u32 size, length;
+ 	int i, idx, count;
+-	unsigned int nbytes;
+ 
+ 	size = cmnd->pdu.datasize;
+-	nbytes = size = (size + 3) & ~3;
++	size = (size + 3) & ~3;
+ 
+ 	offset += tio->offset;
+ 	idx = offset >> PAGE_CACHE_SHIFT;
+@@ -220,7 +211,7 @@ static void digest_data(struct hash_desc
+ 
+ 	assert(count < ISCSI_CONN_IOV_MAX);
+ 
+-	crypto_hash_init(hash);
++	crypto_digest_init(tfm);
+ 
+ 	for (i = 0; size; i++) {
+ 		if (offset + size > PAGE_CACHE_SIZE)
+@@ -235,8 +226,8 @@ static void digest_data(struct hash_desc
+ 		offset = 0;
+ 	}
+ 
+-	crypto_hash_update(hash, sg, nbytes);
+-	crypto_hash_final(hash, crc);
++	crypto_digest_update(tfm, sg, count);
++	crypto_digest_final(tfm, crc);
+ }
+ 
+ int digest_rx_data(struct iscsi_cmnd *cmnd)
+@@ -262,10 +253,9 @@ int digest_rx_data(struct iscsi_cmnd *cm
+ 		offset = 0;
+ 	}
+ 
+-	digest_data(&cmnd->conn->rx_hash, cmnd, tio, offset, (u8 *) &crc);
++	digest_data(cmnd->conn->rx_digest_tfm, cmnd, tio, offset, (u8 *) &crc);
+ 
+-	if (!cmnd->conn->read_overflow &&
+-	    (cmnd_opcode(cmnd) != ISCSI_OP_PDU_REJECT)) {
++	if (!cmnd->conn->read_overflow && (cmnd_opcode(cmnd) != ISCSI_OP_PDU_REJECT)) {
+ 		if (crc != cmnd->ddigest)
+ 			return -EIO;
+ 	}
+@@ -279,6 +269,6 @@ void digest_tx_data(struct iscsi_cmnd *c
+ 	struct iscsi_data_out_hdr *req = (struct iscsi_data_out_hdr *)&cmnd->pdu.bhs;
+ 
+ 	assert(tio);
+-	digest_data(&cmnd->conn->tx_hash, cmnd, tio,
++	digest_data(cmnd->conn->tx_digest_tfm, cmnd, tio,
+ 		    be32_to_cpu(req->buffer_offset), (u8 *) &cmnd->ddigest);
+ }
+Index: kernel/file-io.c
+===================================================================
+--- kernel/file-io.c	(revision 105)
++++ kernel/file-io.c	(working copy)
+@@ -52,9 +52,9 @@ static int fileio_make_request(struct ie
+ 		set_fs(get_ds());
+ 
+ 		if (rw == READ)
+-			ret = do_sync_read(filp, buf, count, &ppos);
++			ret = generic_file_read(filp, buf, count, &ppos);
+ 		else
+-			ret = do_sync_write(filp, buf, count, &ppos);
++			ret = generic_file_write(filp, buf, count, &ppos);
+ 
+ 		set_fs(oldfs);
+ 
+Index: kernel/iscsi.c
+===================================================================
+--- kernel/iscsi.c	(revision 105)
++++ kernel/iscsi.c	(working copy)
+@@ -15,7 +15,7 @@
+ 
+ unsigned long debug_enable_flags;
+ 
+-static struct kmem_cache *iscsi_cmnd_cache;
++static kmem_cache_t *iscsi_cmnd_cache;
+ static char dummy_data[1024];
+ 
+ static int ctr_major;
+Index: kernel/tio.c
+===================================================================
+--- kernel/tio.c	(revision 105)
++++ kernel/tio.c	(working copy)
+@@ -35,7 +35,7 @@ static int tio_add_pages(struct tio *tio
+ 	return 0;
+ }
+ 
+-static struct kmem_cache *tio_cache;
++static kmem_cache_t *tio_cache;
+ 
+ struct tio *tio_alloc(int count)
+ {

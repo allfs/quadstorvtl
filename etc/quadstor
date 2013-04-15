@@ -1,0 +1,126 @@
+#!/bin/sh
+#
+# QUADStor init script 
+# chkconfig: 345 84 16
+# description: QUADStor Data Protection 
+#
+
+# PROVIDE: quadstor
+# REQUIRE: DAEMON HOSTNAME mountcritlocal NETWORK
+# BEFORE: nfsd
+# KEYWORD: nojail shutdown
+
+. /etc/rc.subr
+name="quadstor"
+start_cmd="quadstor_start"
+stop_cmd="quadstor_stop"
+status_cmd="quadstor_status"
+rcvar=`set_rcvar`
+
+quadstor_stop() {
+	if [ -f /quadstor/quadstor.lock ]; then
+		echo "Waiting 60 seconds for lock"
+		sleep 60
+	fi
+
+	touch /quadstor/quadstor.lock
+
+	if [ -f /quadstor/etc/iscsit ]; then
+		/quadstor/etc/iscsit stop > /dev/null 2>&1
+	fi
+
+	echo -n $"Stopping $prog: "
+	/quadstor/bin/scctl -u > /dev/null 2>&1
+	sleep 4 
+
+	pkill mdaemon
+	rm -f /quadstor/.mdaemon
+
+	/quadstor/pgsql/etc/pgsql stop
+
+	/sbin/kldunload iscsit > /dev/null 2>&1
+	/sbin/kldunload ldev > /dev/null 2>&1
+	/sbin/kldunload vtlcore > /dev/null 2>&1
+	rm -f /tmp/.quadstortl.* > /dev/null 2>&1
+	rm -f /quadstor/quadstor.lock
+}
+
+check_error() {
+	if [ "$?" != "0" ]; then
+		echo "$1"
+		rm -f /quadstor/quadstor.lock
+		quadstor_stop
+		exit 1
+	fi
+}
+
+quadstor_start() {
+
+	if [ -f /quadstor/quadstor.lock ]; then
+		sleep 60
+	fi
+
+	mdaemonpid=`/quadstor/bin/pidof /quadstor/sbin/mdaemon 2> /dev/null`
+	if [ "$mdaemonpid" != "" ]; then
+		echo "QUADStor Daemon already running..."
+		exit 1
+	fi
+	
+        echo -n $"Starting $prog: "
+
+	touch /quadstor/quadstor.lock
+	if [ -f /tmp/.s.PGSQL.9988 -o -f /tmp/.s.PGSQL.9988.lock ]; then
+		/quadstor/pgsql/etc/pgsql stop > /dev/null 2>&1
+		sleep 1
+		rm -f /tmp/.s.PGSQL.9988*
+		sleep 1
+	fi
+
+	/quadstor/pgsql/etc/pgsql start
+	check_error "Cannot start database"
+	sleep 10 
+
+	/sbin/kldload /quadstor/lib/modules/vtlcore.ko > /dev/null 2>&1
+	check_error "Failed to insert core module"
+
+	/sbin/kldload /quadstor/lib/modules/ldev.ko > /dev/null 2>&1 
+	check_error "Failed to insert ldev module"
+
+	if [ -f /quadstor/lib/modules/iscsit.ko ]; then
+		/sbin/kldload /quadstor/lib/modules/iscsit.ko > /dev/null 2>&1
+		check_error "Failed to insert iscsi target module"
+	fi
+
+	pkill mdaemon
+	export PATH=$PATH:/quadstor/bin
+	/quadstor/sbin/mdaemon > /dev/null 2>&1
+	check_error "Cannot start master daemon"
+
+	if [ -f /quadstor/lib/modules/iscsit.ko ]; then
+		/quadstor/etc/iscsit start
+	fi
+
+	sleep 10 
+	/quadstor/bin/scctl -l > /dev/null 2>&1
+	rm -f /quadstor/quadstor.lock
+}
+
+quadstor_status() {
+	mdaemonpid=`/quadstor/bin/pidof /quadstor/sbin/mdaemon 2> /dev/null`
+	ietdpid=`/quadstor/bin/pidof /quadstor/sbin/ietd 2> /dev/null`
+	if [ "${mdaemonpid}" != "" -o "${ietdpid}" != "" ] ; then 
+		echo "QUADStor daemon is running..."
+		exit 1
+	else
+		echo "QUADStor daemon is stopped"
+		exit 1
+	fi
+	
+}
+
+load_rc_config $name
+
+: ${quadstor_enable:="NO"}
+
+run_rc_command "$1"
+

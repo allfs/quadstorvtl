@@ -1,0 +1,68 @@
+.thdr {
+	background: #E2EEFB;
+	border: 1px solid #BDD6F4;
+	padding: 0em 1em;
+	text-align: center;
+	line-height: 24px;
+	font-weight: bold;
+	margin-top: 8px;
+	margin-bottom: 5px;
+	clear:both;
+}
+
+.ctable {
+	line-height: 24px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	margin-right: auto;
+	margin-left: auto;
+	text-align: left;
+}
+.inputt {
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+#system-table thead { display: none; }
+#system-table table { border: 0px !important; margin-left: auto; margin-right:auto; }
+#license-table thead { display: none; }
+#license-table table { border: 0px !important; margin-left: auto; margin-right:auto; }
+
+#stats-table thead { display: none; }
+#stats-table table { margin-left: auto; margin-right:auto; }
+#pool-stats-table thead { display: none; }
+#pool-stats-table table { margin-left: auto; margin-right:auto; }
+#vstats-table thead { display: none; }
+
+#disks-table table { text-align: left; margin-left: auto; margin-right:auto; }
+#disks-table a { text-decoration: none; }
+#vtls-table table { text-align: left; margin-left: auto; margin-right:auto; }
+#vtls-table a { text-decoration: none; }
+#vtl-drives-table table { text-align: left; margin-left: auto; margin-right:auto; }
+#vtl-drives-table a { text-decoration: none; }
+#vcartridges-table table { text-align: left; margin-left: auto; margin-right:auto; }
+#vcartridges-table a { text-decoration: none; }
+
+#pool-disks-table table { text-align: left; margin-left: auto; margin-right:auto; }
+#pool-disks-table a { text-decoration: none; }
+
+#pools-table table { width: 65%; text-align: left; margin-left: auto; margin-right:auto; }
+#pools-table a { text-decoration: none; }
+
+#vstats-table table { width: 40%; text-align: left; margin-left: auto; margin-right:auto; }
+
+.info, .error {
+	border: 1px solid;
+	margin: 20px 0px;
+	padding:15px 10px 15px 50px;
+}
+
+.error {
+	color: #D8000C;
+	background-color: #FFBABA;
+}
+
+.info {
+	color: #00529B;
+	background-color: #BDE5F8;
+}

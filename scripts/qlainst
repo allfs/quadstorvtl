@@ -1,0 +1,39 @@
+#!/bin/sh
+KERNEL_VERSION=`uname -r`
+INSTALL_PATH="/boot/"
+
+if [ ! -f /quadstor/lib/modules/$KERNEL_VERSION/qla2xxx.ko ]; then
+	echo "qla2xxx driver has not been build for kernel version $KERNEL_VERSION"
+	echo "Build the itf package by running /quadstor/bin/builditf first"
+	exit 1
+fi
+
+
+if [ ! -f /lib/modules/$KERNEL_VERSION/kernel/drivers/scsi/qla2xxx/qla2xxx.ko.qssave ]; then
+	echo "Moving original qla2xxx driver to /lib/modules/$KERNEL_VERSION/kernel/drivers/scsi/qla2xxx/qla2xxx.ko.qssave"
+	mv -f /lib/modules/$KERNEL_VERSION/kernel/drivers/scsi/qla2xxx/qla2xxx.ko /lib/modules/$KERNEL_VERSION/kernel/drivers/scsi/qla2xxx/qla2xxx.ko.qssave
+fi
+
+mv -f /quadstor/lib/modules/$KERNEL_VERSION/qla2xxx.ko /lib/modules/$KERNEL_VERSION/kernel/drivers/scsi/qla2xxx/qla2xxx.ko
+chmod 744 /lib/modules/$KERNEL_VERSION/kernel/drivers/scsi/qla2xxx/qla2xxx.ko
+
+
+#each system has its own way, based on the presence of a few executables, we can assume certain things 
+echo "Recreating initrd image"
+if [ -x /sbin/new-kernel-pkg ]; then
+	if [ -x /sbin/dracut ]; then
+		/sbin/new-kernel-pkg --mkinitrd --dracut --host-only --depmod --install $KERNEL_VERSION
+	else
+		/sbin/new-kernel-pkg --mkinitrd --depmod --install $KERNEL_VERSION
+	fi
+	/sbin/new-kernel-pkg --rpmposttrans $KERNEL_VERSION
+elif [ -x /usr/sbin/update-initramfs ]; then
+	/usr/sbin/update-initramfs -c -t -k $KERNEL_VERSION
+elif [ -x /sbin/mkinitrd -a -d /lib/modules/$KERNEL_VERSION ]; then
+	#Assume SLES For now
+	/sbin/mkinitrd -k vmlinuz-$KERNEL_VERSION \
+		-i initrd-$KERNEL_VERSION \
+		-b $INSTALL_PATH
+else
+	echo "Dont know how to create initrd image"
+fi

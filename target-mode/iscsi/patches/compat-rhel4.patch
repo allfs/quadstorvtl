@@ -1,0 +1,39 @@
+--- kernel/config.c
++++ kernel/config.c
+@@ -216,7 +216,7 @@ static int add_target(unsigned long ptr)
+ 	return err;
+ }
+ 
+-static long ioctl(struct file *file, unsigned int cmd, unsigned long arg)
++static int ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg)
+ {
+ 	struct iscsi_target *target = NULL;
+ 	long err;
+@@ -311,6 +315,5 @@ done:
+ 
+ struct file_operations ctr_fops = {
+ 	.owner		= THIS_MODULE,
+-	.unlocked_ioctl	= ioctl,
+-	.compat_ioctl	= ioctl,
++	.ioctl		= ioctl,
+ };
+--- kernel/event.c
++++ kernel/event.c
+@@ -71,7 +72,7 @@ static int notify(void *data, int len, i
+ 	if (!(skb = alloc_skb(NLMSG_SPACE(len), gfp_mask)))
+ 		return -ENOMEM;
+ 
+-	nlh = __nlmsg_put(skb, ietd_pid, seq++, NLMSG_DONE, len - sizeof(*nlh), 0);
++	nlh = __nlmsg_put(skb, ietd_pid, seq++, NLMSG_DONE, len - sizeof(*nlh));
+ 
+ 	memcpy(NLMSG_DATA(nlh), data, len);
+ 
+@@ -95,7 +100,7 @@ int event_send(u32 tid, u64 sid, u32 cid
+ 
+ int event_init(void)
+ {
+-	nl = netlink_kernel_create(NETLINK_IET, 1, event_recv, THIS_MODULE);
++	nl = netlink_kernel_create(NETLINK_IET, event_recv);
+ 	if (!nl)
+ 		return -ENOMEM;
+ 	else

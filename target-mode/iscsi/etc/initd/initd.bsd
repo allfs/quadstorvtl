@@ -1,0 +1,79 @@
+#!/bin/sh
+#
+# chkconfig: - 39 35
+# description: Starts and stops the iSCSI target
+#
+# pidfile: /var/run/ietd.pid
+# config:  /etc/ietd.conf
+
+# Source function library.
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+
+RETVAL=0
+
+start()
+{
+	echo -n "Starting iSCSI target service: "
+	daemon /quadstor/sbin/ietd
+	RETVAL=$?
+	echo
+	return $RETVAL
+}
+
+stop()
+{
+	echo -n "Stopping iSCSI target service: "
+	/quadstor/bin/ietadm --op delete >/dev/null 2>/dev/null
+	sleep 4
+	killall ietd 2> /dev/null
+	echo_success
+	return 0
+}
+
+restart()
+{
+        stop
+        start
+}
+
+condrestart()
+{
+	PID=`/quadstor/bin/pidof ietd`
+	if [ $PID ]; then
+        	restart
+	fi
+}
+
+status()
+{
+	PID=`/quadstor/bin/pidof ietd`
+	if [ ! $PID ]; then
+		echo "iSCSI target stopped"
+		exit 1
+	else
+		echo "ietd (pid $PID) is running..."
+	fi
+}
+
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  restart)
+        restart
+        ;;
+  condrestart)
+        condrestart
+        ;;
+  status)
+        status
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|restart|status}"
+        exit 1
+esac
+
+exit 0

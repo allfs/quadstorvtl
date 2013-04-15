@@ -1,0 +1,24 @@
+# The semantics are:
+#
+# * Without any entries no initiator can see or connect to any target.
+#  
+# * By default we allow all initiators to connect to all targets with
+#   the "ALL ALL" entry.
+#
+# * Override which initiators can connect to which targets by putting an
+#   entry for a given target followed by a comma separated list of
+#   initiators, either IP address or IQN name (basic regex patterns for
+#   IQN names are accepted leave out ^ and $ specials as they are implicit),
+#   separate the two with whitespace.
+#
+# * Entry processing stops at the "ALL" target entry if present.
+#
+#
+# Some examples
+#
+#iqn.2006-06.com.quadstor.vtl.VTL1.autoloader 192.168.0.0/16, .*:mscs1-[1-4]\.example\.com
+#iqn.2006-06.com.quadstor.vtl.VTL1.autoloader [3ffe:302:11:1:211:43ff:fe31:5ae2], [3ffe:505:2:1::]/64, 192.168.22.0/24
+#iqn.2006-06.com.quadstor.vtl.VTL1.autoloader ALL
+#iqn.2006-06.com.quadstor.vtl.VTL1.autoloader 192.168.22.3, iqn\.1998-01\.com\.vmware:.*\.example\.com
+# ALL 192.168.0.0/16
+ALL ALL

@@ -1,0 +1,33 @@
+# Coredefs Makefile
+
+SRCS := vadic.c vibmtl.c vhptl.c vqtl.c vsdlt.c vultrium.c bdev.c  tcache.c coreext.c blk_map.c  tape.c tape_partition.c mchanger.c tdrive.c map_lookup.c kernint.c qs_lib.c vdevdefs.c reservation.c lzf_c.c lzf_d.c lz4.c devq.c bdevgroup.c gdevq.c tdevice.c bcheck.c
+
+SRCS += util/support.S util/strcmp.c util/strcpy.c util/strlen.c util/strncpy.c
+
+OBJ = $(SRCS:.c=.o)
+ASM = $(SRCS:.s=.o)
+ASM1 = $(SRCS:.S=.o)
+
+#CFLAGS := -O2 -fno-strict-aliasing -Werror -nostdinc  -I. -I/quadstor/quadstor/export -I/usr/src/sys/ -finline-limit=8000 --param inline-unit-growth=100 --param large-function-growth=1000 -fno-common  -fno-omit-frame-pointer -mcmodel=kernel -mno-red-zone  -mfpmath=387 -mno-sse -mno-sse2 -mno-sse3 -mno-mmx -mno-3dnow  -msoft-float -fno-asynchronous-unwind-tables -ffreestanding -fstack-protector -std=iso9899:1999 -fstack-protector -Wall -Wredundant-decls -Wnested-externs -Wstrict-prototypes  -Wmissing-prototypes -Wpointer-arith -Winline -Wcast-qual  -Wundef -Wno-pointer-sign
+#CC = clang
+#CFLAGS := -nostdinc -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-builtin -fno-strict-aliasing -fno-common -Wstrict-prototypes -Wundef -Werror-implicit-function-declaration -fno-delete-null-pointer-checks -fwrapv -mtune=generic -m64 -mno-red-zone -mcmodel=kernel -pipe -fno-reorder-blocks -Wno-sign-compare -fno-asynchronous-unwind-tables -funit-at-a-time -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -fomit-frame-pointer -fno-stack-protector -Wdeclaration-after-statement -Wno-pointer-sign -Werror -Winit-self -I. -I/quadstor/quadstor/export -Wno-unused-value
+#CFLAGS += -Wno-unused
+CFLAGS := -nostdinc -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-builtin -fno-strict-aliasing -fno-common -Wstrict-prototypes -Wundef -Werror-implicit-function-declaration -fno-delete-null-pointer-checks -fwrapv -mtune=generic -m64 -mno-red-zone -mcmodel=kernel -pipe -Wno-sign-compare -fno-asynchronous-unwind-tables -funit-at-a-time -mno-sse -mno-mmx -mno-sse2 -mno-3dnow -fomit-frame-pointer -fno-stack-protector -Wdeclaration-after-statement -Wno-pointer-sign -Werror -Winit-self -I. -I/quadstor/quadstor/export
+CFLAGS += -g
+#CFLAGS += -O2
+#CFLAGS += -DENABLE_STATS
+
+all: $(ASM) $(ASM1) $(OBJ)
+
+.c.o:
+	$(CC) $(CFLAGS) -c $< -o $@
+
+.s.o:
+	$(CC) $(CFLAGS) -c $< -o $@
+
+.S.o:
+	$(CC) $(CFLAGS) -c $< -o $@
+
+
+clean:
+	rm -f *.o util/*.o

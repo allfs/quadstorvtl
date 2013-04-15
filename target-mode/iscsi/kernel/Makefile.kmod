@@ -1,0 +1,15 @@
+all:
+	@set -e; \
+	sh ./build.sh
+
+clean:
+	@set -e; \
+	sh ./build.sh clean
+
+clobber:
+	@set -e; \
+	sh ./build.sh clean
+
+install:
+	@set -e; \
+	sh ./build.sh install

@@ -1,0 +1,71 @@
+iet vmware esx (v3) disk identification
+=======================================
+
+Disks, also known as LUNs, can be identified by the underlying SCSI 
+protocol using the vital product pages (VPD). Page 0x83 contains the
+unit identification (required by SCSI spec), page 0x80 contains the 
+disk serial number page (optional as per SCSI spec).
+
+iet provides a feature that allows one to define a ScsiId parameter
+within the Lun statement. This parameter controls the value of page
+0x83. Before SVN rev 72 (including 0.4.14) did not control page 0x80.
+
+
+vmware and disk serial numbers
+------------------------------
+VMware ESX uses page 0x80 to identify disks. If two disks have the same
+serial number, then vmware thinks there are multiple paths to that
+disk. This becomes obvious if you have multiple targets defined in
+iet or you have targets defined on different iet servers. This is an
+issue with all versions prior and including release 0.4.14 of iet.
+
+Target iqn.1990-01.edu.amherst.iscsi-target-development:vmware.t1
+        Lun 0 Path=/mnt/bigslice1,Type=fileio
+
+Target iqn.1990-01.edu.amherst.iscsi-target-development:vmware.t2
+        Lun 0 Path=/mnt/bigslice2,Type=fileio
+
+So, if the bigslice1 is 100G and bigslice2 is 200G, you will see one
+LUN in vmware which might have the size 100G or 200G consisting of 2
+paths to that disk. This gets really ugly if one path is down and it
+then accesses a different disk.
+
+
+Prior to SVN rev 75
+-------------------
+Before SVN rev 75 (this includes 0.4.14), iet emitted a 4 byte long
+disk serial number consisting of spaces (0x20). In vmware you can see 
+this by looking at the Id line in /proc/vmware/scsi/hba40/...
+
+  Id: 20 20 20 20 56 49 52 54 55 41
+	
+As it turns out, vmware also appends this resulting Id to the first 6
+bytes of the product identification field, which is VIRTUA
+(VIRTUAL-DISK).
+
+
+To avoid all this
+-----------------
+After and including SVN rev 75, you can configure serial numbers in
+your ietd.conf:
+
+Lun 0 Path=/dev/sdc,Type=fileio,ScsiSN=AMHDSK-061031-03
+
+Note if you do not specify a ScsiSN, like all the previous versions,
+iet emitted a 4 byte long disk serial number consisting of spaces
+(0x20).
+
+
+References:
+-----------
+http://www.vmware.com/community/message.jspa?messageID=364352
+
+
+Todo Items
+----------
+VMware currently does not certify iet as a compatible iSCSI solution.
+The open source community is trying to make iet as compatible as
+possible.
+
+
+Written by Steffen Plotner. Last updated 2006/12/05

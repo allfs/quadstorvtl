@@ -1,0 +1,24 @@
+#!/bin/sh
+
+rm -f /etc/rc0.d/*quadstor
+rm -f /etc/rc1.d/*quadstor
+rm -f /etc/rc2.d/*quadstor
+rm -f /etc/rc3.d/*quadstor
+rm -f /etc/rc4.d/*quadstor
+rm -f /etc/rc5.d/*quadstor
+rm -f /etc/rc6.d/*quadstor
+
+
+cmod=`lsmod | grep vtlcore`
+if [ "$cmod" != "" ]; then
+	/etc/init.d/quadstor stop
+fi
+
+cmod=`lsmod | grep vtlcore`
+if [ "$cmod" != "" ]; then
+	echo "Unable to shutdown QUADStor service cleanly. Please restart the system and try again"
+	exit 1
+fi
+
+/quadstor/bin/qlauninst
+exit 0

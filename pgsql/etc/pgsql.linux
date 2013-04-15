@@ -1,0 +1,185 @@
+#!/bin/sh
+# postgresql	This is the init script for starting up the PostgreSQL
+#		server
+#
+# chkconfig: - 64 36
+# description: Starts and stops the PostgreSQL backend daemon that handles \
+#	       all database requests.
+# processname: postmaster
+# pidfile: /var/run/postmaster.pid
+
+# Version 6.5.3-2 Lamar Owen
+# Added code to determine if PGDATA exists, whether it is current version
+#     or not, and initdb if no PGDATA (initdb will not overwrite a database).
+
+# Version 7.0 Lamar Owen
+# Added logging code
+# Changed PGDATA.
+
+# Version 7.0.2 Trond Eivind Glomsrd <teg@redhat.com>
+# use functions, add conditional restart
+          
+# Version 7.0.3 Lamar Owen <lamar@postgresql.org>
+# Check for the existence of functions before blindly using them 
+# in particular -- check for success () and failure () before using.
+# More Cross-distribution support -- PGVERSION variable, and docdir checks.
+
+# Version 7.1 Release Candidate Lamar Owen <lamar@postgresql.org>
+# initdb parameters have changed.
+
+# Version 7.1.2 Trond Eivind Glomsrd <teg@redhat.com>
+# Specify shell for su
+# Handle stop better - kill unwanted output, make it wait until the database is ready
+# Handle locales slightly differently - always using "C" isn't a valid option 
+# Kill output from database initialization 
+# Mark messages for translation
+
+# Version 7.1.2-2.PGDG Lamar Owen <lamar.owen@wgcr.org>
+# sync up.
+# Karl's fixes for some quoting issues.
+
+# Version 7.2b2 Lamar Owen <lamar.owen@wgcr.org>
+# version change.
+
+# Version 7.2 final.  Lamar Owen <lamar.owen@wgcr.org>
+# reload from Peter E.
+# Eliminate the pidof postmaster test in stop -- we're using pg_ctl so we don't need pidof.
+# Tested the $? return for the stop script -- it does in fact propagate.
+# TODO: multiple postmasters.
+
+# Version 7.3 Lamar Owen <lamar.owen@ramifordistat.net>
+# Multiple postmasters, courtesy Karl DeBisschop
+
+# Version 7.4 Lamar Owen.
+
+# Version 7.4.3 Tom Lane <tgl@sss.pgh.pa.us>
+# Support condstop for uninstall
+# Minor other changes suggested by Fernando Nasser.
+
+# Version 7.4.5 Tom Lane <tgl@sss.pgh.pa.us>
+# Rewrite to start postmaster directly, rather than via pg_ctl; this avoids
+# fooling the postmaster's stale-lockfile check by having too many
+# postgres-owned processes laying about.
+
+
+# PGVERSION is the full package version, e.g., 7.4.7
+# Note: the specfile ordinarily updates this during install
+PGVERSION=8.0.3
+# PGMAJORVERSION is major version, e.g., 7.4 (this should match PG_VERSION)
+PGMAJORVERSION=`echo "$PGVERSION" | sed 's/^\([0-9]*\.[0-9]*\).*$/\1/'`
+
+# Source function library.
+INITD=/etc/rc.d/init.d
+. $INITD/functions
+
+# Get function listing for cross-distribution logic.
+TYPESET=`typeset -f|grep "declare"`
+
+# Get config.
+. /etc/sysconfig/network
+
+# Find the name of the script
+NAME=`basename $0`
+if [ ${NAME:0:1} = "S" -o ${NAME:0:1} = "K" ]
+then
+	NAME=${NAME:3}
+fi
+
+# For SELinux we need to use 'runuser' not 'su'
+if [ -x /sbin/runuser ]
+then
+    SU=/sbin/runuser
+else
+    SU=su
+fi
+
+
+# Set defaults for configuration variables
+PGENGINE=/quadstor/pgsql/bin
+PGPORT=9988
+PGDATA=/quadstor/pgsql/data
+PGLOG=/quadstor/pgsql/pgstartup.log
+export PGDATA
+export PGPORT
+
+# Check that networking is up.
+# Pretty much need it for postmaster.
+[ "${NETWORKING}" = "no" ] && exit 0
+
+[ -f "$PGENGINE/postmaster" ] || exit 1
+
+script_result=0
+
+start(){
+	PSQL_START=$"Starting ${NAME} service: "
+
+	cd /quadstor/pgsql/
+	rm -f /quadstor/pgsql/data/postmaster.pid
+	rm -f /quadstor/pgsql/pg.log
+	$SU -l scdbuser -c "bin/pg_ctl -w -D /quadstor/pgsql/data/ -l /quadstor/pgsql/pg.log start > /dev/null 2>&1"
+	sleep 5
+	pid=`pidof -s "$PGENGINE/postgres"`
+	if [ $pid ] && [ -f "$PGDATA/postmaster.pid" ]
+	then
+		success "$PSQL_START"
+		touch /var/lock/subsys/${NAME}
+		head -n 1 "$PGDATA/postmaster.pid" > "/var/run/postmaster.${PGPORT}.pid"
+	else
+		failure "$PSQL_START"
+		script_result=1
+	fi
+}
+
+stop(){
+	echo -n $"Stopping ${NAME} service: "
+	cd /quadstor/pgsql/
+	$SU -l scdbuser -c "bin/pg_ctl -w -D /quadstor/pgsql/data/ -l /quadstor/pgsql/pg.log stop > /dev/null 2>&1"
+	mypid=`/sbin/pidof /quadstor/pgsql/bin/postgres`
+	if [ "$mypid" != "" ]; then
+		kill -9 $mypid
+	fi
+
+	sleep 5
+	ret=$? 
+	if [ $ret -eq 0 ]
+	then
+		echo_success
+	else
+		echo_failure
+		script_result=1
+	fi
+	rm -f "/var/run/postmaster.${PGPORT}.pid"
+	rm -f /quadstor/pgsql/data/postmaster.pid
+	rm -f "/var/lock/subsys/${NAME}"
+	rm -f "/tmp/.s.PGSQL.9988"
+}
+
+restart(){
+    stop
+    start
+}
+
+# This script is slightly unusual in that the name of the daemon (postmaster)
+# is not the same as the name of the subsystem (postgresql)
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  status)
+	status /quadstor/pgsql/bin/postgres
+	script_result=$?
+	;;
+  restart)
+	restart
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|status|restart}"
+	exit 1
+esac
+
+exit $script_result

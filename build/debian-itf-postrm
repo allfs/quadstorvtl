@@ -1,0 +1,12 @@
+#!/bin/sh
+rm -f /quadstor/core/quadstor-vtl-itf-version
+for i in `ls -1d /quadstor/lib/modules/*`; do
+	if [ -d $i ]; then
+		rm -rf $i > /dev/null 2>&1
+	fi
+done
+
+rm -f /quadstor/bin/ietadm
+rmdir --ignore-fail-on-non-empty /quadstor/lib/modules > /dev/null 2>&1
+rm -rf /quadstor/src/export /quadstor/src/common /quadstor/src/target-mode/
+rmdir --ignore-fail-on-non-empty /quadstor/src > /dev/null 2>&1

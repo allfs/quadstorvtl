@@ -1,0 +1,137 @@
+Introduction
+-------------
+iSCSI Enterprise Target is for building an iSCSI storage system on
+Linux. It is aimed at developing an iSCSI target satisfying enterprise
+requirements.
+
+We borrow code from an Ardis iSCSI target (with respect to the GPL).
+
+
+Installation
+-------------
+There is no longer a need to manually apply the compatibility patches
+located under ./patches. The make process will now auto-detect
+whether these patches need to be applied for your platform and
+auto-apply the correct ones for you.
+
+	DO NOT MANUALLY APPLY THESE COMPATIBILITY PATCHES
+
+This will cause the auto-patch routine in the Makefile to break
+badly and it will put the code-base in such a state where you will
+need to remove it and re-extract the tar ball or run a svn revert to
+get it to compile properly again.
+
+The kernel module requires the kernel source or development package.
+You may need to recompile your kernel with "Cryptographic API" enabled
+under "Cryptographic options" in the kernel config if it isn't by
+default (most kernels have this enabled). If you do need to enable the
+"Cryptographic API" you will also need to enable "CRC32c CRC algorithm"
+if you use header or data digests. They are the kernel options,
+CONFIG_CRYPTO and CONFIG_CRYPTO_CRC32C, respectively. The user-space
+code requires OpenSSL library (http://www.openssl.org/) and developer
+headers (usually openssl-devel package).
+
+The iSCSI target consists of a kernel module (iscsi_trgt.ko) , daemon
+(ietd) and control utility (ietadm).
+
+Compilation of the kernel module, daemon and control utility should
+require nothing more than a:
+
+	make
+
+To build individual components:
+
+	make kernel - to build the kernel modules
+	make usr - to build the daemon and control program
+
+If you have multiple kernel sources installed and wish to target
+the make for a particular source, you would issue:
+
+	make KSRC=<kernel-src>
+
+The path can also be set by editing the main Makefile. If KSRC is
+omitted, make program will try to locate the kernel sources for the
+current running kernel.  Be sure to check whether it finds the right
+kernel sources.
+
+To install everything, use:
+
+	make [KSRC=<kernel-src>] install
+
+To install individual components:
+
+	make [KSRC=<kernel-src>] install-kernel - for kernel module
+	make [KSRC=<kernel-srv>] install-usr - for daemon and utility
+	make [KSRC=<kernel-srv>] install-init - for init.d script
+	make [KSRC=<kernel-srv>] install-etc - for config files
+	make [KSRC=<kernel-srv>] install-man - for man pages
+
+The kernel modules will be installed in the module directory of the
+kernel. The daemon and the control tool will be installed as ietd and
+ietadm under /usr/sbin. The init script will be installed as
+iscsi-target under /etc/init.d. The default ietd.conf,
+initiators.{allow,deny} are installed under /etc (the Makefile will
+not replace any existing config files). The manual pages are installed
+under /usr/man or /usr/share/man depending on your platform. The
+COPYING and this README are installed under /usr/docs/iscsitarget or
+/usr/share/docs/iscsitarget depending on your platform.
+
+If you use Linux distribution that does not have /etc/init.d, the
+boot script will not be installed. So you need to install it to an
+appropriate directory manually.
+
+
+Configuration
+-------------
+The daemon is configured via the configuration file /etc/ietd.conf.
+See the man page and the example file for the current syntax.
+
+The ietadm utility is for managing IET software dynamically. You can
+change the configurations of running targets. See the help message.
+
+The access control based on initiator address and target name patterns
+is configured via two configuration files (/etc/initiators.allow and
+/etc/initiators.deny). These files work like tcpd files
+(/etc/hosts.allow and /etc/hosts.deny). This feature enables you to
+hide a particular targets from some initiators. See the example files
+for the supported expressions. You can change the configuration
+dynamically. The modifications to the files become effective
+immediately.
+
+
+Starting
+-------------
+The target is not started automatically. So execute:
+
+	/etc/init.d/iscsi-target start
+
+Note that you must edit the configuration file before starting the
+target.
+
+
+Stopping
+-------------
+Execute:
+
+	/etc/init.d/iscsi-target stop
+
+
+Contact
+-------------
+Please send bug reports, comments, feature requests etc. to our
+mailing list <iscsitarget-devel@lists.sourceforge.net>.
+
+
+Developer Notes
+----------------
+The central resource for IET development is the
+<iscsitarget-devel@lists.sourceforge.net> mailing list.
+
+Our subversion repository can be found at: svn://svn.berlios.de/iscsitarget
+
+When submitting patches, please diff against the code in our repository's
+trunk and adhere otherwise to the same rules that apply to Linux kernel
+development, in particular the Linux kernel coding style
+($KSRC/Documentation/CodingStyle) and the rules for submitting patches
+($KSRC/Documentation/SubmittingPatches), i.e. please send patches inline as
+plain text.
