@@ -42,13 +42,13 @@ thread_end(void)
 }
 
 bio_t *
-bio_get_new(struct bdevint *bint, void *end_bio_func, void *consumer, uint64_t b_start, int bio_vec_count)
+bio_get_new(struct bdevint *bint, void *end_bio_func, void *consumer, uint64_t b_start, int bio_vec_count, int rw)
 {
 	uint64_t bi_sector = BIO_SECTOR(b_start, bint->sector_shift);
 	iodev_t *iodev = bint->b_dev;
 	bio_t *bio;
 
-	bio = (*kcbs.g_new_bio)(iodev, end_bio_func, consumer, bi_sector, bio_vec_count);
+	bio = (*kcbs.g_new_bio)(iodev, end_bio_func, consumer, bi_sector, bio_vec_count, rw);
 	return bio; 
 }
 

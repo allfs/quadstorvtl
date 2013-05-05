@@ -149,7 +149,7 @@ again:
 		max_pages = bio_get_max_pages(bint->b_dev);
 		if (unlikely(!max_pages))
 			max_pages = 32;
-		bio = bio_get_new(bint, end_bio, tcache, b_start, max_pages);
+		bio = bio_get_new(bint, end_bio, tcache, b_start, max_pages, rw);
 #endif
 		if (unlikely(!bio)) {
 			return -1;
@@ -235,7 +235,6 @@ tcache_entry_rw(struct tcache *tcache, int rw)
 	for (i = 0; i < count; i++) {
 		struct bio *bio = tcache->bio_list[i];
 
-		bio_set_command(bio, rw);
 		b_dev = send_bio(bio);
 		if (prev_b_dev && ((b_dev != prev_b_dev) || log)) {
 			if (!priv.data || log) {

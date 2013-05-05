@@ -314,7 +314,7 @@ size_t strlen(const char *s);
 char * strcpy(char *to, const char *from);
 char * strncpy(char *dst, const char *src, size_t n);
 struct bdevint;
-bio_t *bio_get_new(struct bdevint *bint, void *end_bio_func, void *consuder, uint64_t b_start, int bio_vec_count);
+bio_t *bio_get_new(struct bdevint *bint, void *end_bio_func, void *consuder, uint64_t b_start, int bio_vec_count, int rw);
 void thread_start(void);
 void thread_end(void);
 struct tcache;

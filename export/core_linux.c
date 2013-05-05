@@ -951,8 +951,23 @@ g_destroy_bio(bio_t *bio)
 	bio_put(bio);
 }
 
+static void
+bio_set_command(bio_t *bio, int cmd)
+{
+	switch (cmd) {
+	case QS_IO_READ:
+		bio->bi_rw = READ;
+		break;
+	case QS_IO_WRITE:
+		bio->bi_rw = WRITE;
+		break;
+	default:
+		DEBUG_BUG_ON(1);
+	}
+}
+
 bio_t *
-g_new_bio(iodev_t *iodev, void (*end_bio_func)(bio_t *, int), void *consumer, uint64_t bi_sector, int bio_vec_count)
+g_new_bio(iodev_t *iodev, void (*end_bio_func)(bio_t *, int), void *consumer, uint64_t bi_sector, int bio_vec_count, int rw)
 {
 	struct bio_priv *bpriv;
 	struct bio *bio;
@@ -973,6 +988,7 @@ g_new_bio(iodev_t *iodev, void (*end_bio_func)(bio_t *, int), void *consumer, ui
 	bpriv->end_bio_func = end_bio_func;
 	bio->bi_end_io = bio_end_bio;
 	bio->bi_private = bpriv;
+	bio_set_command(bio, rw);
 	return bio;
 }
 
@@ -994,21 +1010,6 @@ bio_free_page(bio_t *bio)
 
 	bvec = bio_iovec_idx(bio, 0);
 	put_page(bvec->bv_page);
-}
-
-static void
-bio_set_command(bio_t *bio, int cmd)
-{
-	switch (cmd) {
-	case QS_IO_READ:
-		bio->bi_rw = READ;
-		break;
-	case QS_IO_WRITE:
-		bio->bi_rw = WRITE;
-		break;
-	default:
-		DEBUG_BUG_ON(1);
-	}
 }
 
 static int

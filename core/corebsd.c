@@ -89,7 +89,7 @@ biot_alloc(struct bdevint *bint, uint64_t b_start, void *cache)
 }
 
 struct bio *
-bio_get_new(struct bdevint *bint, void *end_bio_func, void *consumer, uint64_t b_start, int bio_vec_count)
+bio_get_new(struct bdevint *bint, void *end_bio_func, void *consumer, uint64_t b_start, int bio_vec_count, int rw)
 {
 	struct bio *bio;
 
@@ -97,6 +97,7 @@ bio_get_new(struct bdevint *bint, void *end_bio_func, void *consumer, uint64_t b
 	bio->bio_offset = b_start << bint->sector_shift;
 	bio->bio_done = end_bio_func;
 	bio->bio_caller1 = consumer;
+	bio_set_command(bio, rw);
 	return bio;
 }
 
@@ -161,11 +162,10 @@ send_biot(struct biot *biot, int rw, void *endfn)
 	struct bio *bio;
 
 	biot->pbase = (vm_offset_t)vm_pg_map(biot->pages, biot->page_count);
-	bio = bio_get_new(biot->bint, endfn, biot, biot->b_start, 1);
+	bio = bio_get_new(biot->bint, endfn, biot, biot->b_start, 1, rw);
 	bio->bio_data = (caddr_t)(biot->pbase);
 	bio->bio_length = biot->dxfer_len;
 	bio->bio_bcount = bio->bio_length;
-	bio_set_command(bio, rw);
 	biot->bio = bio;
 	g_io_request(bio, biot->bint->cp);
 }

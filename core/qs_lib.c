@@ -95,14 +95,13 @@ qs_lib_bio_page(struct bdevint *bint, uint64_t b_start, uint32_t size, pagestruc
 #endif
 
 	debug_check(!b_start);
-	bio = bio_get_new(bint, end_io ? end_io : (void *)bio_meta_end_bio, priv, b_start, 1);
+	bio = bio_get_new(bint, end_io ? end_io : (void *)bio_meta_end_bio, priv, b_start, 1, rw);
 	if (unlikely(!bio))
 		return -1;
 
 	vm_pg_ref(page);
 #ifdef FREEBSD
 	bio_add_page(bio, (caddr_t)vm_pg_address(page), size);
-	bio_set_command(bio, rw);
 	bio->bio_caller2 = page;
 	g_io_request(bio, bint->cp);
 #else
@@ -112,7 +111,6 @@ qs_lib_bio_page(struct bdevint *bint, uint64_t b_start, uint32_t size, pagestruc
 		g_destroy_bio(bio);
 		return -1;
 	}
-	bio_set_command(bio, rw);
 	send_bio(bio);
 #endif
 	return 0;

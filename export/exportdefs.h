@@ -147,7 +147,7 @@ struct qs_kern_cbs {
 	int (*kernel_thread_stop)(kproc_t *task, int *flags, void *chan, int bit);
 	void (*sched_prio)(int prio);
 	int (*get_cpu_count)(void);
-	bio_t* (*g_new_bio)(iodev_t *iodev, void (*end_bio_func)(bio_t *, int), void *consumer, uint64_t bi_sector, int bio_vec_count);
+	bio_t* (*g_new_bio)(iodev_t *iodev, void (*end_bio_func)(bio_t *, int), void *consumer, uint64_t bi_sector, int bio_vec_count, int rw);
 	void (*bio_free_pages)(bio_t *bio);
 	int (*bio_add_page)(bio_t *bio, pagestruct_t *pp, unsigned int len, unsigned int offset);
 	void (*bio_free_page)(bio_t * bio);

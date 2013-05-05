@@ -1,0 +1,16 @@
+*.[oa]
+*˜
+*.ko
+*.mod.c
+Module.symvers
+*.o.cmd
+*.cgi
+*.so
+*.ko.cmd
+pgsql/bin/
+pgsql/include/
+pgsql/lib/
+pgsql/share/
+mapps/html/cgisrc/yui/
+target-mode/fc/qla2xxx
+target-mode/fc/isp
