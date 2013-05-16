@@ -1,6 +1,6 @@
 include ../../../build/rules.mk
 
-CGILIST = system.cgi listvtl.cgi addvtl.cgi addvtlpost.cgi adddisk.cgi adddiskcomp.cgi adddiskpost.cgi indvvtl.cgi liststoragepool.cgi modifystoragepool.cgi addstoragepool.cgi addstoragepoolpost.cgi deletestoragepool.cgi viewstoragepool.cgi iscsiconfpost.cgi iscsiconf.cgi addvcartridge.cgi addvcartridgepost.cgi deletevcartridge.cgi deletevtl.cgi
+CGILIST = system.cgi listvtl.cgi addvtl.cgi addvtlpost.cgi adddisk.cgi adddiskcomp.cgi adddiskpost.cgi indvvtl.cgi liststoragepool.cgi modifystoragepool.cgi addstoragepool.cgi addstoragepoolpost.cgi deletestoragepool.cgi viewstoragepool.cgi iscsiconfpost.cgi iscsiconf.cgi addvcartridge.cgi addvcartridgepost.cgi deletevcartridge.cgi deletevtl.cgi rescandisk.cgi
 
 all: $(CGILIST) strip install
 
@@ -78,6 +78,9 @@ iscsiconf.cgi: iscsiconf.o cgimain.o
 
 iscsiconfpost.cgi: iscsiconfpost.o cgimain.o
 	$(CC) $(CFLAGS) -o iscsiconfpost.cgi iscsiconfpost.o cgimain.o $(CGIHTML) $(LDFLAGS)
+
+rescandisk.cgi: rescandisk.o cgimain.o
+	$(CC) $(CFLAGS) -o rescandisk.cgi rescandisk.o cgimain.o $(CGIHTML) $(LDFLAGS)
 
 clean:
 	rm -f *.o *.cgi
