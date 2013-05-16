@@ -47,7 +47,7 @@ cp /quadstor/quadstor/export/qsio_ccb.h /quadstor/src/export/
 mkdir -p /quadstor/src/others
 cp /quadstor/quadstor/core/lzf*.[ch] /quadstor/src/others/
 cp /quadstor/quadstor/core/lz4*.[ch] /quadstor/src/others/
-cp /quadstor/quadstor/library/servers/md5*.[ch] /quadstor/src/others/
+cp /quadstor/quadstor/library/server/md5*.[ch] /quadstor/src/others/
 
 cd /quadstor/quadstor/build/
 rm /quadstor/quadstor/build/pkg-plist
