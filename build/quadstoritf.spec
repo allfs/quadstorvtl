@@ -2,7 +2,7 @@
 
 Summary: QuadStor Storage Virtualization 
 Name: quadstor-vtl-itf
-Version: 2.2.0
+Version: 2.2.1
 Release: rhel5
 Source0: %{name}-%{version}.tar.gz
 License: None 
@@ -77,7 +77,7 @@ install -m 755 /quadstor/quadstor/scripts/qlauninst $RPM_BUILD_ROOT/quadstor/bin
 	if [ ! -f /quadstor/etc/iet/ietd.conf ]; then
 		cp /quadstor/etc/iet/ietd.conf.sample /quadstor/etc/iet/ietd.conf
 	fi
-	echo "2.2.0 for RHEL/CentOS 5.x" > /quadstor/etc/quadstor-vtl-itf-version
+	echo "2.2.1 for RHEL/CentOS 5.x" > /quadstor/etc/quadstor-vtl-itf-version
 	echo "Building required kernel modules"
 	echo "Running /quadstor/bin/builditf"
 	sleep 5
