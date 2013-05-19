@@ -284,7 +284,7 @@ persistent_reservation_read_full(struct qsio_scsiio *ctio, uint16_t allocation_l
 		else if (registration->init_int == TARGET_INT_FC)
 		{
 			struct transport_id_fc *tid = (struct transport_id_fc *)(buffer+done);
-			memcpy(tid->n_port_name, &ctio->i_prt, 8);
+			memcpy(tid->n_port_name, &registration->i_prt, 8);
 			done += sizeof(struct transport_id_fc);
 		}
 		else if (registration->init_int == TARGET_INT_LOCAL)
