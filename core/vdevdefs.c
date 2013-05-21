@@ -124,7 +124,7 @@ device_find_sense(struct initiator_state *istate, uint8_t sense_key, uint8_t asc
 
 /* called under lock */
 void
-device_unit_attention(struct tdevice *tdevice, int all, uint64_t i_prt, uint64_t t_prt, uint8_t init_int, uint8_t asc, uint8_t ascq, int ignore_dup)
+device_unit_attention(struct tdevice *tdevice, int all, uint64_t i_prt[], uint64_t t_prt[], uint8_t init_int, uint8_t asc, uint8_t ascq, int ignore_dup)
 {
 	struct initiator_state *istate;
 	int retval;
@@ -337,7 +337,7 @@ get_next_device_id(void)
 }
 
 static int
-__device_istate_abort_task(struct tdevice *tdevice, uint64_t i_prt, uint64_t t_prt, int init_int, uint32_t task_tag)
+__device_istate_abort_task(struct tdevice *tdevice, uint64_t i_prt[], uint64_t t_prt[], int init_int, uint32_t task_tag)
 {
 	struct initiator_state *istate;
 	int task_found, task_exists;
@@ -372,7 +372,7 @@ __device_istate_abort_task(struct tdevice *tdevice, uint64_t i_prt, uint64_t t_p
 }
 
 int
-device_istate_abort_task(struct tdevice *tdevice, uint64_t i_prt, uint64_t t_prt, int init_int, uint32_t task_tag)
+device_istate_abort_task(struct tdevice *tdevice, uint64_t i_prt[], uint64_t t_prt[], int init_int, uint32_t task_tag)
 {
 	int task_found, i;
 
@@ -397,7 +397,7 @@ device_istate_abort_task(struct tdevice *tdevice, uint64_t i_prt, uint64_t t_prt
 }
 
 static void
-__device_istate_abort_task_set(struct tdevice *tdevice, uint64_t i_prt, uint64_t t_prt, int init_int)
+__device_istate_abort_task_set(struct tdevice *tdevice, uint64_t i_prt[], uint64_t t_prt[], int init_int)
 {
 	struct initiator_state *istate;
 
@@ -416,7 +416,7 @@ __device_istate_abort_task_set(struct tdevice *tdevice, uint64_t i_prt, uint64_t
 }
 
 void
-device_istate_abort_task_set(struct tdevice *tdevice, uint64_t i_prt, uint64_t t_prt, int init_int)
+device_istate_abort_task_set(struct tdevice *tdevice, uint64_t i_prt[], uint64_t t_prt[], int init_int)
 {
 	int i;
 
@@ -439,11 +439,11 @@ device_istate_abort_task_set(struct tdevice *tdevice, uint64_t i_prt, uint64_t t
 }
 
 void
-device_free_initiator(uint64_t i_prt, uint64_t t_prt, int init_int, struct tdevice *tdevice)
+device_free_initiator(uint64_t i_prt[], uint64_t t_prt[], int init_int, struct tdevice *tdevice)
 {
 	int i;
 
-	debug_info("i_prt %llx t_prt %llx init int %d tdevice %p\n", (unsigned long long)i_prt, (unsigned long long)t_prt, init_int, tdevice);
+	debug_info("i_prt %llx %llx t_prt %llx %llx init int %d tdevice %p\n", (unsigned long long)i_prt[0], (unsigned long long)i_prt[1], (unsigned long long)t_prt[0], (unsigned long long)t_prt[1], init_int, tdevice);
 	if (tdevice) {
 		device_free_initiator_state2(tdevice, i_prt, t_prt, init_int);
 		return;
@@ -586,14 +586,14 @@ target_add_fc_rule(struct fc_rule_config *fc_rule_config)
 		return -1;
 	}
 
-	fc_rule->wwpn = fc_rule_config->wwpn;
+	port_fill(fc_rule->wwpn, fc_rule_config->wwpn);
 	fc_rule->target_id = fc_rule_config->target_id;
 	fc_rule->rule = fc_rule_config->rule;
-	debug_info("wwpn %llx target id %u rule %d\n", (unsigned long long)fc_rule->wwpn, fc_rule->target_id, fc_rule->rule);
+	debug_info("wwpn %llx %llx target id %u rule %d\n", (unsigned long long)fc_rule->wwpn[0], (unsigned long long)fc_rule->wwpn[1], fc_rule->target_id, fc_rule->rule);
 
 	mtx_lock(glbl_lock);
 	TAILQ_FOREACH(iter, &fc_rule_list, r_list) {
-		if (iter->wwpn == fc_rule->wwpn && iter->target_id == fc_rule->target_id) {
+		if (port_equal(iter->wwpn, fc_rule->wwpn) && iter->target_id == fc_rule->target_id) {
 			iter->rule = fc_rule->rule;
 			mtx_unlock(glbl_lock);
 			free(fc_rule, M_QUADSTOR);
@@ -602,7 +602,7 @@ target_add_fc_rule(struct fc_rule_config *fc_rule_config)
 		}
 	}
 
-	if (!fc_rule->wwpn)
+	if (!fc_rule->wwpn[0] && !fc_rule->wwpn[1])
 		TAILQ_INSERT_HEAD(&fc_rule_list, fc_rule, r_list);
 	else
 		TAILQ_INSERT_TAIL(&fc_rule_list, fc_rule, r_list);
@@ -618,8 +618,7 @@ target_remove_fc_rule(struct fc_rule_config *fc_rule_config)
 
 	mtx_lock(glbl_lock);
 	TAILQ_FOREACH(iter, &fc_rule_list, r_list) {
-		if (iter->wwpn == fc_rule_config->wwpn && iter->target_id == fc_rule_config->target_id) {
-			debug_info("wwpn %llx target id %u rule %d\n", (unsigned long long)iter->wwpn, iter->target_id, iter->rule);
+		if (port_equal(iter->wwpn, fc_rule_config->wwpn) && iter->target_id == fc_rule_config->target_id) {
 			TAILQ_REMOVE(&fc_rule_list, iter, r_list);
 			mtx_unlock(glbl_lock);
 			free(iter, M_QUADSTOR);
@@ -648,7 +647,7 @@ target_clear_fc_rules(int target_id)
 }
 
 int
-fc_initiator_check(uint64_t wwpn, void *device)
+fc_initiator_check(uint64_t wwpn[], void *device)
 {
 	struct fc_rule *iter;
 	int rule_wwpn = -1;
@@ -658,7 +657,7 @@ fc_initiator_check(uint64_t wwpn, void *device)
 	struct tdevice *tdevice = device;
 	uint32_t target_id = tdevice->tl_id;
 
-	debug_info("wwpn %llx target id %u\n", (unsigned long long)wwpn, tdevice->tl_id);
+	debug_info("wwpn %llx %llx target id %u\n", (unsigned long long)wwpn[0], (unsigned long long)wwpn[1], tdevice->target_id);
 	mtx_lock(glbl_lock);
 	if (TAILQ_EMPTY(&fc_rule_list)) {
 		mtx_unlock(glbl_lock);
@@ -666,24 +665,24 @@ fc_initiator_check(uint64_t wwpn, void *device)
 	}
 
 	TAILQ_FOREACH(iter, &fc_rule_list, r_list) {
-		debug_info("iter wwpn %llx target id %u\n", (unsigned long long)iter->wwpn, iter->target_id);
-		if (iter->wwpn == wwpn && iter->target_id == target_id) {
-			debug_info("found match %llx tdevice %s rule %d\n", (unsigned long long)wwpn, tdevice_name(tdevice), iter->rule);
+		debug_info("iter wwpn %llx %llx target id %u\n", (unsigned long long)iter->wwpn[0], (unsigned long long)iter->wwpn[1], iter->target_id);
+		if (port_equal(iter->wwpn, wwpn) && iter->target_id == target_id) {
+			debug_info("found match %llx %llx tdevice %s rule %d\n", (unsigned long long)wwpn[0], (unsigned long long)wwpn[1], tdevice_name(tdevice), iter->rule);
 			mtx_unlock(glbl_lock);
 			return iter->rule;
 		}
 
-		if (iter->wwpn == wwpn && !iter->target_id)
+		if (port_equal(iter->wwpn, wwpn) && !iter->target_id)
 			rule_wwpn = iter->rule;
 		else if (iter->target_id == target_id)
 			rule_target = iter->rule;
-		else if (!iter->wwpn)
+		else if (!iter->wwpn[0])
 			rule_all_wwpn = iter->rule;
 		else if (!iter->target_id)
 			rule_all_target = iter->rule;
 	}
 	mtx_unlock(glbl_lock);
-	debug_info("found match %llx tdevice %s rule_wwpn %d rule_target %d rule all wwpn %d rule all target %d\n", (unsigned long long)wwpn, tdevice_name(tdevice), rule_wwpn, rule_target, rule_all_wwpn, rule_all_target);
+	debug_info("found match %llx %llx tdevice %s rule_wwpn %d rule_target %d rule all wwpn %d rule all target %d\n", (unsigned long long)wwpn[0], (unsigned long long)wwpn[1], tdevice_name(tdevice), rule_wwpn, rule_target, rule_all_wwpn, rule_all_target);
 	if (rule_wwpn > 0)
 		return rule_wwpn;
 	else if (rule_target > 0)

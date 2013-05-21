@@ -1004,8 +1004,15 @@ static int __cmnd_abort(struct iscsi_cmnd *cmnd, struct iscsi_session *from_sess
 		struct iscsi_conn *conn = cmnd->conn;
 		struct iscsi_session *session = conn->session;
 		struct iscsi_target *target = session->target;
+		uint64_t abort_i_prt[2];
+		uint64_t abort_t_prt[2];
 
-		task_found = (*icbs.device_istate_abort_task)(target->tdevice, session->sid, t_prt, TARGET_INT_ISCSI, cmnd_itt(cmnd));
+		abort_i_prt[0] = session->sid;
+		abort_i_prt[1] = 0;
+		abort_t_prt[0] = t_prt;
+		abort_t_prt[1] = 0;
+
+		task_found = (*icbs.device_istate_abort_task)(target->tdevice, abort_i_prt, abort_t_prt, TARGET_INT_ISCSI, cmnd_itt(cmnd));
 		if (!task_found)
 			return 0;
 	}
@@ -1073,6 +1080,8 @@ static int target_reset(struct iscsi_cmnd *req, u32 lun, int all)
 	struct iscsi_session *session;
 	struct iscsi_conn *conn;
 	struct iscsi_cmnd *cmnd, *tmp;
+	uint64_t reset_i_prt[2];
+	uint64_t reset_t_prt[2];
 
 	list_for_each_entry(session, &target->session_list, list) {
 		list_for_each_entry(conn, &session->conn_list, list) {
@@ -1088,7 +1097,11 @@ static int target_reset(struct iscsi_cmnd *req, u32 lun, int all)
 		}
 	}
 
-	(*icbs.device_target_reset)(target->tdevice, req->conn->session->sid, t_prt, TARGET_INT_ISCSI);
+	reset_i_prt[0] = req->conn->session->sid;
+	reset_i_prt[1] = 0;
+	reset_t_prt[0] = t_prt;
+	reset_t_prt[1] = 0;
+	(*icbs.device_target_reset)(target->tdevice, reset_i_prt, reset_t_prt, TARGET_INT_ISCSI);
 	return 0;
 }
 
@@ -1097,8 +1110,15 @@ static void task_set_abort(struct iscsi_cmnd *req)
 	struct iscsi_session *session = req->conn->session;
 	struct iscsi_conn *conn;
 	struct iscsi_cmnd *cmnd, *tmp;
+	uint64_t abort_i_prt[2];
+	uint64_t abort_t_prt[2];
 
-	(*icbs.device_istate_abort_task_set)(NULL, session->sid, t_prt, TARGET_INT_ISCSI);
+	abort_i_prt[0] = session->sid;
+	abort_i_prt[1] = 0;
+	abort_t_prt[0] = t_prt;
+	abort_t_prt[1] = 0;
+
+	(*icbs.device_istate_abort_task_set)(NULL, abort_i_prt, abort_t_prt, TARGET_INT_ISCSI);
 
 	list_for_each_entry(conn, &session->conn_list, list) {
 		list_for_each_entry_safe(cmnd, tmp, &conn->pdu_list, conn_list) {

@@ -415,7 +415,7 @@ void vultrium_init_handlers(struct tdrive *tdrive);
 void vsdlt_init_handlers(struct tdrive *tdrive);
 
 int tdrive_media_valid(struct tdrive *tdrive, int voltype);
-void tdrive_reset(struct tdrive *tdrive, uint64_t i_prt, uint64_t t_prt, uint8_t init_int);
+void tdrive_reset(struct tdrive *tdrive, uint64_t i_prt[], uint64_t t_prt[], uint8_t init_int);
 
 int tdrive_device_identification(struct tdrive *tdrive, uint8_t *buffer, int length);
 int tdrive_serial_number(struct tdrive *tdrive, uint8_t *buffer, int length);

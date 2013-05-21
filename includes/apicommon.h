@@ -282,6 +282,7 @@ struct fc_rule {
 	int rule;
 	int target_id;
 	char wwpn[24];
+	char wwpn1[24];
 	char vtl[TL_MAX_NAME_LEN];
 	TAILQ_ENTRY(fc_rule) q_entry;
 };
@@ -291,6 +292,7 @@ TAILQ_HEAD(fc_rule_list, fc_rule);
 struct fc_rule_spec {
 	int rule;
 	char wwpn[24];
+	char wwpn1[24];
 	char vtl[TL_MAX_NAME_LEN];
 };
 

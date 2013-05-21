@@ -365,7 +365,7 @@ struct tl_entryinfo {
 };
 
 struct fc_rule_config {
-	uint64_t wwpn;
+	uint64_t wwpn[2];
 	uint32_t target_id;
 	int rule;
 };

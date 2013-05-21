@@ -45,5 +45,11 @@ checkerror
 
 cp -f qla2xxx.ko /quadstor/lib/modules/$kvers/
 
+cd /quadstor/src/target-mode/fc/srpt
+make clean && make 
+checkerror
+
+cp -f ib_srpt.ko /quadstor/lib/modules/$kvers/
+
 #Install the newly build qla2xxx driver
 /quadstor/bin/qlainst

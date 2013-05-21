@@ -53,7 +53,7 @@ tdevice_exit(struct tdevice *tdevice)
 }
 
 void
-tdevice_reset(struct tdevice *tdevice, uint64_t i_prt, uint64_t t_prt, uint8_t init_int)
+tdevice_reset(struct tdevice *tdevice, uint64_t i_prt[], uint64_t t_prt[], uint8_t init_int)
 {
 	if (tdevice->type == T_SEQUENTIAL)
 		tdrive_reset((struct tdrive *)tdevice, i_prt, t_prt, init_int);

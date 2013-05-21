@@ -374,8 +374,8 @@ construct_ctio(struct ldev_bsd *ldev, struct ccb_scsiio *csio)
 		return NULL;
 	}
 
-	ctio->i_prt = LDEV_HOST_ID; /* Our ID */ 
-	ctio->t_prt = 0;
+	ctio->i_prt[0] = LDEV_HOST_ID; /* Our ID */ 
+	ctio->t_prt[0] = 0;
 	ctio->r_prt = LDEV_RPORT_START; 
 	min_len = min_t(int, 16, csio->cdb_len);
 	memcpy(ctio->cdb, csio->ccb_h.flags & CAM_CDB_POINTER ? csio->cdb_io.cdb_ptr : csio->cdb_io.cdb_bytes, min_len); 

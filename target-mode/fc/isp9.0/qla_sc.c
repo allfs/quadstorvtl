@@ -201,14 +201,24 @@ qla_end_ccb(void *ccb_void)
 }
 
 int
-fcbridge_i_prt_valid(struct fcbridge *fcbridge, uint64_t i_prt)
+fcbridge_i_prt_valid(struct fcbridge *fcbridge, uint64_t i_prt[])
 {
 	ispsoftc_t *isp = fcbridge->ha;
 	int i;
 
+	if (i_prt[1])
+		return 1;
+
 	for (i = 0; i < isp->isp_nchan; i++) { 
-		if (i_prt == FCPARAM(isp, i)->isp_wwpn)
+		if (i_prt[0] == FCPARAM(isp, i)->isp_wwpn)
 			return 0;
 	}
 	return 1;
+}
+
+void
+fcbridge_get_tport(struct fcbridge *fcbridge, uint64_t wwpn[])
+{
+	wwpn[0] = FCPARAM(fcbridge->ha, 0)->isp_wwpn;
+	wwpn[1] = 0; 
 }

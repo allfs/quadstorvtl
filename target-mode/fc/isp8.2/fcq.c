@@ -79,8 +79,8 @@ process_ctio(struct fcbridge *fcbridge, struct tgtcmd *cmd)
 	}
 	sx_xunlock(&itf_lock);
 
-	ctio->i_prt = cmd->i_prt;
-	ctio->t_prt = cmd->t_prt;
+	ctio->i_prt[0] = cmd->i_prt;
+	ctio->t_prt[0] = cmd->t_prt;
 	ctio->r_prt = cmd->r_prt;
 #if 0
 	memcpy(&ctio->init_id, cmd->wwn, WWN_SIZE);
@@ -109,8 +109,8 @@ process_inot(struct fcbridge *fcbridge, struct tgtcmd *cmd)
 
 	notify = zalloc(sizeof(struct qsio_immed_notify), M_QISP, M_WAITOK|__GFP_NOFAIL);
 
-	notify->i_prt = cmd->i_prt;
-	notify->t_prt = cmd->t_prt;
+	notify->i_prt[0] = cmd->i_prt;
+	notify->t_prt[0] = cmd->t_prt;
 	notify->r_prt = cmd->r_prt;
 	notify->task_tag = cmd->seq_id; 
 #if 0

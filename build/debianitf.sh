@@ -52,6 +52,9 @@ install -m 644 /quadstor/quadstor/target-mode/fc/common/fccommon.c $DEBIAN_ROOT/
 install -m 755 -d $DEBIAN_ROOT/quadstor/src/target-mode/fc/qla2xxx
 install -m 644 /quadstor/quadstor/target-mode/fc/qla2xxx/*.[ch] $DEBIAN_ROOT/quadstor/src/target-mode/fc/qla2xxx
 install -m 644 /quadstor/quadstor/target-mode/fc/qla2xxx/Makefile.dist $DEBIAN_ROOT/quadstor/src/target-mode/fc/qla2xxx/Makefile
+install -m 755 -d $DEBIAN_ROOT/quadstor/src/target-mode/fc/srpt
+install -m 644 /quadstor/quadstor/target-mode/fc/srpt/*.[ch] $DEBIAN_ROOT/quadstor/src/target-mode/fc/srpt
+install -m 644 /quadstor/quadstor/target-mode/fc/srpt/Makefile.dist $DEBIAN_ROOT/quadstor/src/target-mode/fc/srpt/Makefile
 
 install -m 755 /quadstor/quadstor/scripts/builditf.linux.sh $DEBIAN_ROOT/quadstor/bin/builditf
 install -m 755 /quadstor/quadstor/scripts/qlainst $DEBIAN_ROOT/quadstor/bin/qlainst

@@ -23,7 +23,7 @@
 #include <exportdefs.h>
 
 static int
-initiator_has_registered_ar(struct reservation *reservation, uint64_t i_prt, uint64_t t_prt, uint8_t init_int)
+initiator_has_registered_ar(struct reservation *reservation, uint64_t i_prt[], uint64_t t_prt[], uint8_t init_int)
 {
 	struct registration *tmp;
 
@@ -60,7 +60,7 @@ in_persistent_ar_type(struct reservation *reservation)
 }
  
 static int
-is_persistent_reservation_holder(struct reservation *reservation, uint64_t i_prt, uint64_t t_prt, uint8_t init_int)
+is_persistent_reservation_holder(struct reservation *reservation, uint64_t i_prt[], uint64_t t_prt[], uint8_t init_int)
 {
 	if (reservation->type != RESERVATION_TYPE_PERSISTENT)
 		return 0;
@@ -151,7 +151,7 @@ persistent_reservation_read_reservations(struct qsio_scsiio *ctio, uint16_t allo
 
 	*((uint32_t *)buffer) = htobe32(reservation->generation);
 	done = 8;
-	debug_info("reservation is_reserved %d i_prt %llx t_prt %llx key %llx\n", reservation->is_reserved, (unsigned long long)reservation->i_prt, (unsigned long long)reservation->t_prt, (unsigned long long)reservation->persistent_key);
+	debug_info("reservation is_reserved %d i_prt %llx %llx t_prt %llx %llx key %llx\n", reservation->is_reserved, (unsigned long long)reservation->i_prt[0], (unsigned long long)reservation->i_prt[1], (unsigned long long)reservation->t_prt[0], (unsigned long long)reservation->t_prt[1], (unsigned long long)reservation->persistent_key);
 	if (reservation->is_reserved)
 	{
 		if (allocation_length >= (8 + sizeof(pin_data)))
@@ -173,11 +173,11 @@ persistent_reservation_read_reservations(struct qsio_scsiio *ctio, uint16_t allo
 }
 
 static void
-registrant_unit_attention(struct tdevice *tdisk, struct registration *registration, uint8_t asc, uint8_t ascq)
+registrant_unit_attention(struct tdevice *tdevice, struct registration *registration, uint8_t asc, uint8_t ascq)
 {
 	struct initiator_state *istate;
 
-	istate = device_get_initiator_state(tdisk, registration->i_prt, registration->t_prt, registration->r_prt, registration->init_int, 0, 0);
+	istate = device_get_initiator_state(tdevice, registration->i_prt, registration->t_prt, registration->r_prt, registration->init_int, 0, 0);
 	if (!istate)
 		return;
 
@@ -186,16 +186,16 @@ registrant_unit_attention(struct tdevice *tdisk, struct registration *registrati
 }
 
 static void
-registrants_unit_attention(struct tdevice *tdisk, uint8_t asc, uint8_t ascq, uint64_t i_prt, uint64_t t_prt, uint8_t init_int, int skip)
+registrants_unit_attention(struct tdevice *tdevice, uint8_t asc, uint8_t ascq, uint64_t i_prt[], uint64_t t_prt[], uint8_t init_int, int skip)
 {
-	struct reservation *reservation = &tdisk->reservation;
+	struct reservation *reservation = &tdevice->reservation;
 	struct registration *registration;
 	int send_sync = 0;
 
 	SLIST_FOREACH(registration, &reservation->registration_list, r_list) {
 		if (skip && iid_equal(registration->i_prt, registration->t_prt, registration->init_int, i_prt, t_prt, init_int))
 			continue;
-		registrant_unit_attention(tdisk, registration, asc, ascq);
+		registrant_unit_attention(tdevice, registration, asc, ascq);
 		send_sync = 1;
 	}
 }
@@ -259,7 +259,7 @@ persistent_reservation_read_full(struct qsio_scsiio *ctio, uint16_t allocation_l
 		bzero(pfull, sizeof(struct pfull_data));
 		pfull->key = htobe64(registration->key);
 		pfull->addl_len = htobe16(transport_size);
-		debug_info("reservation is_reserved %d reservation->i_prt %llx reservation->t_prt %llx reservation->init_int %d\n", reservation->is_reserved, (unsigned long long)reservation->i_prt, (unsigned long long)reservation->t_prt, reservation->init_int);
+		debug_info("reservation is_reserved %d reservation->i_prt %llx %llx reservation->t_prt %llx %llx reservation->init_int %d\n", reservation->is_reserved, (unsigned long long)reservation->i_prt[0], (unsigned long long)reservation->i_prt[1], (unsigned long long)reservation->t_prt[0], (unsigned long long)reservation->t_prt[1], reservation->init_int);
 		debug_info("registration init_name %s\n", registration->init_name);
 		if (reservation->is_reserved && is_persistent_reservation_holder(reservation, registration->i_prt, registration->t_prt, registration->init_int)) {
 			pfull->r_holder |= 0x01;
@@ -284,7 +284,11 @@ persistent_reservation_read_full(struct qsio_scsiio *ctio, uint16_t allocation_l
 		else if (registration->init_int == TARGET_INT_FC)
 		{
 			struct transport_id_fc *tid = (struct transport_id_fc *)(buffer+done);
-			memcpy(tid->n_port_name, &registration->i_prt, 8);
+			memcpy(tid->n_port_name, &registration->i_prt[0], 8);
+			if (registration->i_prt[1]) {
+				tid->protocol_id = 0x04;
+				memcpy(tid->n_port_name+8, &registration->i_prt[1], 8);
+			}
 			done += sizeof(struct transport_id_fc);
 		}
 		else if (registration->init_int == TARGET_INT_LOCAL)
@@ -341,7 +345,7 @@ persistent_reservation_read_keys(struct qsio_scsiio *ctio, uint16_t allocation_l
 }
 
 static int
-initiator_has_registered(uint64_t key, uint64_t i_prt, uint64_t t_prt, uint8_t init_int, struct registration_list *lhead, struct registration **registration)
+initiator_has_registered(uint64_t key, uint64_t i_prt[], uint64_t t_prt[], uint8_t init_int, struct registration_list *lhead, struct registration **registration)
 {
 	struct registration *tmp;
 
@@ -366,9 +370,9 @@ persistent_reservation_reset(struct reservation *reservation)
 }
 
 static void
-persistent_reservation_remove_registration(struct tdevice *tdisk, struct registration *registration)
+persistent_reservation_remove_registration(struct tdevice *tdevice, struct registration *registration)
 {
-	struct reservation *reservation = &tdisk->reservation;
+	struct reservation *reservation = &tdevice->reservation;
 
 	if (!reservation->is_reserved)
 		return;
@@ -380,7 +384,7 @@ persistent_reservation_remove_registration(struct tdevice *tdisk, struct registr
 	else {
 		if (is_persistent_reservation_holder(reservation, registration->i_prt, registration->t_prt, registration->init_int)) {
 			if (in_persistent_ro_type(reservation)) {
-				registrants_unit_attention(tdisk, RESERVATIONS_RELEASED_ASC, RESERVATIONS_RELEASED_ASCQ, registration->i_prt, registration->t_prt, registration->init_int, 1);
+				registrants_unit_attention(tdevice, RESERVATIONS_RELEASED_ASC, RESERVATIONS_RELEASED_ASCQ, registration->i_prt, registration->t_prt, registration->init_int, 1);
 			}
 			persistent_reservation_reset(reservation);
 		}
@@ -388,9 +392,9 @@ persistent_reservation_remove_registration(struct tdevice *tdisk, struct registr
 }
  
 int
-persistent_reservation_handle_register(struct tdevice *tdisk, struct qsio_scsiio *ctio)
+persistent_reservation_handle_register(struct tdevice *tdevice, struct qsio_scsiio *ctio)
 {
-	struct reservation *reservation = &tdisk->reservation;
+	struct reservation *reservation = &tdevice->reservation;
 	struct registration *tmp, *registration, *prev = NULL;
 	struct reservation_parameter *param;
 	uint64_t service_action_key;
@@ -421,7 +425,7 @@ persistent_reservation_handle_register(struct tdevice *tdisk, struct qsio_scsiio
 				SLIST_REMOVE_AFTER(prev, r_list);
 			else
 				SLIST_REMOVE_HEAD(&reservation->registration_list, r_list);
-			persistent_reservation_remove_registration(tdisk, tmp);
+			persistent_reservation_remove_registration(tdevice, tmp);
 			free(tmp, M_RESERVATION);
 		}
 		else
@@ -447,8 +451,8 @@ persistent_reservation_handle_register(struct tdevice *tdisk, struct qsio_scsiio
 		return 0;
 	}
 
-	registration->i_prt = ctio->i_prt;
-	registration->t_prt = ctio->t_prt;
+	port_fill(registration->i_prt, ctio->i_prt);
+	port_fill(registration->t_prt, ctio->t_prt);
 	registration->r_prt = ctio->r_prt;
 	registration->init_int = ctio->init_int;
 	registration->key = service_action_key;
@@ -465,9 +469,9 @@ persistent_reservation_handle_register(struct tdevice *tdisk, struct qsio_scsiio
 }
 
 int
-persistent_reservation_handle_register_and_ignore(struct tdevice *tdisk, struct qsio_scsiio *ctio)
+persistent_reservation_handle_register_and_ignore(struct tdevice *tdevice, struct qsio_scsiio *ctio)
 {
-	struct reservation *reservation = &tdisk->reservation;
+	struct reservation *reservation = &tdevice->reservation;
 	struct registration *tmp, *registration, *prev = NULL;
 	struct reservation_parameter *param;
 	uint64_t service_action_key;
@@ -490,7 +494,7 @@ persistent_reservation_handle_register_and_ignore(struct tdevice *tdisk, struct 
 			else
 				SLIST_REMOVE_HEAD(&reservation->registration_list, r_list);
 
-			persistent_reservation_remove_registration(tdisk, tmp);
+			persistent_reservation_remove_registration(tdevice, tmp);
 			free(tmp, M_RESERVATION);
 		}
 		else
@@ -510,8 +514,8 @@ persistent_reservation_handle_register_and_ignore(struct tdevice *tdisk, struct 
 	}
 
 	registration->key = service_action_key;
-	registration->i_prt = ctio->i_prt;
-	registration->t_prt = ctio->t_prt;
+	port_fill(registration->i_prt, ctio->i_prt);
+	port_fill(registration->t_prt, ctio->t_prt);
 	registration->r_prt = ctio->r_prt;
 	registration->init_int = ctio->init_int;
 	if (ctio->init_int == TARGET_INT_ISCSI)
@@ -527,9 +531,9 @@ persistent_reservation_handle_register_and_ignore(struct tdevice *tdisk, struct 
 }
 
 int
-persistent_reservation_handle_reserve(struct tdevice *tdisk, struct qsio_scsiio *ctio)
+persistent_reservation_handle_reserve(struct tdevice *tdevice, struct qsio_scsiio *ctio)
 {
-	struct reservation *reservation = &tdisk->reservation;
+	struct reservation *reservation = &tdevice->reservation;
 	uint8_t *cdb = ctio->cdb;
 	struct reservation_parameter *param;
 	uint64_t key;
@@ -568,17 +572,17 @@ persistent_reservation_handle_reserve(struct tdevice *tdisk, struct qsio_scsiio 
 	reservation->type = RESERVATION_TYPE_PERSISTENT;
 	reservation->persistent_type = type;
 	reservation->persistent_key = key;
-	reservation->i_prt = ctio->i_prt;
-	reservation->t_prt = ctio->t_prt;
+	port_fill(reservation->i_prt, ctio->i_prt);
+	port_fill(reservation->t_prt, ctio->t_prt);
 	reservation->r_prt = ctio->r_prt;
 	reservation->init_int = ctio->init_int;
 	return 0;
 }
 
 int
-persistent_reservation_handle_release(struct tdevice *tdisk, struct qsio_scsiio *ctio)
+persistent_reservation_handle_release(struct tdevice *tdevice, struct qsio_scsiio *ctio)
 {
-	struct reservation *reservation = &tdisk->reservation;
+	struct reservation *reservation = &tdevice->reservation;
 	uint8_t *cdb = ctio->cdb;
 	struct reservation_parameter *param;
 	uint64_t key;
@@ -620,16 +624,16 @@ persistent_reservation_handle_release(struct tdevice *tdisk, struct qsio_scsiio 
 	}
 
 	if (multiple_registrants_reservation_type(reservation)) {
-		registrants_unit_attention(tdisk, RESERVATIONS_RELEASED_ASC, RESERVATIONS_RELEASED_ASCQ, ctio->i_prt, ctio->t_prt, ctio->init_int, 1);
+		registrants_unit_attention(tdevice, RESERVATIONS_RELEASED_ASC, RESERVATIONS_RELEASED_ASCQ, ctio->i_prt, ctio->t_prt, ctio->init_int, 1);
 	}
 	persistent_reservation_reset(reservation);
 	return 0;
 }
 
 int
-persistent_reservation_handle_clear(struct tdevice *tdisk, struct qsio_scsiio *ctio)
+persistent_reservation_handle_clear(struct tdevice *tdevice, struct qsio_scsiio *ctio)
 {
-	struct reservation *reservation = &tdisk->reservation;
+	struct reservation *reservation = &tdevice->reservation;
 	struct reservation_parameter *param;
 	uint64_t key;
 	int retval;
@@ -644,14 +648,14 @@ persistent_reservation_handle_clear(struct tdevice *tdisk, struct qsio_scsiio *c
 		return 0;
 	}
 
-	registrants_unit_attention(tdisk, RESERVATIONS_PREEMPTED_ASC, RESERVATIONS_PREEMPTED_ASCQ, ctio->i_prt, ctio->t_prt, ctio->init_int, 1);
+	registrants_unit_attention(tdevice, RESERVATIONS_PREEMPTED_ASC, RESERVATIONS_PREEMPTED_ASCQ, ctio->i_prt, ctio->t_prt, ctio->init_int, 1);
 	persistent_reservation_reset(reservation);
 	reservation->generation++;
 	return 0;
 }
 
 static void
-istate_abort_tasks_other_initiators(struct initiator_state *istate, uint64_t i_prt, uint64_t t_prt, uint8_t init_int)
+istate_abort_tasks_other_initiators(struct initiator_state *istate, uint64_t i_prt[], uint64_t t_prt[], uint8_t init_int)
 {
 	struct qsio_scsiio *iter;
 
@@ -673,21 +677,21 @@ istate_abort_tasks_other_initiators(struct initiator_state *istate, uint64_t i_p
 }
  
 static void
-persistent_reservation_abort_tasks(struct tdevice *tdisk, uint64_t i_prt, uint64_t t_prt, uint16_t r_prt, int init_int)
+persistent_reservation_abort_tasks(struct tdevice *tdevice, uint64_t i_prt[], uint64_t t_prt[], uint16_t r_prt, int init_int)
 {
 	struct initiator_state *istate;
 
-	istate = device_get_initiator_state(tdisk, i_prt, t_prt, r_prt, init_int, 0, 0);
-	tdevice_reservation_lock(tdisk);
+	istate = device_get_initiator_state(tdevice, i_prt, t_prt, r_prt, init_int, 0, 0);
+	tdevice_reservation_lock(tdevice);
 	if (istate)
 		istate_abort_tasks_other_initiators(istate, i_prt, t_prt, init_int);
-	tdevice_reservation_unlock(tdisk);
+	tdevice_reservation_unlock(tdevice);
 }
 
 int
-persistent_reservation_handle_preempt(struct tdevice *tdisk, struct qsio_scsiio *ctio, int abort)
+persistent_reservation_handle_preempt(struct tdevice *tdevice, struct qsio_scsiio *ctio, int abort)
 {
-	struct reservation *reservation = &tdisk->reservation;
+	struct reservation *reservation = &tdevice->reservation;
 	uint8_t *cdb = ctio->cdb;
 	struct registration *tmp, *tvar, *prev = NULL;
 	struct reservation_parameter *param;
@@ -739,17 +743,17 @@ persistent_reservation_handle_preempt(struct tdevice *tdisk, struct qsio_scsiio 
 			SLIST_REMOVE_HEAD(&reservation->registration_list, r_list);
 
 		if (abort)
-			persistent_reservation_abort_tasks(tdisk, tmp->i_prt, tmp->t_prt, tmp->r_prt, tmp->init_int);
+			persistent_reservation_abort_tasks(tdevice, tmp->i_prt, tmp->t_prt, tmp->r_prt, tmp->init_int);
 
-		registrant_unit_attention(tdisk, tmp, REGISTRATIONS_PREEMPTED_ASC, REGISTRATIONS_PREEMPTED_ASCQ);
+		registrant_unit_attention(tdevice, tmp, REGISTRATIONS_PREEMPTED_ASC, REGISTRATIONS_PREEMPTED_ASCQ);
 		send_sync = 1;
 		free(tmp, M_RESERVATION);
 	}
 
 	if ((reservation->is_reserved && !is_ar && (reservation->persistent_key == service_action_key)) || (is_ar && !service_action_key)) {
 		reservation->type = type;
-		reservation->i_prt = ctio->i_prt;
-		reservation->t_prt = ctio->t_prt;
+		port_fill(reservation->i_prt, ctio->i_prt);
+		port_fill(reservation->t_prt, ctio->t_prt);
 		reservation->r_prt = ctio->r_prt;
 		reservation->init_int = ctio->init_int;
 		reservation->persistent_key = key;

@@ -92,8 +92,8 @@ process_ctio(struct fcbridge *fcbridge, struct qla_tgt_cmd *cmd)
 	}
 	sx_xunlock(&itf_lock);
 
-	ctio->i_prt = wwn_to_u64(cmd->sess->port_name);
-	ctio->t_prt = wwn_to_u64(cmd->sess->vha->port_name);
+	ctio->i_prt[0] = wwn_to_u64(cmd->sess->port_name);
+	ctio->t_prt[0] = wwn_to_u64(cmd->sess->vha->port_name);
 	ctio->r_prt = cmd_r_prt(cmd->sess->vha);
 	ctio->init_int = TARGET_INT_FC;
 	memcpy(ctio->cdb, qla_tgt_cmd_cdb(cmd), 16);
@@ -120,8 +120,8 @@ process_inot(struct fcbridge *fcbridge, struct qla_tgt_mgmt_cmd *cmd)
 	DEBUG_BUG_ON(cmd->se_cmd.ccb);
 	notify = kzalloc(sizeof(struct qsio_immed_notify), GFP_KERNEL|__GFP_NOFAIL);
 
-	notify->i_prt = wwn_to_u64(cmd->sess->port_name);
-	notify->t_prt = wwn_to_u64(cmd->sess->vha->port_name);
+	notify->i_prt[0] = wwn_to_u64(cmd->sess->port_name);
+	notify->t_prt[0] = wwn_to_u64(cmd->sess->vha->port_name);
 	notify->r_prt = cmd_r_prt(cmd->sess->vha);
 	notify->init_int = TARGET_INT_FC;
 	notify->fn = cmd->se_cmd.notify_fn;

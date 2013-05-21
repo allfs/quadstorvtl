@@ -203,7 +203,7 @@ struct sense_info {
 };
 
 static inline int
-iid_equal(uint64_t first_i, uint64_t first_t, int8_t first_f, uint64_t second_i, uint64_t second_t, int8_t second_f)
+iid_equal(uint64_t first_i[], uint64_t first_t[], int8_t first_f, uint64_t second_i[], uint64_t second_t[], int8_t second_f)
 {
 	if (first_i == second_i && first_t == second_t && first_f == second_f)
 		return 1;
@@ -293,7 +293,7 @@ istate_abort_task_set(struct initiator_state *istate)
 }
  
 static inline void
-istate_abort_tasks(struct initiator_state *istate, uint64_t i_prt, uint64_t t_prt, uint8_t init_int, int block)
+istate_abort_tasks(struct initiator_state *istate, uint64_t i_prt[], uint64_t t_prt[], uint8_t init_int, int block)
 {
 	struct qsio_scsiio *iter;
 
@@ -310,7 +310,7 @@ istate_abort_tasks(struct initiator_state *istate, uint64_t i_prt, uint64_t t_pr
 		if (iter->ccb_h.flags & QSIO_IN_DEVQ)
 			continue;
 		iter->ccb_h.flags |= QSIO_CTIO_ABORTED;
-		if (iter->i_prt != i_prt || iter->t_prt != t_prt || iter->init_int != init_int)
+		if (!port_equal(iter->i_prt, i_prt) || !port_equal(iter->t_prt, t_prt) || iter->init_int != init_int)
 			iter->ccb_h.flags |= QSIO_SEND_ABORT_STATUS;
 	}
 	mtx_unlock(istate->istate_lock);
@@ -334,7 +334,7 @@ istate_task_exists(struct initiator_state *istate, uint32_t task_tag)
 }
 
 static inline int
-istate_abort_task(struct initiator_state *istate, uint64_t i_prt, uint64_t t_prt, uint8_t init_int, uint32_t task_tag, int *task_exists)
+istate_abort_task(struct initiator_state *istate, uint64_t i_prt[], uint64_t t_prt[], uint8_t init_int, uint32_t task_tag, int *task_exists)
 {
 	struct qsio_scsiio *iter;
 	int task_found = 0;
@@ -359,7 +359,7 @@ istate_abort_task(struct initiator_state *istate, uint64_t i_prt, uint64_t t_prt
 
 		debug_info("aborting task with tag %x\n", task_tag);
 		iter->ccb_h.flags |= QSIO_CTIO_ABORTED;
-		if (iter->i_prt != i_prt || iter->t_prt != t_prt || iter->init_int != init_int)
+		if (!port_equal(iter->i_prt, i_prt) || !port_equal(iter->t_prt, t_prt) || iter->init_int != init_int)
 			iter->ccb_h.flags |= QSIO_SEND_ABORT_STATUS;
 		task_found = 1;
 		break;
@@ -529,29 +529,29 @@ ctio_free(struct qsio_scsiio *ctio)
 }
 
 static inline void
-init_istate(struct initiator_state *iter, uint64_t i_prt, uint64_t t_prt, uint16_t r_prt, uint8_t init_int)
+init_istate(struct initiator_state *iter, uint64_t i_prt[], uint64_t t_prt[], uint16_t r_prt, uint8_t init_int)
 {
 	SLIST_INIT(&iter->sense_list);
 	TAILQ_INIT(&iter->queue_list);
 	iter->istate_lock = mtx_alloc("istate lock");
 	iter->istate_wait = wait_chan_alloc("istate wait");
-	iter->i_prt = i_prt;
-	iter->t_prt = t_prt;
+	port_fill(iter->i_prt, i_prt);
+	port_fill(iter->t_prt, t_prt);
 	iter->r_prt = r_prt;
 	iter->init_int = init_int;
 	atomic_set(&iter->refs, 1);
 }
 
-int fc_initiator_check(uint64_t wwpn, void *device);
+int fc_initiator_check(uint64_t wwpn[], void *device);
 
 static inline struct initiator_state *
-__device_get_initiator_state(struct tdevice *tdevice, uint64_t i_prt, uint64_t t_prt, uint16_t r_prt, uint8_t init_int, int alloc, int check)
+__device_get_initiator_state(struct tdevice *tdevice, uint64_t i_prt[], uint64_t t_prt[], uint16_t r_prt, uint8_t init_int, int alloc, int check)
 {
 	struct istate_list *istate_list = &tdevice->istate_list;
 	struct initiator_state *iter, *prev = NULL;
 
 	SLIST_FOREACH(iter, istate_list, i_list) {
-		if (iter->i_prt == i_prt && iter->t_prt == t_prt && iter->init_int == init_int) {
+		if (port_equal(iter->i_prt, i_prt) && port_equal(iter->t_prt, t_prt) && iter->init_int == init_int) {
 			if (iter->disallowed)
 				return NULL;
 			if (prev) {
@@ -585,7 +585,7 @@ __device_get_initiator_state(struct tdevice *tdevice, uint64_t i_prt, uint64_t t
 }
 
 static inline struct initiator_state *
-device_get_initiator_state(struct tdevice *tdevice, uint64_t i_prt, uint64_t t_prt, uint16_t r_prt, uint8_t init_int, int alloc, int check)
+device_get_initiator_state(struct tdevice *tdevice, uint64_t i_prt[], uint64_t t_prt[], uint16_t r_prt, uint8_t init_int, int alloc, int check)
 {
 	return __device_get_initiator_state(tdevice, i_prt, t_prt, r_prt, init_int, alloc, check);
 }
@@ -671,13 +671,13 @@ free_initiator_state(struct initiator_state *istate)
 }
 
 static inline void
-device_free_initiator_state2(struct tdevice *tdevice, uint64_t i_prt, uint64_t t_prt, uint8_t init_int)
+device_free_initiator_state2(struct tdevice *tdevice, uint64_t i_prt[], uint64_t t_prt[], uint8_t init_int)
 {
 	struct initiator_state *iter, *prev = NULL;
 
 	tdevice_reservation_lock(tdevice);
 	SLIST_FOREACH(iter, &tdevice->istate_list, i_list) {
-		if (iter->i_prt == i_prt && iter->t_prt == t_prt && iter->init_int == init_int) {
+		if (port_equal(iter->i_prt, i_prt) && port_equal(iter->t_prt, t_prt) && iter->init_int == init_int) {
 			if (prev)
 				SLIST_REMOVE_AFTER(prev, i_list);
 			else
@@ -733,8 +733,8 @@ device_queue_ctio_list(struct ccb_list *ctio_list)
 	}
 }
 
-int device_istate_abort_task(struct tdevice *tdevice, uint64_t i_prt, uint64_t t_prt, int init_int, uint32_t task_tag);
-void device_istate_abort_task_set(struct tdevice *tdevice, uint64_t i_prt, uint64_t t_prt, int init_int);
+int device_istate_abort_task(struct tdevice *tdevice, uint64_t i_prt[], uint64_t t_prt[], int init_int, uint32_t task_tag);
+void device_istate_abort_task_set(struct tdevice *tdevice, uint64_t i_prt[], uint64_t t_prt[], int init_int);
 
 static inline int
 __device_istate_queue_ctio(struct tdevice *tdevice, struct qsio_scsiio *ctio, int node_master)
@@ -781,8 +781,8 @@ device_queue_ctio(struct tdevice *tdevice, struct qsio_scsiio *ctio)
 static inline void 
 device_initialize_ctio(struct qsio_scsiio *ctio, struct qsio_scsiio *new)
 {
-	new->i_prt = ctio->i_prt;
-	new->t_prt = ctio->t_prt;
+	port_fill(new->i_prt, ctio->i_prt);
+	port_fill(new->t_prt, ctio->t_prt);
 	new->r_prt = ctio->r_prt;
 	new->init_int = ctio->init_int;
 	new->ccb_h.tdevice = ctio->ccb_h.tdevice;
@@ -823,7 +823,7 @@ struct reservation;
 void device_add_sense(struct initiator_state *istate, uint8_t error_code, uint8_t sense_key, uint32_t info, uint8_t asc, uint8_t ascq);
 int device_find_sense(struct initiator_state *istate, uint8_t sense_key, uint8_t asc, uint8_t ascq);
 int device_request_sense(struct qsio_scsiio *ctio, struct initiator_state *istate, int add_sense_len);
-void device_unit_attention(struct tdevice *tdevice, int all, uint64_t i_prt, uint64_t t_prt, uint8_t init_int, uint8_t asc, uint8_t ascq, int ignore_dup);
+void device_unit_attention(struct tdevice *tdevice, int all, uint64_t i_prt[], uint64_t t_prt[], uint8_t init_int, uint8_t asc, uint8_t ascq, int ignore_dup);
 void device_free_all_initiators(struct istate_list *lhead);
 void device_wait_all_initiators(struct istate_list *lhead);
 void device_free_stale_initiators(struct istate_list *lhead);
@@ -831,8 +831,8 @@ struct logical_unit_naa_identifier;
 void device_init_naa_identifier(struct logical_unit_naa_identifier *naa_identifier, char *serial_number);
 struct logical_unit_identifier;
 void device_init_unit_identifier(struct logical_unit_identifier *unit_identifier, char *vendor_id, char *product_id, int serial_len);
-void device_target_reset(struct tdevice *tdevice, uint64_t i_prt, uint64_t t_prt, uint8_t init_int);
-void device_free_initiator(uint64_t i_prt, uint64_t t_prt, int init_int, struct tdevice *tdevice);
+void device_target_reset(struct tdevice *tdevice, uint64_t i_prt[], uint64_t t_prt[], uint8_t init_int);
+void device_free_initiator(uint64_t i_prt[], uint64_t t_prt[], int init_int, struct tdevice *tdevice);
 void cbs_remove_device(struct tdevice *tdevice);
 void cbs_disable_device(struct tdevice *tdevice);
 void cbs_new_device(struct tdevice *tdevice, int notify_usr);
@@ -844,7 +844,7 @@ int target_remove_fc_rule(struct fc_rule_config *spec);
 void target_clear_fc_rules(int target_id);
 
 struct fc_rule {
-	uint64_t wwpn;
+	uint64_t wwpn[2];
 	int target_id;
 	int rule;
 	TAILQ_ENTRY(fc_rule) r_list;

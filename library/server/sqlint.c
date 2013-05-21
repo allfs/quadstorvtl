@@ -916,7 +916,7 @@ sql_query_fc_rules(struct fc_rule_list *fc_rule_list)
 	int i;
 	struct fc_rule *fc_rule;
 
-	sprintf(sqlcmd, "SELECT WWPN,TARGETID,RULE FROM FCCONFIG ORDER BY TARGETID");
+	sprintf(sqlcmd, "SELECT WWPN,WWPN1,TARGETID,RULE FROM FCCONFIG ORDER BY TARGETID");
 	res = pgsql_exec_query(sqlcmd, &conn);
 	if (res == NULL) {
 		DEBUG_ERR_SERVER("Error occurred in executing sqlcmd %s\n", sqlcmd); 
@@ -933,8 +933,9 @@ sql_query_fc_rules(struct fc_rule_list *fc_rule_list)
 		}
 
 		strcpy(fc_rule->wwpn, PQgetvalue(res, i, 0));
-		fc_rule->target_id = atoi(PQgetvalue(res, i, 1));
-		fc_rule->rule = atoi(PQgetvalue(res, i, 2));
+		strcpy(fc_rule->wwpn1, PQgetvalue(res, i, 1));
+		fc_rule->target_id = atoi(PQgetvalue(res, i, 2));
+		fc_rule->rule = atoi(PQgetvalue(res, i, 3));
 		TAILQ_INSERT_TAIL(fc_rule_list, fc_rule, q_entry);
 	}
 
@@ -950,7 +951,7 @@ sql_add_fc_rule(struct fc_rule *fc_rule)
 	char sqlcmd[512];
 	int error = -1;
 
-	sprintf(sqlcmd, "INSERT INTO FCCONFIG (WWPN, TARGETID, RULE) VALUES ('%s', '%d', '%d')", fc_rule->wwpn, fc_rule->target_id, fc_rule->rule);
+	sprintf(sqlcmd, "INSERT INTO FCCONFIG (WWPN, WWPN1, TARGETID, RULE) VALUES ('%s', '%s', '%d', '%d')", fc_rule->wwpn, fc_rule->wwpn1, fc_rule->target_id, fc_rule->rule);
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
 	return error;
 }
@@ -961,7 +962,7 @@ sql_delete_fc_rule(struct fc_rule *fc_rule)
 	char sqlcmd[512];
 	int error = -1;
 
-	sprintf(sqlcmd, "DELETE FROM FCCONFIG WHERE WWPN='%s' AND TARGETID='%d'", fc_rule->wwpn, fc_rule->target_id);
+	sprintf(sqlcmd, "DELETE FROM FCCONFIG WHERE WWPN='%s' AND WWPN1='%s' AND TARGETID='%d'", fc_rule->wwpn, fc_rule->wwpn1, fc_rule->target_id);
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
 	return error;
 }

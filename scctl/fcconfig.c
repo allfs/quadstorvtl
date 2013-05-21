@@ -74,7 +74,7 @@ dump_fc_rule_list(void)
 	int retval;
 	int rule;
 	char vtl[40];
-	char wwpn[20];
+	char wwpn[64];
 
 	strcpy(tempfile, "/tmp/.quadstorfcrllst.XXXXXX");
 	fd = mkstemp(tempfile);
@@ -97,7 +97,7 @@ dump_fc_rule_list(void)
 		exit(1);
 	}
 
-	fprintf(stdout, "%28s %10s %30s\n", "WWPN", "Rule", "VTL");
+	fprintf(stdout, "%-42s %-9s %-24s\n", "WWPN", "Rule", "VTL");
 	while ((fgets(buf, sizeof(buf), fp) != NULL)) {
 		retval = sscanf(buf, "wwpn: %s vtl: %s rule: %d\n", wwpn, vtl, &rule);
 		if (retval != 3) {
@@ -107,9 +107,9 @@ dump_fc_rule_list(void)
 		}
 
 		if (rule == FC_RULE_ALLOW)
-			fprintf(stdout, "%28s %10s %30s\n", wwpn, "Allow", vtl);
+			fprintf(stdout, "%-42s %-9s %-24s\n", wwpn, "Allow", vtl);
 		else
-			fprintf(stdout, "%28s %10s %30s\n", wwpn, "Disallow", vtl);
+			fprintf(stdout, "%-42s %-9s %-24s\n", wwpn, "Disallow", vtl);
 	}
 
 	fclose(fp);
@@ -118,11 +118,40 @@ dump_fc_rule_list(void)
 	exit(0);
 }
 
+void
+convert_guid_to_wwpn(char *wwpn, char *guid)
+{
+	int i = 0;
+
+	while (1) {
+		wwpn[0] = guid[0];
+		wwpn[1] = guid[1];
+		wwpn[2] = ':';
+		wwpn[3] = guid[2];
+		wwpn[4] = guid[3];
+		i++;
+		if (i == 4)
+			break;
+
+		wwpn[5] = ':';
+		wwpn += 6;
+		guid += 5;
+	}
+}
+
+void
+fill_guid(char *spec_wwpn, char *spec_wwpn1, char *guid)
+{
+	convert_guid_to_wwpn(spec_wwpn, guid);
+	convert_guid_to_wwpn(spec_wwpn1, guid+20);
+}
+
 int main(int argc, char *argv[])
 {
 	int c;
 	int list = 0;
-	char wwpn[24];
+	char wwpn[64];
+	int wwpn_len;
 	char vtl[TDISK_MAX_NAME_LEN];
 	char rule[16];
 	int add = 0, delete = 0;
@@ -172,11 +201,16 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "-a or -x needs to be specified\n");
 			print_usage();
 		}
-		if (wwpn[0] && strlen(wwpn) != 23) {
+		wwpn_len = strlen(wwpn);
+		if (wwpn_len && wwpn_len != 23 && wwpn_len != 39) {
 			fprintf(stderr, "Invalid wwpn %s\n", wwpn);
 			print_usage();
 		}
-		strcpy(fc_rule_spec.wwpn, wwpn);
+		if (wwpn_len == 23)
+			strcpy(fc_rule_spec.wwpn, wwpn);
+		else if (wwpn_len == 39) {
+			fill_guid(fc_rule_spec.wwpn, fc_rule_spec.wwpn1, wwpn);
+		}
 		strcpy(fc_rule_spec.vtl, vtl);
 		if (add) {
 			if (strcasecmp(rule, "Allow") == 0)

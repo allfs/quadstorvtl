@@ -103,8 +103,8 @@ struct qsio_immed_notify {
 	uint8_t  notify_status;         /* Returned NOTIFY status */
 	uint16_t r_prt;
 	uint32_t fn;
-	uint64_t i_prt;
-	uint64_t t_prt;
+	uint64_t i_prt[2];
+	uint64_t t_prt[2];
 	uint32_t task_tag;
 };
 
@@ -129,8 +129,8 @@ struct qsio_scsiio {
 	uint8_t  *data_ptr;
 	uint32_t dxfer_len;
 	uint32_t task_tag;
-	uint64_t i_prt;
-	uint64_t t_prt;
+	uint64_t i_prt[2];
+	uint64_t t_prt[2];
 	void     *istate;
 	TAILQ_ENTRY(qsio_scsiio) ta_list;
 };

@@ -1,25 +1,25 @@
 UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)
-SUBDIRS := qla2xxx
+SUBDIRS := qla2xxx srpt
 CMD := make
-MOD := qla2xxx.ko 
+MOD := /quadstor/quadstor/target-mode/fc/qla2xxx/qla2xxx.ko /quadstor/quadstor/target-mode/fc/srpt/ib_srpt.ko
 else
 SUBDIRS = isp
 CMD = make -f Makefile.isp
-MOD := ispmod.ko
+MOD := /quadstor/quadstor/target-mode/fc/isp/ispmod.ko
 endif
 
 all: compile
 compile:
 	@set -e; \
 	for i in $(SUBDIRS); do \
-		cd $$i && $(CMD); \
+		cd /quadstor/quadstor/target-mode/fc/$$i && $(CMD); \
 	done
 
 clean:
 	@set -e; \
 	for i in $(SUBDIRS); do \
-		cd $$i && $(CMD) clean; \
+		cd /quadstor/quadstor/target-mode/fc/$$i && $(CMD) clean; \
 	done
 
 clobber: clean
@@ -27,5 +27,5 @@ clobber: clean
 install:
 	@set -e; \
 	mkdir -p /quadstor/lib/modules;
-	cd $(SUBDIRS) && cp -f $(MOD) /quadstor/lib/modules;
+	cp -f $(MOD) /quadstor/lib/modules
 

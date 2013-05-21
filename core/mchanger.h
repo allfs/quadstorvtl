@@ -234,7 +234,7 @@ void mchanger_proc_cmd(void *changer, void *iop);
 int mchanger_check_cmd(void *changer, uint8_t op);
 struct vdeviceinfo;
 int mchanger_mod_device(struct mchanger *mchanger, struct vdeviceinfo *deviceinfo);
-void mchanger_reset(struct mchanger *mchanger, uint64_t i_prt, uint64_t t_prt, uint8_t init_int);
+void mchanger_reset(struct mchanger *mchanger, uint64_t i_prt[], uint64_t t_prt[], uint8_t init_int);
 
 /* Mchanger element operations */
 struct mchanger_element * mchanger_add_element(struct mchanger *mchanger, int type, void *element);

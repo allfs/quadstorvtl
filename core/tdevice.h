@@ -33,8 +33,8 @@ struct initiator_state {
 	uint32_t head;
 	uint32_t queued;
 	uint32_t pending;
-	uint64_t i_prt;
-	uint64_t t_prt;
+	uint64_t i_prt[2];
+	uint64_t t_prt[2];
 	uint16_t r_prt;
 	uint8_t init_int;
 	uint8_t disallowed;
@@ -79,7 +79,7 @@ do {                                                                    \
 
 int tdevice_init(struct tdevice *tdevice, int type, int tl_id, int target_id, char *name, void (*proc_cmd) (void *, void *), char *thr_name);
 void tdevice_exit(struct tdevice *tdevice);
-void tdevice_reset(struct tdevice *tdevice, uint64_t i_prt, uint64_t t_prt, uint8_t init_int);
+void tdevice_reset(struct tdevice *tdevice, uint64_t i_prt[], uint64_t t_prt[], uint8_t init_int);
 
 void tdevice_insert_ccb(struct qsio_hdr *ccb_h);
 int tdevice_check_cmd(struct tdevice *tdevice, uint8_t op);

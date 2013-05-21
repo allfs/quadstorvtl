@@ -66,6 +66,8 @@ static int session_free(struct iscsi_session *session)
 {
 	int i;
 	struct iscsi_target *target = session->target;
+	uint64_t init_i_prt[2];
+	uint64_t init_t_prt[2];
 
 	dprintk(D_SETUP, "%#Lx\n", (unsigned long long) session->sid);
 
@@ -80,7 +82,12 @@ static int session_free(struct iscsi_session *session)
 
 	list_del(&session->list);
 	spin_unlock(&target->session_list_lock);
-	(*icbs.device_free_initiator)(session->sid, t_prt, TARGET_INT_ISCSI, session->target->tdevice);
+
+	init_i_prt[0] = session->sid;
+	init_i_prt[1] = 0;
+	init_t_prt[0] = t_prt; 
+	init_t_prt[1] = 0;
+	(*icbs.device_free_initiator)(init_i_prt, init_t_prt, TARGET_INT_ISCSI, session->target->tdevice);
 	free(session->initiator, M_IET);
 	free(session, M_IETSESS);
 

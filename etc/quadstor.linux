@@ -80,6 +80,9 @@ start() {
 	/sbin/modprobe -q sg > /dev/null 2>&1
 	/sbin/modprobe -q scsi_transport_fc > /dev/null 2>&1
 	/sbin/modprobe -q qla2xxx > /dev/null 2>&1
+	/sbin/modprobe -q ib_core > /dev/null 2>&1
+	/sbin/modprobe -q ib_cm > /dev/null 2>&1
+	/sbin/insmod /quadstor/lib/modules/$kvers/ib_srpt.ko > /dev/null 2>&1
 
 	/sbin/insmod /quadstor/lib/modules/$kvers/vtlcore.ko > /dev/null 2>&1
 	check_error "Failed to insert core module"

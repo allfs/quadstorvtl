@@ -142,7 +142,7 @@ ctio_host(struct qsio_scsiio *ctio)
 }
 
 void fcbridge_route_cmd_post(struct qsio_scsiio *ctio);
-int fcbridge_i_prt_valid(struct fcbridge *fcbridge, uint64_t i_prt);
+int fcbridge_i_prt_valid(struct fcbridge *fcbridge, uint64_t i_prt[]);
 /* TM failed response code, see FCP */
 #define FC_TM_FAILED                0x5
 

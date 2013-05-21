@@ -325,7 +325,13 @@ qla_sc_handle_cmd(scsi_qla_host_t *vha, struct qla_tgt_cmd *cmd,
 static void
 qla_sc_free_session(struct qla_tgt_sess *sess)
 {
-	fcbridge_free_initiator(wwn_to_u64(sess->port_name), wwn_to_u64(sess->vha->port_name));
+	uint64_t i_prt[2], t_prt[2];
+
+	i_prt[0] = wwn_to_u64(sess->port_name);
+	i_prt[1] = 0;
+	t_prt[0] = wwn_to_u64(sess->vha->port_name);
+	t_prt[1] = 0;
+	fcbridge_free_initiator(i_prt, t_prt);
 	kfree(sess->se_sess);
 }
 
@@ -410,14 +416,21 @@ qla_sc_shutdown_sess(struct qla_tgt_sess *sess)
 }
 
 int
-fcbridge_i_prt_valid(struct fcbridge *fcbridge, uint64_t i_prt)
+fcbridge_i_prt_valid(struct fcbridge *fcbridge, uint64_t i_prt[])
 {
 	scsi_qla_host_t *ha = fcbridge->ha;
 
-	if (i_prt != wwn_to_u64(ha->port_name))
+	if (i_prt[1] || i_prt[0] != wwn_to_u64(ha->port_name))
 		return 1;
 	else
 		return 0;
+}
+
+void
+fcbridge_get_tport(struct fcbridge *fcbridge, uint64_t wwpn[])
+{
+	wwpn[0] = wwn_to_u64(fcbridge->ha->port_name);
+	wwpn[1] = 0;
 }
 
 struct qla_tgt_func_tmpl qla_sc_template = {

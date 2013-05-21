@@ -60,6 +60,9 @@ install -m 744 /quadstor/quadstor/target-mode/fc/common/fccommon.c $RPM_BUILD_RO
 mkdir -p $RPM_BUILD_ROOT/quadstor/src/target-mode/fc/qla2xxx
 install -m 744 /quadstor/quadstor/target-mode/fc/qla2xxx/*.[ch] $RPM_BUILD_ROOT/quadstor/src/target-mode/fc/qla2xxx
 install -m 744 /quadstor/quadstor/target-mode/fc/qla2xxx/Makefile.dist $RPM_BUILD_ROOT/quadstor/src/target-mode/fc/qla2xxx/Makefile
+mkdir -p $RPM_BUILD_ROOT/quadstor/src/target-mode/fc/srpt
+install -m 744 /quadstor/quadstor/target-mode/fc/srpt/*.[ch] $RPM_BUILD_ROOT/quadstor/src/target-mode/fc/srpt
+install -m 744 /quadstor/quadstor/target-mode/fc/srpt/Makefile.dist $RPM_BUILD_ROOT/quadstor/src/target-mode/fc/srpt/Makefile
 
 install -m 755 /quadstor/quadstor/scripts/builditf.linux.sh $RPM_BUILD_ROOT/quadstor/bin/builditf
 install -m 755 /quadstor/quadstor/scripts/qlainst $RPM_BUILD_ROOT/quadstor/bin/qlainst

@@ -37,8 +37,7 @@ struct transport_id_common {
 struct transport_id_fc {
 	uint8_t protocol_id;
 	uint8_t rsvd[7];
-	uint8_t n_port_name[8];
-	uint8_t rsvd1[8];
+	uint8_t n_port_name[16];
 } __attribute__ ((__packed__));
 
 struct transport_id_scsi {
@@ -52,8 +51,8 @@ struct transport_id_scsi {
 
 struct registration {
 	uint64_t key;
-	uint64_t i_prt;
-	uint64_t t_prt;
+	uint64_t i_prt[2];
+	uint64_t t_prt[2];
 	uint16_t r_prt;
 	uint8_t init_int;
 	uint8_t pad[1];
@@ -78,8 +77,8 @@ struct reservation {
 	uint8_t  persistent_type : 4;
 	uint8_t  init_int;
 	uint16_t  r_prt;
-	uint64_t  i_prt;
-	uint64_t  t_prt;
+	uint64_t  i_prt[2];
+	uint64_t  t_prt[2];
 	uint64_t  persistent_key;
 	SLIST_HEAD(registration_list, registration) registration_list;
 };
@@ -105,13 +104,26 @@ struct pin_data {
 
 struct qsio_scsiio;
 
+static inline void
+port_fill(uint64_t dest[], uint64_t src[])
+{
+	dest[0] = src[0];
+	dest[1] = src[1];
+}
+
+static inline int
+port_equal(uint64_t port1[], uint64_t port2[])
+{
+	return (port1[0] == port2[0] && port1[1] == port2[1]);
+}
+
 static inline int
 device_reserved(struct qsio_scsiio *ctio, struct reservation *reservation)
 {
-	if (!reservation->is_reserved || (reservation->i_prt == ctio->i_prt && reservation->t_prt == ctio->t_prt))
+	if (!reservation->is_reserved || (port_equal(reservation->i_prt, ctio->i_prt) && port_equal(reservation->t_prt, ctio->t_prt)))
 		return 0;
 	else {
-		debug_info("reservation i_prt %llu ctio i_prt %llu reservation t_prt %llu ctio t_prt %llu reservation init_int %d ctio init_int %d\n", reservation->i_prt, ctio->i_prt, reservation->t_prt, ctio->t_prt, reservation->init_int, ctio->init_int);
+		debug_info("reservation i_prt %llu:%llu ctio i_prt %llu:%llu reservation t_prt %llu ctio t_prt %llu reservation init_int %d ctio init_int %d\n", reservation->i_prt[0], reservation->i_prt[1], ctio->i_prt[0], ctio->i_prt[1], reservation->t_prt, ctio->t_prt, reservation->init_int, ctio->init_int);
 		return 1;
 	}
 }

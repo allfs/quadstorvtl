@@ -553,8 +553,8 @@ construct_ctio(struct scsi_cmnd *SCpnt)
 	if (unlikely(!t_prt))
 		t_prt = (*icbs.get_tprt)();
 
-	ctio->i_prt = LDEV_HOST_ID;
-	ctio->t_prt = t_prt;
+	ctio->i_prt[0] = LDEV_HOST_ID;
+	ctio->t_prt[0] = t_prt;
 	ctio->init_int = TARGET_INT_LOCAL;
 	ctio->r_prt = LDEV_RPORT_START; 
 	cmnd = SCpnt->cmnd;

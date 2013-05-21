@@ -70,7 +70,7 @@ struct qs_interface_cbs icbs = {
 };
 
 static int
-initiator_valid(uint64_t i_prt)
+initiator_valid(uint64_t i_prt[])
 {
 	struct fcbridge *fcbridge;
 	int valid = 1, retval;
@@ -191,13 +191,9 @@ fcbridge_new_device_cb(struct tdevice *device)
 static inline void
 fcbridge_init_unit_identifier(struct fcbridge *fcbridge, struct logical_unit_identifier *unit_identifier)
 {
-	uint64_t wwpn;
+	uint64_t wwpn[2];
 
-#ifdef FREEBSD
-	wwpn = FCPARAM(fcbridge->ha, 0)->isp_wwpn;
-#else
-	wwpn = wwn_to_u64(fcbridge->ha->port_name);
-#endif
+	fcbridge_get_tport(fcbridge, wwpn);
 	unit_identifier->code_set = 0x02; /*logical unit idenifier */
 	unit_identifier->identifier_type = UNIT_IDENTIFIER_T10_VENDOR_ID;
 	memset(unit_identifier->vendor_id, ' ', 8);
@@ -205,7 +201,7 @@ fcbridge_init_unit_identifier(struct fcbridge *fcbridge, struct logical_unit_ide
 	memset(unit_identifier->product_id, ' ', 16);
 	strncpy(unit_identifier->product_id, PRODUCT_ID_QUADSTOR_FCBRIDGE, strlen(PRODUCT_ID_QUADSTOR_FCBRIDGE));
 	unit_identifier->identifier_length = offsetof(struct logical_unit_identifier, serial_number) - offsetof(struct logical_unit_identifier, vendor_id);
-	sprintf(unit_identifier->serial_number, "%016llX", (unsigned long long)wwpn);
+	sprintf(unit_identifier->serial_number, "%08llX%08llX", (unsigned long long)wwpn[1], (unsigned long long)wwpn[0]);
 	unit_identifier->identifier_length += strlen(unit_identifier->serial_number);
 }
 
@@ -419,8 +415,8 @@ static int
 fcbridge_serial_number(struct fcbridge *fcbridge, uint8_t *buffer, int length)
 {
 	struct serial_number_page *page = (struct serial_number_page *) buffer;
-	uint64_t wwpn;
 	uint8_t serial_number[32];
+	uint64_t wwpn[2];
 	int min_len;
 
 	if (unlikely(length < sizeof(struct vital_product_page)))
@@ -428,12 +424,8 @@ fcbridge_serial_number(struct fcbridge *fcbridge, uint8_t *buffer, int length)
 		return -1;
 	}
 
-#ifdef FREEBSD
-	wwpn = FCPARAM(fcbridge->ha, 0)->isp_wwpn;
-#else
-	wwpn = wwn_to_u64(fcbridge->ha->port_name);
-#endif
-	sprintf(serial_number, "%016llX", (unsigned long long)wwpn);
+	fcbridge_get_tport(fcbridge, wwpn);
+	sprintf(serial_number, "%08llX%08llX", (unsigned long long)wwpn[1], (unsigned long long)wwpn[0]);
 
 	memset(page, 0, sizeof(struct vital_product_page));
 	page->device_type = T_PROCESSOR; /* peripheral qualifier */
@@ -1077,7 +1069,7 @@ __ctio_free_all(struct qsio_scsiio *ctio, int local_pool)
 	}
 }
 
-void fcbridge_free_initiator(uint64_t i_prt, uint64_t t_prt)
+void fcbridge_free_initiator(uint64_t i_prt[], uint64_t t_prt[])
 {
 #if 0 /* Not required */
 	if (atomic_read(&icbs.itf_enabled))

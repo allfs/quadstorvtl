@@ -55,6 +55,6 @@ int fcbridge_proc_cmd(void *bridge, void *iop);
 int fcbridge_task_mgmt(struct fcbridge *fcbridge, struct qsio_immed_notify *notify);
 void __ctio_free_data(struct qsio_scsiio *ctio);
 void fcbridge_route_cmd_post(struct qsio_scsiio *ctio);
-int fcbridge_i_prt_valid(struct fcbridge *fcbridge, uint64_t i_prt);
+int fcbridge_i_prt_valid(struct fcbridge *fcbridge, uint64_t i_prt[]);
 
 #endif

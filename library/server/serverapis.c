@@ -831,7 +831,8 @@ fc_rule_config_fill(struct fc_rule *fc_rule, struct fc_rule_config *fc_rule_conf
 {
 	memset(fc_rule_config, 0, sizeof(fc_rule_config));
 	fc_rule_config->target_id = fc_rule->target_id;
-	fc_rule_config->wwpn = char_to_wwpn(fc_rule->wwpn);
+	fc_rule_config->wwpn[0] = char_to_wwpn(fc_rule->wwpn);
+	fc_rule_config->wwpn[1] = char_to_wwpn(fc_rule->wwpn1);
 	fc_rule_config->rule = fc_rule->rule;
 }
 

@@ -22,6 +22,28 @@
 
 extern struct fc_rule_list fc_rule_list;
 
+static int
+fc_rule_wwpn_equal(struct fc_rule *fc_rule, struct fc_rule_spec *fc_rule_spec)
+{
+	if (strcmp(fc_rule->wwpn, fc_rule_spec->wwpn))
+		return 0;
+	if (strcmp(fc_rule->wwpn1, fc_rule_spec->wwpn1))
+		return 0;
+	return 1;
+}
+
+static int
+fc_rule_wwpn_valid(struct fc_rule *fc_rule)
+{
+	return (fc_rule->wwpn[0] || fc_rule->wwpn1[0]);
+}
+
+static int
+fc_rule_spec_wwpn_valid(struct fc_rule_spec *fc_rule_spec)
+{
+	return (fc_rule_spec->wwpn[0] || fc_rule_spec->wwpn1[0]);
+}
+
 struct fc_rule *
 fc_rule_locate(struct fc_rule_spec *fc_rule_spec)
 {
@@ -34,7 +56,7 @@ fc_rule_locate(struct fc_rule_spec *fc_rule_spec)
 			continue;
 		if (fc_rule->target_id != -1 && strcmp(fc_rule->vtl, fc_rule_spec->vtl))
 			continue;
-		if (strcmp(fc_rule->wwpn, fc_rule_spec->wwpn))
+		if (!fc_rule_wwpn_equal(fc_rule, fc_rule_spec))
 			continue;
 		return fc_rule;
 	}
@@ -76,7 +98,7 @@ tl_server_remove_fc_rule(struct tl_comm *comm, struct tl_msg *msg)
 
 	fc_rule_spec = (struct fc_rule_spec *)(msg->msg_data);
 
-	if (!fc_rule_spec->wwpn[0] && !fc_rule_spec->vtl[0]) {
+	if (!fc_rule_spec_wwpn_valid(fc_rule_spec) && !fc_rule_spec->vtl[0]) {
 		fc_rule = fc_rule_locate(fc_rule_spec);
 		if (!fc_rule) {
 			tl_server_msg_failure2(comm, msg, "Cannot locate fc rule\n");
@@ -102,9 +124,9 @@ tl_server_remove_fc_rule(struct tl_comm *comm, struct tl_msg *msg)
 	}
 
 	TAILQ_FOREACH_SAFE(fc_rule, &fc_rule_list, q_entry, next) {
-		if (fc_rule_spec->wwpn[0] && !fc_rule->wwpn[0])
+		if (fc_rule_spec_wwpn_valid(fc_rule_spec) && !fc_rule_wwpn_valid(fc_rule))
 			continue;
-		if (fc_rule_spec->wwpn[0] && fc_rule->wwpn[0] && strcmp(fc_rule->wwpn, fc_rule_spec->wwpn))
+		if (fc_rule_spec_wwpn_valid(fc_rule_spec) && fc_rule_wwpn_valid(fc_rule) && !fc_rule_wwpn_equal(fc_rule, fc_rule_spec))
 			continue;
 		if (fc_rule_spec->vtl[0] && fc_rule->target_id == -1)
 			continue;
@@ -173,6 +195,7 @@ tl_server_add_fc_rule(struct tl_comm *comm, struct tl_msg *msg)
 	}
 
 	strcpy(fc_rule->wwpn, fc_rule_spec->wwpn);
+	strcpy(fc_rule->wwpn1, fc_rule_spec->wwpn1);
 	if (vdevice) {
 		strcpy(fc_rule->vtl, vdevice->name);
 		fc_rule->target_id = vdevice->tl_id;
@@ -217,6 +240,34 @@ tl_server_add_fc_rule(struct tl_comm *comm, struct tl_msg *msg)
 	return 0;
 }
 
+void
+convert_guid_to_wwpn(char *guid, char *wwpn)
+{
+	int i = 0;
+
+	while (1) {
+		guid[0] = wwpn[0];
+		guid[1] = wwpn[1];
+		guid[2] = wwpn[3];
+		guid[3] = wwpn[4];
+		i++;
+		if (i == 4)
+			break;
+
+		guid[4] = ':';
+		wwpn += 6;
+		guid += 5;
+	}
+}
+
+static void
+fill_guid(char *wwpn, char *wwpn1, char *guid)
+{
+	convert_guid_to_wwpn(guid, wwpn);
+	guid[19] = ':';
+	convert_guid_to_wwpn(guid+20, wwpn1);
+}
+
 int
 tl_server_list_fc_rules(struct tl_comm *comm, struct tl_msg *msg)
 {
@@ -224,7 +275,7 @@ tl_server_list_fc_rules(struct tl_comm *comm, struct tl_msg *msg)
 	FILE *fp;
 	struct fc_rule *fc_rule;
 	struct sockaddr_in in_addr;
-	char wwpn[24];
+	char wwpn[128];
 
 	if (sscanf(msg->msg_data, "tempfile: %s\n", filepath) != 1) {
 		DEBUG_ERR_SERVER("Invalid msg data receied");
@@ -241,7 +292,9 @@ tl_server_list_fc_rules(struct tl_comm *comm, struct tl_msg *msg)
 
         memset(&in_addr, 0, sizeof(in_addr));
 	TAILQ_FOREACH(fc_rule, &fc_rule_list, q_entry) {
-		if (fc_rule->wwpn[0])
+		if (fc_rule->wwpn[0] && fc_rule->wwpn1[0])
+			fill_guid(fc_rule->wwpn, fc_rule->wwpn1, wwpn);
+		else if (fc_rule->wwpn[0])
 			strcpy(wwpn, fc_rule->wwpn);
 		else
 			strcpy(wwpn, "All");

@@ -77,7 +77,8 @@ void __ctio_free_data(struct qsio_scsiio *ctio);
 void __ctio_free_all(struct qsio_scsiio *ctio, int local_pool);
 struct qsio_scsiio * __local_ctio_new(allocflags_t flags);
 int __ctio_queue_cmd(struct qsio_scsiio *ctio);
-void fcbridge_free_initiator(uint64_t i_prt, uint64_t t_prt);
+void fcbridge_free_initiator(uint64_t i_prt[], uint64_t t_prt[]);
+void fcbridge_get_tport(struct fcbridge *fcbridge, uint64_t wwpn[]);
 
 static inline void
 print_wwn(unsigned char *wwn, char *str)

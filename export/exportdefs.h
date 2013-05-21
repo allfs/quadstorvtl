@@ -11,6 +11,7 @@ enum {
 
 #define LDEV_RPORT_START	3
 #define FC_RPORT_START		4
+#define SRPT_RPORT_START	32000
 #define ISCSI_RPORT_START	32768
 #define RPORT_MAX		65535
 
@@ -51,8 +52,8 @@ struct qs_interface_cbs {
 	void (*device_send_ccb) (struct qsio_scsiio *);
 	void (*device_send_notify) (struct qsio_immed_notify *);
 	int (*device_istate_queue_ctio) (struct tdevice *, struct qsio_scsiio *);
-	int (*device_istate_abort_task) (struct tdevice *, uint64_t, uint64_t, int, uint32_t);
-	void (*device_istate_abort_task_set) (struct tdevice *, uint64_t, uint64_t, int);
+	int (*device_istate_abort_task) (struct tdevice *, uint64_t[], uint64_t[], int, uint32_t);
+	void (*device_istate_abort_task_set) (struct tdevice *, uint64_t[], uint64_t[], int);
 	int (*device_queue_ctio) (struct tdevice *, struct qsio_scsiio *);
 	void (*device_queue_ctio_direct) (struct qsio_hdr *);
 	void (*device_queue_ctio_list) (struct ccb_list *);
@@ -60,10 +61,10 @@ struct qs_interface_cbs {
 	int (*device_check_cmd) (struct tdevice *, uint8_t);
 	int (*device_allocate_buffers) (struct qsio_scsiio *, uint32_t, uint32_t, allocflags_t);
 	int (*device_allocate_cmd_buffers) (struct qsio_scsiio *, allocflags_t);
-	void (*device_target_reset) (struct tdevice *vdevice, uint64_t i_prt, uint64_t t_prt, uint8_t init_int);
-	void (*device_free_initiator) (uint64_t, uint64_t, int, struct tdevice *);
+	void (*device_target_reset) (struct tdevice *vdevice, uint64_t i_prt[], uint64_t t_prt[], uint8_t init_int);
+	void (*device_free_initiator) (uint64_t[], uint64_t[], int, struct tdevice *);
 
-	int (*fc_initiator_check)(uint64_t wwpn, void *device);
+	int (*fc_initiator_check)(uint64_t wwpn[], void *device);
 	uint64_t (*get_tprt) (void);
 
 	LIST_ENTRY(qs_interface_cbs) i_list;

@@ -1922,8 +1922,8 @@ mchanger_cmd_reserve(struct mchanger *mchanger, struct qsio_scsiio *ctio)
 
 	reservation->is_reserved = 1;
 	reservation->type = RESERVATION_TYPE_RESERVE;
-	reservation->i_prt = ctio->i_prt;
-	reservation->t_prt = ctio->t_prt;
+	port_fill(reservation->i_prt, ctio->i_prt);
+	port_fill(reservation->t_prt, ctio->t_prt);
 	reservation->init_int = ctio->init_int;
 	tdevice_reservation_unlock(tdevice);
 	return 0;
@@ -2555,7 +2555,7 @@ out:
 }
 
 void
-mchanger_reset(struct mchanger *mchanger, uint64_t i_prt, uint64_t t_prt, uint8_t init_int)
+mchanger_reset(struct mchanger *mchanger, uint64_t i_prt[], uint64_t t_prt[], uint8_t init_int)
 {
 	struct reservation *reservation = &mchanger->tdevice.reservation;
 

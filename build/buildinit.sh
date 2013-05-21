@@ -36,9 +36,9 @@ mkdir -p /quadstor/bin
 rm -f /quadstor/quadstor/target-mode/fc/qla2xxx
 
 if [ "$1" = "rhel6" ]; then
-	cd /quadstor/quadstor/target-mode/fc && ln -s qla2xxx.63 qla2xxx
+	cd /quadstor/quadstor/target-mode/fc && ln -s qla2xxx.upstream qla2xxx
 elif [ "$1" = "sles11sp2" ]; then
-	cd /quadstor/quadstor/target-mode/fc && ln -s qla2xxx.sles11.sp2 qla2xxx
+	cd /quadstor/quadstor/target-mode/fc && ln -s qla2xxx.upstream qla2xxx
 elif [ "$1" = "sles11" ]; then
 	cd /quadstor/quadstor/target-mode/fc && ln -s qla2xxx.slessp1 qla2xxx
 elif [ "$1" = "ubuntu11" ]; then

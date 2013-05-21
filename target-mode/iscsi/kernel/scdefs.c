@@ -787,8 +787,8 @@ iscsi_construct_ctio(struct iscsi_conn *conn, struct iscsi_cmnd *cmnd)
 	if (unlikely(!t_prt))
 		t_prt = (*icbs.get_tprt)();
 
-	ctio->i_prt = conn->session->sid;
-	ctio->t_prt = t_prt;
+	ctio->i_prt[0] = conn->session->sid;
+	ctio->t_prt[0] = t_prt;
 	ctio->r_prt = ISCSI_RPORT_START;
 	ctio->init_int = TARGET_INT_ISCSI;
 	memcpy(ctio->cdb, hdr->scb, 16);
