@@ -69,9 +69,4 @@ struct se_cmd {
 	STAILQ_ENTRY		(se_cmd) q_list;
 };
 
-enum ib_srq_type {
-	IB_SRQT_BASIC,
-	IB_SRQT_XRC
-};
-
 #endif
