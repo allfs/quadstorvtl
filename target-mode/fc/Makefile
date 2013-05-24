@@ -1,6 +1,6 @@
 UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)
-SUBDIRS := qla2xxx
+SUBDIRS := qla2xxx srpt
 CMD := make
 MOD := /quadstor/quadstor/target-mode/fc/qla2xxx/qla2xxx.ko /quadstor/quadstor/target-mode/fc/srpt/ib_srpt.ko
 else

@@ -51,6 +51,7 @@ elif [ "$1" = "bsd" ]; then
 	cd /quadstor/quadstor/target-mode/fc && ln -s isp8.2 isp
 else
 	cd /quadstor/quadstor/target-mode/fc && ln -s qla2xxx.58 qla2xxx
+	sed -i -e "s/:= qla2xxx.*/:= qla2xxx/" /quadstor/quadstor/target-mode/fc/Makefile
 fi
 
 if [ ! -d /quadstor/quadstor/mapps/html/cgisrc/yui ]; then
