@@ -37,6 +37,26 @@ struct tsegment_map {
 };
 TAILQ_HEAD(tmap_list, tsegment_map);
 
+struct raw_mam {
+	uint16_t csum;
+	uint16_t pad[3];
+} __attribute__ ((__packed__));
+
+struct raw_attribute {
+	uint16_t length;
+	uint8_t valid;
+} __attribute__ ((__packed__));
+
+struct mam_attribute {
+	uint16_t identifier;
+	uint8_t format;
+	uint16_t length;
+	uint8_t valid;
+	struct raw_attribute *raw_attr;
+	uint8_t *value;
+};
+#define MAX_MAM_ATTRIBUTES	90
+#define MAM_ATTRIBUTE_DATA_OFFSET		(MAX_MAM_ATTRIBUTES * sizeof(struct read_attribute))
 
 struct tsegment_entry {
 	uint64_t block;
@@ -160,6 +180,7 @@ enum {
 	PARTITION_LOOKUP_SEGMENTS,
 	PARTITION_DIR_WRITE,
 	PARTITION_DIR_READ,
+	PARTITION_MAM_CORRUPT,
 };
 
 struct tape_partition {
@@ -192,6 +213,8 @@ struct tape_partition {
 	uint32_t mlookup_count;
 	SLIST_ENTRY(tape_partition) p_list;
 	int flags;
+	pagestruct_t *mam_data;
+	struct mam_attribute mam_attributes[MAX_MAM_ATTRIBUTES];
 };
 
 void partition_set_cmap(struct tape_partition *partition, struct blk_map *map);
@@ -304,5 +327,16 @@ struct tape_position_info {
 	uint64_t file_number;
 	uint64_t set_number;
 };
-
+int tape_partition_mam_set_byte(struct tape_partition *partition, uint16_t identifier, uint8_t val);
+int tape_partition_mam_set_word(struct tape_partition *partition, uint16_t identifier, uint32_t val);
+int tape_partition_mam_set_long(struct tape_partition *partition, uint16_t identifier, uint64_t val);
+int tape_partition_mam_set_ascii(struct tape_partition *partition, uint16_t identifier, char *val);
+int tape_partition_mam_memset(struct tape_partition *partition, uint16_t identifier, uint8_t val, int vali);
+int tape_partition_mam_set_text(struct tape_partition *partition, uint16_t identifier, char *val);
+struct mam_attribute * tape_partition_mam_get_attribute(struct tape_partition *partition, uint16_t identifier);
+int tape_partition_write_mam(struct tape_partition *partition);
+int mam_attr_length_valid(struct read_attribute *attr, struct mam_attribute *mam_attr);
+void mam_attr_set_length(struct read_attribute *attr, struct mam_attribute *mam_attr);
+void tape_update_volume_change_reference(struct tape *tape);
+void tape_partition_update_mam(struct tape_partition *partition, uint16_t first_attribute);
 #endif

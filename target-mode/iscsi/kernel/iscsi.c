@@ -813,6 +813,7 @@ static void scsi_cmnd_start(struct iscsi_conn *conn, struct iscsi_cmnd *req)
 	case WRITE_6:
 	case MODE_SELECT:
 	case MODE_SELECT_10:
+	case WRITE_ATTRIBUTE:
 	case SEND_DIAGNOSTIC:
 	case PERSISTENT_RESERVE_OUT:
 	{

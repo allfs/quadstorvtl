@@ -1280,6 +1280,7 @@ blk_map_overwrite_check(struct blk_map *map)
 	if (unlikely(retval != 0))
 		return MEDIA_ERROR;
 
+	tape_update_volume_change_reference(partition->tape);
 	return 0;
 }
 
@@ -1516,6 +1517,8 @@ blk_map_write_filemarks(struct tape_partition *partition, uint8_t wsmk)
 		map->mlookup->f_ids++;
 	}
 	map_lookup_entry_update(map);
+	if (!entry->lid_start)
+		tape_update_volume_change_reference(partition->tape);
 	return 0;
 err:
 	blk_entry_free_all(&entry_list);
@@ -1858,6 +1861,10 @@ blk_map_write(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32
 	}
 	else
 		retval = 0;
+
+	if (retval == 0 && !lid_start)
+		tape_update_volume_change_reference(partition->tape);
+
 	return retval;
 
 err:

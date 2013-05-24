@@ -22,6 +22,122 @@
 #include "tape.h"
 #include "qs_lib.h"
 
+/*
+ * 00 - Binary
+ * 01 - Ascii
+ * 02 - Text 
+ * 80 - Binary Readnly
+ * 81 - Ascii readonly
+ * 82 - Text readonly
+ */
+struct mam_attribute mam_attributes[] = {
+	{0x0000, 0x80, 8, 1, NULL}, /* Remaining capacity in partition */
+	{0x0001, 0x80, 8, 1, NULL}, /* Maximum capacity in partition */
+	{0x0002, 0x80, 8, 1, NULL}, /* TapeAlert flags */
+	{0x0003, 0x80, 8, 1, NULL}, /* Load count */
+	{0x0004, 0x80, 8, 1, NULL}, /* MAM space remaining */
+	{0x0005, 0x81, 8, 1, NULL}, /* Assigning organization */
+	{0x0006, 0x80, 1, 1, NULL}, /* Formatted density code */
+	{0x0007, 0x80, 1, 1, NULL}, /* Initialization count */
+	{0x0008, 0x01, 32, 1, NULL}, /* Volume identifier */
+	{0x0009, 0x00, 4, 1, NULL}, /* Volume change reference */
+	{0xFFFF, 0x00, 8, 0, NULL}, /* Reserved */
+	{0xFFFF, 0x00, 8, 0, NULL}, /* Reserved */
+	{0xFFFF, 0x01, 8, 0, NULL}, /* Reserved */
+	{0xFFFF, 0x01, 8, 0, NULL}, /* Reserved */
+	{0x020A, 0x01, 40, 1, NULL},/* Device make/serial number at last load */
+	{0x020B, 0x01, 40, 1, NULL},/* Device make/serial number at last load -1 */
+	{0x020C, 0x01, 40, 1, NULL},/* Device make/serial number at last load -2 */
+	{0x020D, 0x01, 40, 1, NULL},/* Device make/serial number at last load -3 */
+	{0xFFFF, 0x00, 8, 0, NULL}, /* Reserved */
+	{0xFFFF, 0x00, 8, 0, NULL}, /* Reserved */
+	{0xFFFF, 0x01, 8, 0, NULL}, /* Reserved */
+	{0xFFFF, 0x01, 8, 0, NULL}, /* Reserved */
+	{0x0220, 0x80, 8, 1, NULL}, /* Total MB written in medium life */
+	{0x0221, 0x80, 8, 1, NULL}, /* Total MB read in medium life */
+	{0x0222, 0x80, 8, 1, NULL}, /* Total MB written in current/last load */
+	{0x0223, 0x80, 8, 1, NULL}, /* Total MB read in current/last load */
+	{0x0224, 0x80, 8, 1, NULL}, /* Logical position of first encrypted block */
+	{0x0225, 0x80, 8, 1, NULL}, /* Logical position of first unencrypted block */
+	{0xFFFF, 0x00, 8, 0, NULL}, /* Reserved */
+	{0xFFFF, 0x00, 8, 0, NULL}, /* Reserved */
+	{0xFFFF, 0x01, 8, 0, NULL}, /* Reserved */
+	{0xFFFF, 0x01, 8, 0, NULL}, /* Reserved */
+	/* Medium Attributes */
+	{0x0400, 0x01, 8, 1, NULL}, /* The name of the manufacturer */
+	{0x0401, 0x01, 32, 1, NULL}, /* The serial number */
+	{0x0402, 0x80, 4, 1, NULL}, /* Length of tape */
+	{0x0403, 0x80, 4, 1, NULL}, /* Width of tape */
+	{0x0404, 0x81, 8, 1, NULL}, /* Assigning organization */
+	{0x0405, 0x80, 1, 1, NULL}, /* Density code */
+	{0x0406, 0x81, 8, 1, NULL}, /* Manufacture date */
+	{0x0407, 0x80, 8, 1, NULL}, /* MAM capacity */
+	{0x0408, 0x80, 1, 1, NULL}, /* Medium Type */
+	{0x0409, 0x80, 2, 1, NULL}, /* Medium Type Information*/
+	{0xFFFF, 0x00, 8, 0, NULL}, /* Reserved */
+	{0xFFFF, 0x00, 8, 0, NULL}, /* Reserved */
+	{0xFFFF, 0x01, 8, 0, NULL}, /* Reserved */
+	{0xFFFF, 0x01, 8, 0, NULL}, /* Reserved */
+	/* Host Attributes */
+	{0x0800, 0x01, 8, 0, NULL}, /* Application Vendor */
+	{0x0801, 0x01, 32, 0, NULL}, /* Application Name */
+	{0x0802, 0x01, 8, 0, NULL}, /* Application Version */
+	{0x0803, 0x02, 160, 0, NULL}, /* User Label */
+	{0x0804, 0x01, 12, 0, NULL}, /* Last Written */
+	{0x0805, 0x00, 1, 0, NULL}, /* Localization identifier */
+	{0x0806, 0x01, 32, 0, NULL}, /* Barcode */
+	{0x0807, 0x02, 80, 0, NULL}, /* Owning host name */
+	{0x0808, 0x02, 160, 0, NULL}, /* Media Pool */
+	{0x0809, 0x01, 16, 0, NULL}, /* Partition User Label */
+	{0x080A, 0x00, 1, 0, NULL}, /* Load/Unload at Partition */
+	{0x080B, 0x01, 16, 0, NULL}, /* Application format version */
+	{0x080C, 0x00, 256, 0, NULL}, /* Volume coherency Information */
+	{0xFFFF, 0x00, 8, 0, NULL}, /* Reserved */
+	{0xFFFF, 0x00, 8, 0, NULL}, /* Reserved */
+	{0xFFFF, 0x01, 8, 0, NULL}, /* Reserved */
+	{0xFFFF, 0x01, 8, 0, NULL}, /* Reserved */
+	{0x1500, 0x00, 4, 0, NULL}, /* Application Vendor */
+};
+
+#define MAM_ATTRIBUTES_DEFINED	(sizeof(mam_attributes)/sizeof(mam_attributes[0]))
+
+static int
+mam_attr_max_length(struct mam_attribute *mam_attr)
+{
+	switch(mam_attr->identifier) {
+		case 0x0008:
+			return 32;
+		case 0x080C:
+			return 256;
+		default:
+			return mam_attr->length;
+	}
+}
+
+static void
+tape_partition_mam_init(struct tape_partition *partition, int load)
+{
+	struct mam_attribute *mam_attr;
+	struct raw_attribute *raw_attr;
+	uint8_t *ptr;
+	int i;
+
+	memcpy(&partition->mam_attributes, mam_attributes, sizeof(mam_attributes));
+	ptr = vm_pg_address(partition->mam_data) + MAM_ATTRIBUTE_DATA_OFFSET;
+	raw_attr = (struct raw_attribute *)vm_pg_address(partition->mam_data);
+
+	for (i = 0; i < MAM_ATTRIBUTES_DEFINED; i++, raw_attr++) {
+		mam_attr = &partition->mam_attributes[i];
+		mam_attr->value = ptr;
+		mam_attr->raw_attr = raw_attr;
+		if (load) {
+			mam_attr->valid = raw_attr->valid;
+			mam_attr->length = raw_attr->length;
+		}
+		ptr += mam_attr_max_length(mam_attr);
+	}
+}
+
 static int tape_partition_space_eod(struct tape_partition *partition);
 
 void
@@ -1192,6 +1308,8 @@ tape_partition_free(struct tape_partition *partition, int free_alloc)
 	map_lookup_free_all(partition);
 	tmap_list_free_all(&partition->meta_tmap_list);
 	tmap_list_free_all(&partition->data_tmap_list);
+	if (partition->mam_data)
+		vm_pg_free(partition->mam_data);
 	free(partition, M_TAPE_PARTITION);
 }
 
@@ -1237,6 +1355,272 @@ tape_partition_init(struct tape *tape, struct tape_partition *partition)
 	partition_calc_max_tmaps(partition);
 }
 
+struct mam_attribute *
+tape_partition_mam_get_attribute(struct tape_partition *partition, uint16_t identifier)
+{
+	struct mam_attribute *attr;
+	int i;
+
+	if (identifier == 0xFFFF)
+		return NULL;
+
+	for (i = 0; i < MAM_ATTRIBUTES_DEFINED; i++) {
+		attr = &partition->mam_attributes[i];
+		if (attr->identifier == identifier)
+			return attr;
+	}
+	return NULL;
+}
+
+int
+tape_partition_mam_set_byte(struct tape_partition *partition, uint16_t identifier, uint8_t val)
+{
+	struct mam_attribute *attr;
+
+	attr = tape_partition_mam_get_attribute(partition, identifier);
+	if (!attr)
+		return -1;
+
+	*((uint8_t *)attr->value) = val;
+	attr->valid = 1;
+	return 0;
+}
+
+int
+tape_partition_mam_set_word(struct tape_partition *partition, uint16_t identifier, uint32_t val)
+{
+	struct mam_attribute *attr;
+
+	attr = tape_partition_mam_get_attribute(partition, identifier);
+	if (!attr)
+		return -1;
+
+	*((uint32_t *)attr->value) = htobe32(val);
+	attr->valid = 1;
+	return 0;
+}
+
+int
+tape_partition_mam_set_long(struct tape_partition *partition, uint16_t identifier, uint64_t val)
+{
+	struct mam_attribute *attr;
+
+	attr = tape_partition_mam_get_attribute(partition, identifier);
+	if (!attr)
+		return -1;
+
+	*((uint64_t *)attr->value) = htobe64(val);
+	attr->valid = 1;
+	return 0;
+}
+
+int
+tape_partition_mam_set_ascii(struct tape_partition *partition, uint16_t identifier, char *val)
+{
+	struct mam_attribute *attr;
+	int len;
+
+	attr = tape_partition_mam_get_attribute(partition, identifier);
+	if (!attr)
+		return -1;
+
+	len = strlen(val);
+	if (len > attr->length)
+		return -1;
+
+	sys_memset(attr->value, ' ', attr->length);
+	memcpy(attr->value, val, len);
+	attr->valid = 1;
+	return 0;
+}
+
+void
+mam_attr_set_length(struct read_attribute *attr, struct mam_attribute *mam_attr)
+{
+	uint16_t length = be16toh(attr->length);
+
+	if (!length)
+		return;
+
+	switch(mam_attr->identifier) {
+		case 0x0008:
+		case 0x080C:
+			mam_attr->length = length;
+			break;
+		default:
+			break;
+	}
+}
+
+int
+mam_attr_length_valid(struct read_attribute *attr, struct mam_attribute *mam_attr)
+{
+	uint16_t len = be16toh(attr->length);
+
+	if (!len)
+		return 1;
+
+	switch(mam_attr->identifier) {
+		case 0x0008:
+			return (len <= 32);
+		case 0x080C:
+			return (len >= 23 && len <= 256);
+		default:
+			return (len == mam_attr->length);
+	}
+}
+
+int
+tape_partition_mam_memset(struct tape_partition *partition, uint16_t identifier, uint8_t val, int valid)
+{
+	struct mam_attribute *attr;
+
+	attr = tape_partition_mam_get_attribute(partition, identifier);
+	if (!attr)
+		return -1;
+
+	sys_memset(attr->value, val, attr->length);
+	attr->valid = valid;
+	return 0;
+}
+
+int
+tape_partition_mam_set_text(struct tape_partition *partition, uint16_t identifier, char *val)
+{
+	struct mam_attribute *attr;
+	int len;
+
+	attr = tape_partition_mam_get_attribute(partition, identifier);
+	if (!attr)
+		return -1;
+
+	len = strlen(val);
+	if (len > attr->length)
+		return -1;
+
+	memcpy(attr->value, val, len);
+	attr->valid = 1;
+	return 0;
+}
+
+int
+tape_partition_write_mam(struct tape_partition *partition)
+{
+	struct raw_mam *raw_mam;
+	int retval;
+	uint16_t csum;
+
+	if (atomic_test_bit(PARTITION_MAM_CORRUPT, &partition->flags))
+		return -1;
+
+	raw_mam = (struct raw_mam *)(vm_pg_address(partition->mam_data) + (LBA_SIZE - sizeof(*raw_mam)));
+	csum = net_calc_csum16(vm_pg_address(partition->mam_data), LBA_SIZE - sizeof(*raw_mam));
+	raw_mam->csum = csum;
+
+	retval = qs_lib_bio_lba(partition->tmaps_bint, partition->tmaps_b_start, partition->mam_data, QS_IO_WRITE, 0);
+	return retval;
+}
+
+
+static int
+is_lto_tape(struct tape *tape)
+{
+	switch (tape->make) {
+	case VOL_TYPE_LTO_1:
+	case VOL_TYPE_LTO_2:
+	case VOL_TYPE_LTO_3:
+	case VOL_TYPE_LTO_4:
+	case VOL_TYPE_LTO_5:
+	case VOL_TYPE_LTO_6:
+		return 1;
+	default:
+		return 0;
+	}
+}
+
+static int
+tape_partition_create_mam(struct tape_partition *partition)
+{
+	int i;
+	struct mam_attribute *mam_attr;
+	struct raw_attribute *raw_attr;
+
+	partition->mam_data = vm_pg_alloc(VM_ALLOC_ZERO);
+	if (unlikely(!partition->mam_data)) {
+		return -1;
+	}
+	tape_partition_mam_init(partition, 0);
+
+	tape_partition_mam_memset(partition, 0x0005, ' ', 1);
+	tape_partition_mam_memset(partition, 0x0008, ' ', 1);
+	tape_partition_mam_memset(partition, 0x020A, ' ', 1);
+	tape_partition_mam_memset(partition, 0x020B, ' ', 1);
+	tape_partition_mam_memset(partition, 0x020C, ' ', 1);
+	tape_partition_mam_memset(partition, 0x020D, ' ', 1);
+	tape_partition_mam_memset(partition, 0x0400, ' ', 1);
+	tape_partition_mam_memset(partition, 0x0401, ' ', 1);
+	/* Media width */
+	if (is_lto_tape(partition->tape)) {
+		tape_partition_mam_set_ascii(partition, 0x0005, "LTO-CVE");
+		tape_partition_mam_set_ascii(partition, 0x0404, "LTO-CVE");
+		tape_partition_mam_set_word(partition, 0x0403, 127);
+	}
+	/* Manufacture date */
+	tape_partition_mam_set_ascii(partition, 0x0406, "20130501");
+	/* MAM capacity */
+	tape_partition_mam_set_long(partition, 0x0407, 4096);
+
+	for (i = 0; i < MAM_ATTRIBUTES_DEFINED; i++) {
+		mam_attr = &partition->mam_attributes[i];
+		raw_attr = mam_attr->raw_attr;
+		raw_attr->length = mam_attr->length;
+		raw_attr->valid = mam_attr->valid;
+	}
+	return tape_partition_write_mam(partition);
+}
+
+void
+tape_partition_update_mam(struct tape_partition *partition, uint16_t first_attribute)
+{
+	uint64_t remaining;
+
+	if (first_attribute > 0x0001)
+		return;
+
+	remaining = partition->size - partition->used;
+	tape_partition_mam_set_long(partition, 0x0000, remaining >> 20);
+	tape_partition_mam_set_word(partition, 0x0001, partition->size >> 20);
+}
+
+void
+tape_update_volume_change_reference(struct tape *tape)
+{
+	struct tape_partition *partition;
+	struct mam_attribute *attr;
+	uint32_t vcr;
+
+	partition = tape_get_partition(tape, 0);
+	debug_check(!partition);
+
+	if (atomic_test_bit(PARTITION_MAM_CORRUPT, &partition->flags))
+		return;
+
+	attr = tape_partition_mam_get_attribute(partition, 0x0009);
+	vcr = be32toh(*((uint32_t *)attr->value));
+
+	/* vcr can never repeat */
+	if (vcr == 0xFFFFFFFF)
+		return;
+	vcr++;
+
+	SLIST_FOREACH(partition, &tape->partition_list, p_list) {
+		if (atomic_test_bit(PARTITION_MAM_CORRUPT, &partition->flags))
+			continue;
+		tape_partition_mam_set_word(partition, 0x0009, vcr);
+		tape_partition_write_mam(partition);
+	}
+}
+
 struct tape_partition *
 tape_partition_new(struct tape *tape, uint64_t size, int partition_id)
 {
@@ -1264,7 +1648,7 @@ tape_partition_new(struct tape *tape, uint64_t size, int partition_id)
 	if (unlikely(retval != 0)) {
 		debug_warn("Cannot zero tmaps metadata\n");
 		bdev_release_block(bint, b_start);
-		free(partition, M_TAPE_PARTITION);
+		tape_partition_free(partition, 0);
 		return NULL;
 	}
 
@@ -1273,7 +1657,15 @@ tape_partition_new(struct tape *tape, uint64_t size, int partition_id)
 	if (unlikely(retval != 0)) {
 		debug_warn("Cannot zero tmaps metadata\n");
 		bdev_release_block(bint, b_start);
-		free(partition, M_TAPE_PARTITION);
+		tape_partition_free(partition, 0);
+		return NULL;
+	}
+
+	retval = tape_partition_create_mam(partition);
+	if (unlikely(retval != 0)) {
+		debug_warn("Cannot create MAM data\n");
+		bdev_release_block(bint, b_start);
+		tape_partition_free(partition, 0);
 		return NULL;
 	}
 
@@ -1323,6 +1715,32 @@ tmaps_get_usage(struct tape_partition *partition, int type, int *error)
 	return total_used;
 }
 
+static int
+tape_partition_load_mam(struct tape_partition *partition)
+{
+	struct raw_mam *raw_mam;
+	int retval;
+	uint16_t csum;
+
+	partition->mam_data = vm_pg_alloc(0);
+	if (unlikely(!partition->mam_data))
+		return -1;
+
+	retval = qs_lib_bio_lba(partition->tmaps_bint, partition->tmaps_b_start, partition->mam_data, QS_IO_READ, 0);
+	if (unlikely(retval != 0))
+		return -1;
+
+	raw_mam = (struct raw_mam *)(vm_pg_address(partition->mam_data) + (LBA_SIZE - sizeof(*raw_mam)));
+	csum = net_calc_csum16(vm_pg_address(partition->mam_data), LBA_SIZE - sizeof(*raw_mam));
+	if (csum != raw_mam->csum) {
+		debug_warn("Tape %s Partition %u MAM corrupt\n", partition->tape->label, partition->partition_id);
+		atomic_set_bit(PARTITION_MAM_CORRUPT, &partition->flags);
+	}
+
+	tape_partition_mam_init(partition, 1);
+	return 0;
+}
+
 struct tape_partition *
 tape_partition_load(struct tape *tape, int partition_id)
 {
@@ -1356,17 +1774,24 @@ tape_partition_load(struct tape *tape, int partition_id)
 	partition->tmaps_bint = bint;
 	tape_partition_init(tape, partition);
 
+	retval = tape_partition_load_mam(partition);
+	if (unlikely(retval != 0)) {
+		debug_warn("Cannot load partition MAM data\n");
+		tape_partition_free(partition, 0);
+		return NULL;
+	}
+
 	error = 0;
 	used = tmaps_get_usage(partition, SEGMENT_TYPE_META, &error);
 	if (unlikely(error != 0)) {
-		free(partition, M_TAPE_PARTITION);
+		tape_partition_free(partition, 0);
 		return NULL;
 	}
 	total_used += used;
 
 	used = tmaps_get_usage(partition, SEGMENT_TYPE_DATA, &error);
 	if (unlikely(error != 0)) {
-		free(partition, M_TAPE_PARTITION);
+		tape_partition_free(partition, 0);
 		return NULL;
 	}
 	total_used += used;

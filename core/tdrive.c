@@ -50,6 +50,7 @@ tdrive_empty_write_queue(struct tdrive *tdrive)
 	if (unlikely(!tape))
 		return;
 
+	tdrive_wait_for_write_queue(tdrive);
 	partition = tape->cur_partition;
 	if (atomic_test_bit(PARTITION_DIR_WRITE, &partition->flags))
 		tape_flush_buffers(tdrive->tape);
@@ -157,7 +158,7 @@ tdrive_init_medium_partition_page(struct tdrive *tdrive)
 
 	bzero(page, sizeof(*page));
 	page->page_code = MEDIUM_PARTITION_PAGE;
-	page->page_length = 6;
+	page->page_length = sizeof(*page) - 2;
 	tape = tdrive->tape;
 	if (!tape)
 		return;
@@ -168,6 +169,7 @@ tdrive_init_medium_partition_page(struct tdrive *tdrive)
 	page->fdp |= (0x3 << 3); /* PSUM */
 	page->medium_fmt_recognition = 0x3;
 	count = tape_partition_count(tape);
+	sys_memset(page->partition_size, 0, sizeof(page->partition_size));
 	for (i = 0; i < count; i++) {
 		partition = tape_get_partition(tape, i);
 		partition_size = partition_size_to_units(partition->size, page->partition_units & 0xF);
@@ -176,7 +178,9 @@ tdrive_init_medium_partition_page(struct tdrive *tdrive)
 			if (partition->size == tape->size && tape->size == tape->set_size)
 				idp = 0;
 		}
+#if 0
 		page->page_length += 2;
+#endif
 	}
 	page->addl_partitions_defined = count - 1;
 	if (count > 1)
@@ -1225,6 +1229,7 @@ tdrive_cmd_format_medium(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	uint8_t format;
 	uint8_t fdp, sdp, idp;
 	int64_t psize0 = 0 , psize1 = 0;
+	int fill_to_max = 0;
 	int num_partitions, partition_units;
 
 	if (tape->worm) {
@@ -1263,7 +1268,22 @@ tdrive_cmd_format_medium(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 		return 0;
 	}
 
-	if (!partition_units) {
+	if (!partition_units)
+		goto skip_fill_check;
+
+	for (i = 0; i < page->addl_partitions_defined + 1; i++) {
+		if (page->partition_size[i] == 0xFFFF) {
+			if (fill_to_max || i > 1) {
+				ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, PARAMETER_VALUE_INVALID_ASC, PARAMETER_VALUE_INVALID_ASCQ);  
+				return -1;
+			}
+			fill_to_max = 1;
+			continue;
+		}
+	}
+
+skip_fill_check:
+	if (!partition_units || fill_to_max) {
 		uint16_t val0 = be16toh(page->partition_size[0]);
 		uint16_t val1 = be16toh(page->partition_size[1]);
 		uint64_t min_size = get_fixed_partition_size(tape, 0);
@@ -1344,7 +1364,7 @@ skip_size_check:
 		partition = tape_get_partition(tape, i);
 		if (fdp)
 			partition_size = get_fixed_partition_size(tape, i);
-		else if (partition_units)
+		else if (partition_units && !fill_to_max)
 			partition_size = partition_size_from_units(be16toh(page->partition_size[i]), partition_units);
 		else
 			partition_size = i ? psize1 : psize0;
@@ -1359,6 +1379,7 @@ skip_size_check:
 		if (unlikely(retval != 0))
 			return -1;
 	}
+	tape_update_volume_change_reference(tape);
 	tdrive_init_medium_partition_page(tdrive);
 	return 0;
 }
@@ -2077,16 +2098,24 @@ tdrive_log_page_supported(struct tdrive *tdrive, uint8_t page_code)
 }
 
 static int
-tdrive_copy_read_attributes(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint32_t allocation_length, uint32_t first_attribute)
+tdrive_copy_read_attributes(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint32_t allocation_length, uint32_t first_attribute, struct tape_partition *partition)
 {
 	uint32_t done = 0;
 	uint32_t avail = 0;
 	struct read_attribute *attr;
 	uint8_t *buffer;
+	struct mam_attribute *mam_attr;
+	int mam_attr_len, min_len;
+	int i;
 
 	if (allocation_length < 4)
 	{
 		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);  
+		return 0;
+	}
+
+	if (atomic_test_bit(PARTITION_MAM_CORRUPT, &partition->flags)) {
+		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_MEDIUM_ERROR, 0, AUXILIARY_MEMORY_READ_ERROR_ASC, AUXILIARY_MEMORY_READ_ERROR_ASCQ);
 		return 0;
 	}
 
@@ -2101,53 +2130,37 @@ tdrive_copy_read_attributes(struct tdrive *tdrive, struct qsio_scsiio *ctio, uin
 
 	done = 4;
 
-	if (first_attribute <= ATTRIBUTE_REMAINING_CAPACITY)
-	{
-		if ((done + sizeof(struct read_attribute) + 0x08) <= allocation_length)
-		{
-			uint64_t tape_used, tape_remaining;
-
-			attr = (struct read_attribute *)(buffer+done);
-			bzero(attr, sizeof(struct read_attribute) + 0x08);
-			attr->identifier = htobe16(ATTRIBUTE_REMAINING_CAPACITY);
-			attr->format |= 0x80; 
-			attr->length = htobe16(0x08);
-			tape_used = tape_usage(tdrive->tape);
-			tape_remaining = ((tdrive->tape->size - tape_used));
-			*((uint64_t *)attr->value) = (tape_remaining >> 20);
-			done += sizeof(struct read_attribute) + 0x08;
+	tape_partition_update_mam(partition, first_attribute);
+	for (i = 0; i < MAX_MAM_ATTRIBUTES; i++) {
+		mam_attr = &partition->mam_attributes[i];
+		if (i && !mam_attr->identifier)
+			break;
+		if (mam_attr->identifier == 0xFFFF)
+			continue;
+		if (!mam_attr->valid)
+			continue;
+		if (first_attribute > mam_attr->identifier)
+			continue;
+		mam_attr_len = mam_attr->length + 5;
+		avail += mam_attr_len;
+		attr = (struct read_attribute *)(buffer+done);
+		if ((done + 5) <= allocation_length) {
+			attr->identifier = htobe16(mam_attr->identifier);
+			attr->format = mam_attr->format;
+			attr->length = htobe16(mam_attr->length);
+			done += 5;
 		}
-		avail += sizeof(struct read_attribute) + 0x08;
+		if ((allocation_length - done) > 0) {
+			min_len = min_t(int, allocation_length - done, mam_attr->length);
+			memcpy(attr->value, mam_attr->value, min_len);
+			done += min_len;
+		}
 	}
 
-	if (first_attribute <= ATTRIBUTE_MAXIMUM_CAPACITY)
-	{
-		if ((done + sizeof(struct read_attribute) + 0x08) <= allocation_length)
-		{
-			attr = (struct read_attribute *)(buffer+done);
-			bzero(attr, sizeof(struct read_attribute) + 0x08);
-			attr->identifier = htobe16(ATTRIBUTE_MAXIMUM_CAPACITY);
-			attr->format |= 0x80; 
-			attr->length = htobe16(0x08);
-			*((uint64_t *)attr->value) = (tdrive->tape->size >> 20);
-			done += sizeof(struct read_attribute) + 0x08;
-		}
-		avail += sizeof(struct read_attribute) + 0x08;
-	}
-
-	if (first_attribute <= ATTRIBUTE_MEDIUM_TYPE)
-	{
-		if ((done + sizeof(struct read_attribute) + 0x01) <= allocation_length)
-		{
-			attr = (struct read_attribute *)(buffer+done);
-			bzero(attr, sizeof(struct read_attribute) + 0x01);
-			attr->identifier = htobe16(ATTRIBUTE_MEDIUM_TYPE);
-			attr->format |= 0x80; 
-			attr->length = htobe16(0x01);
-			*((uint8_t *)attr->value) = 0x00;
-			done += sizeof(struct read_attribute) + 0x01;
-		}
-		avail += sizeof(struct read_attribute) + 0x01;
+	if (done == 4 && allocation_length > 4) {
+		ctio_free_data(ctio);
+		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);  
+		return 0;
 	}
 
 	bzero(buffer, 4);
@@ -2157,21 +2170,21 @@ tdrive_copy_read_attributes(struct tdrive *tdrive, struct qsio_scsiio *ctio, uin
 }
 
 static int
-tdrive_copy_read_attribute_list(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint32_t allocation_length)
+tdrive_copy_read_attribute_list(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint32_t allocation_length, struct tape_partition *partition)
 {
+	struct mam_attribute *mam_attr;
 	uint32_t done = 0;
 	uint32_t avail = 0;
 	uint8_t *buffer;
+	int i;
 
-	if (allocation_length < 4)
-	{
+	if (allocation_length < 4) {
 		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);  
 		return 0;
 	}
 
 	ctio_allocate_buffer(ctio, allocation_length, Q_WAITOK);
-	if (unlikely(!ctio->data_ptr))
-	{
+	if (unlikely(!ctio->data_ptr)) {
 		/* Memory allocation failure */
 		debug_warn("Unable to allocate for allocation length %d\n", allocation_length);
 		return -1;
@@ -2180,39 +2193,121 @@ tdrive_copy_read_attribute_list(struct tdrive *tdrive, struct qsio_scsiio *ctio,
 
 	done = 4;
 
-	if (done + sizeof(uint16_t) <= allocation_length)
-	{
-		*((uint32_t *)buffer+done) = htobe16(ATTRIBUTE_REMAINING_CAPACITY);
-		done += sizeof(uint16_t);
-
+	for (i = 0; i < MAX_MAM_ATTRIBUTES; i++) {
+		mam_attr = &partition->mam_attributes[i];
+		if (i && !mam_attr->identifier)
+			break;
+		if (mam_attr->identifier == 0xFFFF)
+			continue;
+		if (!mam_attr->valid)
+			continue;
+		if ((done + 2) <= allocation_length) {
+			*((uint16_t *)buffer+done) = htobe16(mam_attr->identifier);
+			done += 2;
+		}
+		avail += 2;
 	}
-	avail += sizeof(uint16_t);
-
-	if (done + sizeof(uint16_t) <= allocation_length)
-	{
-		*((uint32_t *)buffer+done) = htobe16(ATTRIBUTE_MAXIMUM_CAPACITY);
-		done += sizeof(uint16_t);
-	}
-	avail += sizeof(uint16_t);
-
-	if (done + sizeof(uint16_t) <= allocation_length)
-	{
-		*((uint32_t *)buffer+done) = htobe16(ATTRIBUTE_MEDIUM_TYPE);
-		done += sizeof(uint16_t);
-	}
-	avail += sizeof(uint16_t);
 
 	bzero(buffer, 4);
 	*((uint32_t *)buffer) = htobe32(avail);
 	ctio->dxfer_len = done;
 	return 0;
+}
+
+static int
+tdrive_cmd_write_attribute(struct tdrive *tdrive, struct qsio_scsiio *ctio)
+{
+	struct tape_partition *partition;
+	uint8_t *cdb = ctio->cdb;
+	struct mam_attribute *mam_attr;
+	uint8_t partition_id;
+	uint32_t parameter_list_length;
+	uint32_t parameter_length, todo;
+	struct read_attribute *attr;
+	uint8_t *ptr;
+	int attr_length;
+
+	parameter_list_length = be32toh(*(uint32_t *)(&cdb[10]));
+	if (!parameter_list_length)
+		return 0;
+
+	parameter_length = be32toh(*((uint32_t *)ctio->data_ptr));
+	if ((parameter_length + 4) > parameter_list_length) {
+		ctio_free_data(ctio);
+		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);  
+		return 0;
+	}
+
+	partition_id = cdb[7];
+	partition = tape_get_partition(tdrive->tape, partition_id);
+	if (!partition) {
+		ctio_free_data(ctio);
+		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);  
+		return 0;
+	}
+
+	if (atomic_test_bit(PARTITION_MAM_CORRUPT, &partition->flags)) {
+		ctio_free_data(ctio);
+		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_MEDIUM_ERROR, 0, AUXILIARY_MEMORY_WRITE_ERROR_ASC, AUXILIARY_MEMORY_WRITE_ERROR_ASCQ);
+		return 0;
+	}
+
+	ptr = ctio->data_ptr + 4;
+	todo = parameter_length;
+
+	while (todo > 5) {
+		attr = (struct read_attribute *)ptr;
+		todo -= 5;
+		ptr += 5;
+		attr_length = be16toh(attr->length);
+		if (todo < attr_length)
+			break;
+		mam_attr = tape_partition_mam_get_attribute(partition, be16toh(attr->identifier));
+		if (!mam_attr || (mam_attr->format & 0x80) || (mam_attr->format != attr->format) || !mam_attr_length_valid(attr, mam_attr)) {
+			ctio_free_data(ctio);
+			ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);  
+			return 0;
+		} 
+		ptr += attr_length;
+		todo -= attr_length;
+	}
+
+	ptr = ctio->data_ptr + 4;
+	todo = parameter_length;
+
+	while (todo > 5) {
+		attr = (struct read_attribute *)ptr;
+		todo -= 5;
+		ptr += 5;
+		attr_length = be16toh(attr->length);
+		if (todo < attr_length)
+			break;
+		mam_attr = tape_partition_mam_get_attribute(partition, be16toh(attr->identifier));
+		if (!attr_length) {
+			mam_attr->valid = 0;
+		}
+		else {
+			memcpy(mam_attr->value, attr->value, attr_length);
+			mam_attr->valid = 1;
+			mam_attr_set_length(attr, mam_attr);
+			mam_attr->raw_attr->length = mam_attr->length;
+		}
+		mam_attr->raw_attr->valid = mam_attr->valid;
+
+		ptr += attr_length;
+		todo -= attr_length;
+	}
+
+	ctio_free_data(ctio);
+	return tape_partition_write_mam(partition);
 }
 
 static int
 tdrive_cmd_read_attribute(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 {
+	struct tape_partition *partition;
 	uint8_t *cdb = ctio->cdb;
-	uint8_t service_action;
+	uint8_t service_action, partition_id;
 	uint16_t first_attribute;
 	uint32_t allocation_length;
 	int retval = 0;
@@ -2220,14 +2315,21 @@ tdrive_cmd_read_attribute(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	service_action = cdb[1] & 0x1F;
 	first_attribute = be16toh(*(uint16_t *)(&cdb[8]));
 	allocation_length = be32toh(*((uint32_t *)(&cdb[10])));
+	partition_id = cdb[7];
+
+	partition = tape_get_partition(tdrive->tape, partition_id);
+	if (!partition) {
+		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);  
+		return 0;
+	}
 
 	switch (service_action)
 	{
 		case SERVICE_ACTION_READ_ATTRIBUTES:
-			retval = tdrive_copy_read_attributes(tdrive, ctio, allocation_length, first_attribute);
+			retval = tdrive_copy_read_attributes(tdrive, ctio, allocation_length, first_attribute, partition);
 			break;
 		case SERVICE_ACTION_READ_ATTRIBUTE_LIST:
-			retval = tdrive_copy_read_attribute_list(tdrive, ctio, allocation_length);
+			retval = tdrive_copy_read_attribute_list(tdrive, ctio, allocation_length, partition);
 			break;
 	}
 	return retval;
@@ -2378,7 +2480,7 @@ update_medium_partition_page(struct tdrive *tdrive, struct qsio_scsiio *ctio, ui
 	struct medium_partition_page *new = (struct medium_partition_page *)data;
 	struct medium_partition_page *page = &tdrive->partition_page;
 	struct tape *tape = tdrive->tape;
-	uint64_t size = 0;
+	uint64_t size = 0, fill_to_max = 0;
 	int i;
 	int len;
 
@@ -2423,9 +2525,20 @@ update_medium_partition_page(struct tdrive *tdrive, struct qsio_scsiio *ctio, ui
 		goto skip_size_check;
 
 	for (i = 0; i < new->addl_partitions_defined + 1; i++) {
+		if (new->partition_size[i] == 0xFFFF) {
+			if (fill_to_max || i > 1) {
+				ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, PARAMETER_VALUE_INVALID_ASC, PARAMETER_VALUE_INVALID_ASCQ);  
+				return -1;
+			}
+			fill_to_max = 1;
+			continue;
+		}
 		size += partition_size_from_units(be16toh(new->partition_size[i]), new->partition_units & 0xF); 
 	}
 
+	if (fill_to_max)
+		goto skip_size_check;
+ 
 	if (size > tape->set_size) {
 		/* Should be volume overflow and checked in format medium */
 		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, PARAMETER_VALUE_INVALID_ASC, PARAMETER_VALUE_INVALID_ASCQ);  
@@ -2639,7 +2752,7 @@ tdrive_cmd_mode_select10(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	todo -= be16toh(header->block_descriptor_length);
 	done += be16toh(header->block_descriptor_length);
 
-	while (todo > 2)
+	while (todo > 4)
 	{
 		uint8_t page_code, page_length;
 
@@ -3293,6 +3406,7 @@ tdrive_cmd_access_ok(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 			case LOG_SELECT:
 			case MODE_SELECT_6:
 			case MODE_SELECT_10:
+			case WRITE_ATTRIBUTE:
 			case MODE_SENSE_6:
 			case MODE_SENSE_10:
 			case PERSISTENT_RESERVE_IN:
@@ -3367,6 +3481,7 @@ tdrive_cmd_access_ok(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 		case MODE_SENSE_10:
 		case MODE_SELECT_6:
 		case MODE_SELECT_10:
+		case WRITE_ATTRIBUTE:
 		case TEST_UNIT_READY:
 		case ERASE:
 		case LOAD_UNLOAD:
@@ -3466,6 +3581,7 @@ tdrive_check_cmd(void *drive, uint8_t op)
 		case MODE_SENSE_10:
 		case MODE_SELECT_6:
 		case MODE_SELECT_10:
+		case WRITE_ATTRIBUTE:
 		case LOG_SELECT:
 		case LOG_SENSE:
 		case LOAD_UNLOAD:
@@ -3627,6 +3743,9 @@ tdrive_proc_cmd(void *drive, void *iop)
 			break;
 		case READ_ATTRIBUTE:
 			retval = tdrive_cmd_read_attribute(tdrive, ctio);
+			break;
+		case WRITE_ATTRIBUTE:
+			retval = tdrive_cmd_write_attribute(tdrive, ctio);
 			break;
 		case READ_BUFFER:
 			retval = tdrive_cmd_read_buffer(tdrive, ctio);

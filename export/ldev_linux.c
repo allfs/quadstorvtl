@@ -503,6 +503,7 @@ ldev_proc_cmd(struct qsio_scsiio *ctio)
 	}
 	case MODE_SELECT:
 	case MODE_SELECT_10:
+	case WRITE_ATTRIBUTE:
 	case SEND_DIAGNOSTIC:
 	case PERSISTENT_RESERVE_OUT:
 	{

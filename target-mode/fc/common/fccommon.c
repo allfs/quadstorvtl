@@ -299,6 +299,7 @@ fcbridge_route_cmd_post(struct qsio_scsiio *ctio)
 		return;
 	case MODE_SELECT_6:
 	case MODE_SELECT_10:
+	case WRITE_ATTRIBUTE:
 	case SEND_DIAGNOSTIC:
 	case PERSISTENT_RESERVE_OUT:
 		if (!(ctio->ccb_h.flags & QSIO_DIR_OUT))

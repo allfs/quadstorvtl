@@ -500,7 +500,7 @@ int
 device_allocate_cmd_buffers(struct qsio_scsiio *ctio, allocflags_t flags)
 {
 	uint8_t *cdb = ctio->cdb;
-	uint16_t parameter_list_length;
+	uint32_t parameter_list_length;
 
 	switch (cdb[0])
 	{
@@ -514,6 +514,11 @@ device_allocate_cmd_buffers(struct qsio_scsiio *ctio, allocflags_t flags)
 		case PERSISTENT_RESERVE_OUT:
 		case UNMAP:
 			parameter_list_length = be16toh(*(uint16_t *)(&cdb[7]));
+			break;
+		case WRITE_ATTRIBUTE:
+			parameter_list_length = be32toh(*(uint32_t *)(&cdb[10]));
+			if (parameter_list_length > 65536) /* Limit memory here */
+				return -1;
 			break;
 		default:
 			parameter_list_length = 0;
