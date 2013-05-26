@@ -2,13 +2,13 @@
 #define QS_SCSIDEFS_H_
 
 #define MAX_EVPD_PAGES		16
-#define READ_BIT(a, bit) ((a & (1 << bit)) >> bit)
+#define READ_BIT(a, bit) ((a >> bit) & 0x1)
 #define READ_WORD(a,b) ((a << 8) | (b))
 #define READ_24(a, b, c) ((a << 16) | (b << 8) | c)
 #define READ_DOUBLE_WORD(a,b,c,d) ((a << 24) | (b << 16) | (c << 8) | (d))
 #define READ_TUPLE(a,b,c) ((a << 16) | (b << 8) | (c)) 
 #define READ_NIBBLE_LOW(a) ((a) & 0xF)
-#define READ_NIBBLE_HIGH(a) (((a) & 0x10) >> 4) 
+#define READ_NIBBLE_HIGH(a) (((a >> 4) & 0xF))
 
 struct page_info {
 	int num_pages;
