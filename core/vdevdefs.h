@@ -205,7 +205,7 @@ struct sense_info {
 static inline int
 iid_equal(uint64_t first_i[], uint64_t first_t[], int8_t first_f, uint64_t second_i[], uint64_t second_t[], int8_t second_f)
 {
-	if (first_i == second_i && first_t == second_t && first_f == second_f)
+	if (port_equal(first_i, second_i) && port_equal(first_t, second_t) && first_f == second_f)
 		return 1;
 	else
 		return 0;
