@@ -54,6 +54,10 @@ int main()
 	iscsiconf.tl_id = tl_id;
 	iscsiconf.target_id = target_id;
 
+	iqn = cgi_val(entries, "iqn");
+	if (!iqn)
+		cgi_print_header_error_page("Invalid CGI Parameters\n");
+
 	IncomingUser = cgi_val(entries, "IncomingUser");
 	if (!IncomingUser || strlen(IncomingUser) > 36)
 		cgi_print_header_error_page("Invalid CGI Parameters\n");
