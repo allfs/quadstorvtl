@@ -1452,7 +1452,7 @@ static int coremod_ioctl(vnode_t *i, struct file *f, uint32_t cmd, unsigned long
 			retval = (*kcbs.vdevice_delete)(deviceinfo);
 		else if (cmd == TLTARGIOCMODDEVICE)
 			retval = (*kcbs.vdevice_modify)(deviceinfo);
-		else if (TLTARGIOCGETDEVICEINFO)
+		else if (cmd == TLTARGIOCGETDEVICEINFO)
 			retval = (*kcbs.vdevice_info)(deviceinfo);
 
 		if (retval == 0)

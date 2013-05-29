@@ -91,7 +91,7 @@ coremod_ioctl(struct cdev *dev, unsigned long cmd, caddr_t arg, int fflag, struc
 			retval = (*kcbs.vdevice_delete)(deviceinfo);
 		else if (cmd == TLTARGIOCMODDEVICE)
 			retval = (*kcbs.vdevice_modify)(deviceinfo);
-		else if (TLTARGIOCGETDEVICEINFO)
+		else if (cmd == TLTARGIOCGETDEVICEINFO)
 			retval = (*kcbs.vdevice_info)(deviceinfo);
 		memcpy(userp, deviceinfo, sizeof(*deviceinfo));
 		break;
