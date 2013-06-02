@@ -149,9 +149,21 @@ parse_vcartridge(FILE *fp)
 		goto err;
 	}
 
-	if (fscanf(fp, "type: %d\n", &vinfo->type) != 1)
+	if (fscanf(fp, "type: %hhu\n", &vinfo->type) != 1)
 	{
 		DEBUG_ERR("Cannot get type\n");
+		goto err;
+	}
+
+	if (fscanf(fp, "elem_type: %hhu\n", &vinfo->elem_type) != 1)
+	{
+		DEBUG_ERR("Cannot get elem_type\n");
+		goto err;
+	}
+
+	if (fscanf(fp, "elem_address: %hu\n", &vinfo->elem_address) != 1)
+	{
+		DEBUG_ERR("Cannot get elem_address\n");
 		goto err;
 	}
 

@@ -1,6 +1,6 @@
 include ../../../build/rules.mk
 
-CGILIST = system.cgi listvtl.cgi addvtl.cgi addvtlpost.cgi adddisk.cgi adddiskcomp.cgi adddiskpost.cgi indvvtl.cgi liststoragepool.cgi modifystoragepool.cgi addstoragepool.cgi addstoragepoolpost.cgi deletestoragepool.cgi viewstoragepool.cgi iscsiconfpost.cgi iscsiconf.cgi addvcartridge.cgi addvcartridgepost.cgi deletevcartridge.cgi deletevtl.cgi rescandisk.cgi
+CGILIST = system.cgi listvtl.cgi addvtl.cgi addvtlpost.cgi adddisk.cgi adddiskcomp.cgi adddiskpost.cgi indvvtl.cgi liststoragepool.cgi modifystoragepool.cgi addstoragepool.cgi addstoragepoolpost.cgi deletestoragepool.cgi viewstoragepool.cgi iscsiconfpost.cgi iscsiconf.cgi addvcartridge.cgi addvcartridgepost.cgi deletevcartridge.cgi deletevtl.cgi rescandisk.cgi addlvdrive.cgi listvdrive.cgi addvdrive.cgi addvdrivepost.cgi indvvdrive.cgi loadvdrive.cgi addvtlseldrive.cgi
 
 all: $(CGILIST) strip install
 
@@ -81,6 +81,27 @@ iscsiconfpost.cgi: iscsiconfpost.o cgimain.o
 
 rescandisk.cgi: rescandisk.o cgimain.o
 	$(CC) $(CFLAGS) -o rescandisk.cgi rescandisk.o cgimain.o $(CGIHTML) $(LDFLAGS)
+
+addlvdrive.cgi: addlvdrive.o cgimain.o
+	$(CC) $(CFLAGS) -o addlvdrive.cgi addlvdrive.o cgimain.o $(CGIHTML) $(LDFLAGS)
+
+listvdrive.cgi: listvdrive.o cgimain.o
+	$(CC) $(CFLAGS) -o listvdrive.cgi listvdrive.o cgimain.o $(CGIHTML) $(LDFLAGS)
+
+addvdrive.cgi: addvdrive.o cgimain.o
+	$(CC) $(CFLAGS) -o addvdrive.cgi addvdrive.o cgimain.o $(CGIHTML) $(LDFLAGS)
+
+addvdrivepost.cgi: addvdrivepost.o cgimain.o
+	$(CC) $(CFLAGS) -o addvdrivepost.cgi addvdrivepost.o cgimain.o $(CGIHTML) $(LDFLAGS)
+
+indvvdrive.cgi: indvvdrive.o cgimain.o
+	$(CC) $(CFLAGS) -o indvvdrive.cgi indvvdrive.o cgimain.o $(CGIHTML) $(LDFLAGS)
+
+loadvdrive.cgi: loadvdrive.o cgimain.o
+	$(CC) $(CFLAGS) -o loadvdrive.cgi loadvdrive.o cgimain.o $(CGIHTML) $(LDFLAGS)
+
+addvtlseldrive.cgi: addvtlseldrive.o cgimain.o
+	$(CC) $(CFLAGS) -o addvtlseldrive.cgi addvtlseldrive.o cgimain.o $(CGIHTML) $(LDFLAGS)
 
 clean:
 	rm -f *.o *.cgi

@@ -538,12 +538,12 @@ sql_query_vdevice(struct vdevice *device_list[])
 		{
 			struct tdriveconf *driveconf;
 
-			driveconf = tdriveconf_new(tl_id, 0, PQgetvalue(res, i, 1), PQgetvalue(res, i, 6));
+			driveconf = tdriveconf_new(tl_id, 0, PQgetvalue(res, i, 2), PQgetvalue(res, i, 7));
 			if (!driveconf) {
 				DEBUG_ERR("Unable to allocae for a new driveconf struct\n");
 				goto err;
 			}
-			driveconf->type = atoi(PQgetvalue(res, i, 2));
+			driveconf->type = atoi(PQgetvalue(res, i, 3));
 			retval = sql_query_driveprop(driveconf);
 			if (retval != 0) {
 				DEBUG_ERR("Query drive property failed\n");

@@ -3051,6 +3051,7 @@ tl_server_load_drive(struct tl_comm *comm, struct tl_msg *msg)
 	memset(&dinfo, 0, sizeof(struct vdeviceinfo));
 	dinfo.type = T_SEQUENTIAL;
 	dinfo.tl_id = vdevice->tl_id;
+	dinfo.tape_id = tape_id;
 	dinfo.target_id = vdevice->target_id;
 	dinfo.mod_type = load;
 

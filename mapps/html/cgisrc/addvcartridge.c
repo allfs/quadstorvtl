@@ -39,31 +39,27 @@ int main()
 	if (retval != 0)
 		cgi_print_header_error_page("Getting pool list failed\n");
 
+	if (TAILQ_EMPTY(&group_list))
+		cgi_print_header_error_page("Could not find any storage pool with configured disk storage");
+
 	read_cgi_input(&entries);
 	tmp = cgi_val(entries, "tl_id");
 	if (!tmp)
-	{
 		cgi_print_header_error_page("Invalid CGI parameters\n");
-	}
+
 	tl_id = atoi(tmp);
 
 	vtlname = cgi_val(entries, "vtlname");
 	if (!vtlname)
-	{
 		cgi_print_header_error_page("Invalid CGI parameters\n");
-	}
 
 	tmp = cgi_val(entries, "nvoltypes");
 	if (!tmp || !(nvoltypes = atoi(tmp)))
-	{
 		cgi_print_header_error_page("Invalid CGI parameters\n");
-	}
 
 	tmp = cgi_val(entries, "vtltype");
 	if (!tmp || !(vtltype = atoi(tmp)))
-	{
 		cgi_print_header_error_page("Invalid CGI parameters\n");
-	}
 
 	cgi_print_header("Add VCartridge", "addvcartridge.js", 0);
 	cgi_print_thdr("Add VCartridge");
@@ -91,14 +87,9 @@ int main()
 
 			sprintf(vspec, "vtype%d", i);
 			tmp = cgi_val(entries, vspec);
-			if (!tmp || !(vtype = atoi(tmp))) {
-				DEBUG_INFO("tmp is %s\n", tmp);
-				if (tmp)
-				{
-					DEBUG_INFO("vtype is %d\n", vtype);
-				}
+			if (!tmp || !(vtype = atoi(tmp)))
 				cgi_print_header_error_page("Invalid CGI Parameters\n");
-			}
+
 			printf("<OPTION value=\"%d\">%s</OPTION>\n", voltypes[vtype - 1].type, voltypes[vtype - 1].name );
 		}
 		printf("</SELECT></td>\n");
@@ -106,9 +97,9 @@ int main()
 	else {
 		int vtype;
 		tmp = cgi_val(entries, "vtype0");
-		if (!tmp || !(vtype = atoi(tmp))) {
+		if (!tmp || !(vtype = atoi(tmp)))
 			cgi_print_header_error_page("Invalid CGI Parameters\n");
-		}
+
 		printf("<input type=\"hidden\" name=\"voltype\" value=\"%d\">\n", vtype);
 		printf("<td>%s</td>\n", voltypes[vtype - 1].name);
 	}

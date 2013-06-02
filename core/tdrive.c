@@ -440,7 +440,6 @@ tdrive_free(struct tdrive *tdrive, int delete)
 	if (tdrive->tape && (!tdrive->tape->locked || tdrive->tape->locked_by == tdrive)) {
 		tdrive_empty_write_queue(tdrive);
 		tape_flush_buffers(tdrive->tape);
-		tape_free(tdrive->tape, delete);
 	}
 
 	tdrive_cbs_remove(tdrive);
@@ -537,8 +536,7 @@ tdrive_new_vcartridge(struct tdrive *tdrive, struct vcartridge *vinfo)
 
 	if (!tdrive->tape)
 		__tdrive_load_tape(tdrive, tape);
-	else
-		LIST_INSERT_HEAD(&tdrive->media_list, tape, t_list);
+	LIST_INSERT_HEAD(&tdrive->media_list, tape, t_list);
 	return 0;
 }
 
@@ -578,6 +576,16 @@ tdrive_vcartridge_info(struct tdrive *tdrive, struct vcartridge *vcartridge)
 }
 
 int
+tdrive_get_info(struct tdrive *tdrive, struct vdeviceinfo *deviceinfo)
+{
+	tdrive_lock(tdrive);
+	if (tdrive->tape)
+		strcpy(deviceinfo->tape_label, tdrive->tape->label);
+	tdrive_unlock(tdrive);
+	return 0;
+}
+
+int
 tdrive_delete_vcartridge(struct tdrive *tdrive, struct vcartridge *vcartridge)
 {
 	int retval;
@@ -594,6 +602,7 @@ tdrive_delete_vcartridge(struct tdrive *tdrive, struct vcartridge *vcartridge)
 	if (unlikely(retval != 0))
 		return -1;
 
+	LIST_REMOVE(tape, t_list);
 	tape_free(tape, vcartridge->free_alloc);
 	return 0;
 }
@@ -611,8 +620,8 @@ tdrive_load_vcartridge(struct tdrive *tdrive, struct vcartridge *vinfo)
 
 	if (!tdrive->tape)
 		__tdrive_load_tape(tdrive, tape);
-	else
-		LIST_INSERT_HEAD(&tdrive->media_list, tape, t_list);
+
+	LIST_INSERT_HEAD(&tdrive->media_list, tape, t_list);
 
 	return 0;
 }
@@ -3705,7 +3714,7 @@ tdrive_proc_cmd(void *drive, void *iop)
 		}
 	}
 
-	if (tdrive_cmd_access_ok(tdrive, ctio) != 0)
+	if (tdrive_cmd_access_ok(tdrive, ctio) != 0) 
 	{
 		ctio->scsi_status = SCSI_STATUS_RESERV_CONFLICT;
 		ctio_free_data(ctio);
@@ -3946,45 +3955,32 @@ tdrive_load(struct tdrive *tdrive, struct vdeviceinfo *deviceinfo)
 	tape = tdrive->tape;
 	load = deviceinfo->mod_type;
 	if (!load && !tape)
-	{
 		return 0;
-	}
 
 	if (load && tape && strcmp(tape->label, deviceinfo->tape_label) == 0)
-	{
 		return 0;
-	}
 
-	if (tape)
-	{
+	if (tape) {
 		retval = tdrive_unload_tape(tdrive, NULL);
 		if (unlikely(retval != 0))
-		{
 			return -1;
-		}
-		LIST_INSERT_HEAD(&tdrive->media_list, tape, t_list);
 	} 
 
 	if (!load)
-	{
 		return 0;
-	}
 
 	tape = tdrive_find_tape(tdrive, deviceinfo->tape_id);
-	if (unlikely(!tape))
-	{
+	if (unlikely(!tape)) {
 		debug_warn("Cannot find tape at id %s\n", deviceinfo->tape_label);
 		return -1;
 	}
 
 	retval = tdrive_load_tape(tdrive, tape);
-	if (unlikely(retval != 0))
-	{
+	if (unlikely(retval != 0)) {
 		debug_warn("Cannot load tape at id %s\n", deviceinfo->tape_label);
 		return -1;
 	}
 
-	LIST_REMOVE_INIT(tape, t_list);
 	return 0;
 }
 

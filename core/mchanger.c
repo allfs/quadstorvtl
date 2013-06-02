@@ -2268,6 +2268,7 @@ mchanger_proc_cmd(void *changer, void *iop)
 
 	if (mchanger_cmd_access_ok(mchanger, ctio) != 0) {
 		ctio->scsi_status = SCSI_STATUS_RESERV_CONFLICT;
+		ctio_free_data(ctio);
 		retval = 0;
 		goto out;
 	}
@@ -2441,6 +2442,20 @@ mchanger_export_vcartridge(struct mchanger *mchanger, struct vcartridge *vinfo, 
 }
 
 int
+mchanger_get_info(struct mchanger *mchanger, struct vdeviceinfo *deviceinfo)
+{
+	struct tdrive *tdrive;
+
+	if (!deviceinfo->target_id)
+		return 0;
+
+	tdrive = mchanger_locate_tdrive(mchanger, deviceinfo->target_id);
+	if (!tdrive)
+		return -1;
+
+	return tdrive_get_info(tdrive, deviceinfo);
+}
+int
 mchanger_vcartridge_info(struct mchanger *mchanger, struct vcartridge *vcartridge)
 {
 	struct mchanger_element *element;
@@ -2456,6 +2471,8 @@ mchanger_vcartridge_info(struct mchanger *mchanger, struct vcartridge *vcartridg
 				tape = tdrive->tape;
 				if (tape && tape->tape_id == vcartridge->tape_id) {
 					tape_get_info(tape, vcartridge);
+					vcartridge->elem_type = element->type;
+					vcartridge->elem_address = element->address;
 					goto out;
 				}
 			}
@@ -2463,6 +2480,8 @@ mchanger_vcartridge_info(struct mchanger *mchanger, struct vcartridge *vcartridg
 				tape = element->element_data;
 				if (tape && tape->tape_id == vcartridge->tape_id) {
 					tape_get_info(tape, vcartridge);
+					vcartridge->elem_type = element->type;
+					vcartridge->elem_address = element->address;
 					goto out;
 				}
 			}

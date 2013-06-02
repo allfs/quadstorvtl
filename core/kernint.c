@@ -399,6 +399,7 @@ kern_interface_init(struct qs_kern_cbs *kern_cbs)
 	kern_cbs->vdevice_delete = vdevice_delete;
 	kern_cbs->vdevice_modify = vdevice_modify;
 	kern_cbs->vdevice_info = vdevice_info;
+	kern_cbs->vdevice_load = vdevice_load;
 	kern_cbs->vcartridge_new = vcartridge_new;
 	kern_cbs->vcartridge_load = vcartridge_load;
 	kern_cbs->vcartridge_delete = vcartridge_delete;

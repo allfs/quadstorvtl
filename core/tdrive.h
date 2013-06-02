@@ -409,6 +409,7 @@ int tdrive_compression_enabled(struct tdrive *tdrive);
 int tdrive_read_position(struct tdrive *tdrive, struct tl_entryinfo *entryinfo);
 int tdrive_delete_vcartridge(struct tdrive *tdrive, struct vcartridge *vcartridge);
 int tdrive_vcartridge_info(struct tdrive *tdrive, struct vcartridge *vcartridge);
+int tdrive_get_info(struct tdrive *tdrive, struct vdeviceinfo *deviceinfo);
 
 /* handler routines */
 void vultrium_init_handlers(struct tdrive *tdrive);

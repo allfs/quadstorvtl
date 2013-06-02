@@ -82,6 +82,8 @@ dump_volume(FILE *fp, struct vcartridge *vinfo)
 	fprintf(fp, "tape_id: %u\n", vinfo->tape_id);
 	fprintf(fp, "worm: %d\n", vinfo->worm);
 	fprintf(fp, "type: %d\n", vinfo->type);
+	fprintf(fp, "elem_type: %d\n", vinfo->elem_type);
+	fprintf(fp, "elem_address: %d\n", vinfo->elem_address);
 	fprintf(fp, "group_name: %s\n", vinfo->group_name);
 	fprintf(fp, "label: %s\n", vinfo->label);
 	fprintf(fp, "size: %llu\n", (unsigned long long)vinfo->size);

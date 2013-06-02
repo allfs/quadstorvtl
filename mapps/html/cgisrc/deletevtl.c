@@ -24,7 +24,7 @@ int main()
 {
 	llist entries;
 	char *tmp;
-	int tl_id;
+	int tl_id, vtltype;
 	int retval;
 
 	read_cgi_input(&entries);
@@ -34,10 +34,18 @@ int main()
 		cgi_print_header_error_page("No VTL specified for deletion");
 	tl_id = atoi(tmp);
 
+	tmp = cgi_val(entries, "vtltype");
+	if (!tmp)
+		cgi_print_header_error_page("Invalid CGI Parameters");
+	vtltype = atoi(tmp);
+
 	retval = tl_client_delete_vtl_conf(tl_id);
 	if (retval != 0)
 		cgi_print_header_error_page("Unable to delete the specified VTL");
 
-	cgi_redirect("listvtl.cgi");
+	if (vtltype == T_CHANGER)
+		cgi_redirect("listvtl.cgi");
+	else
+		cgi_redirect("listvdrive.cgi");
 	return 0;
 }

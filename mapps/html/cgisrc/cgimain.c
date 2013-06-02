@@ -59,8 +59,8 @@ struct drivetype drivetypes[] = {
 };
 
 struct voltype voltypes[] = {
-	{VOL_TYPE_CLEANING, VOL_TYPE_CLEANING},
-	{VOL_TYPE_DIAGNOSTICS, VOL_TYPE_DIAGNOSTICS},
+	{VOL_TYPE_CLEANING, VOL_NAME_CLEANING},
+	{VOL_TYPE_DIAGNOSTICS, VOL_NAME_DIAG},
 	{VOL_TYPE_DLT_4, VOL_NAME_DLT_4},
 	{VOL_TYPE_VSTAPE, VOL_NAME_VSTAPE},
 	{VOL_TYPE_SDLT_1, VOL_NAME_SDLT_1},
@@ -73,6 +73,8 @@ struct voltype voltypes[] = {
 	{VOL_TYPE_LTO_5, VOL_NAME_LTO_5},
 	{VOL_TYPE_LTO_6, VOL_NAME_LTO_6},
 };
+
+int num_voltypes = (sizeof(voltypes) / sizeof(struct voltype));
 
 void
 __cgi_print_header(char *title, char *jsfile, int nocache, char *meta, int refresh, char *onload)
@@ -127,6 +129,7 @@ __cgi_print_header(char *title, char *jsfile, int nocache, char *meta, int refre
 	printf("<li class=\"yui3-menuitem\"><a class=\"yui3-menuitem-content\" href=\"adddisk.cgi?tjid%ld.%ld\">Physical Storage</a></li>\n", (long)tv.tv_sec, (long)tv.tv_usec);
 	printf("<li class=\"yui3-menuitem\"><a class=\"yui3-menuitem-content\" href=\"liststoragepool.cgi?tjid%ld.%ld\">Storage Pools</a></li>\n", (long)tv.tv_sec, (long)tv.tv_usec);
 	printf("<li class=\"yui3-menuitem\"><a class=\"yui3-menuitem-content\" href=\"listvtl.cgi?tjid%ld.%ld\">Virtual Libraries</a></li>\n", (long)tv.tv_sec, (long)tv.tv_usec);
+	printf("<li class=\"yui3-menuitem\"><a class=\"yui3-menuitem-content\" href=\"listvdrive.cgi?tjid%ld.%ld\">Virtual Drives</a></li>\n", (long)tv.tv_sec, (long)tv.tv_usec);
 
 	printf("</ul>\n");
 	printf("</div>\n");

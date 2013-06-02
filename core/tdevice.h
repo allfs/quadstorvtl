@@ -88,6 +88,7 @@ int vdevice_new(struct vdeviceinfo *deviceinfo);
 int vdevice_delete(struct vdeviceinfo *deviceinfo);
 int vdevice_modify(struct vdeviceinfo *deviceinfo);
 int vdevice_info(struct vdeviceinfo *deviceinfo);
+int vdevice_load(struct vdeviceinfo *deviceinfo);
 void tdevice_cbs_disable(struct tdevice *tdevice);
 void tdevice_cbs_remove(struct tdevice *tdevice);
 int tdevice_delete(uint32_t tl_id, int free_alloc);

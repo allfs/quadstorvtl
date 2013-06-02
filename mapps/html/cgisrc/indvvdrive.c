@@ -55,45 +55,37 @@ int main()
 	int tl_id;
 	int retval;
 	struct vdevice *vdevice;
-	struct vtlconf *vtlconf;
-	struct tdriveconf *dconf;
+	struct tdriveconf *driveconf;
 	struct vcartridge *vcartridge;
 	char buf[256];
 	char tempfile[100];
 	int fd, i;
 	FILE *fp;
-	char *cols[] = {"Name", "{ key: 'DType', label: 'Drive Type'}", "Name", "{ key: 'Serial', label: 'Serial Number'}", "VCartridge", "{ key: 'iSCSI', label: 'iSCSI', allowHTML: true }", NULL};
-	char *cols1[] = {"Pool", "Label", "{key: 'Element', sortable: true }", "Address", "{ key: 'VType', label: 'VCart Type', sortable: true }", "WORM", "Size", "Used", "{ key: 'Delete', label: 'Delete', allowHTML: true }", NULL};
+	char *cols1[] = {"Pool", "Label", "VType", "WORM", "Size", "Used", "Status", "{ key: 'LoadUnload', label: 'Load/Unload', allowHTML: true }", "{ key: 'Delete', label: 'Delete', allowHTML: true }", NULL};
 
 	read_cgi_input(&entries);
 
 	tmp = cgi_val(entries, "tl_id");
 	if (!tmp)
-	{
-		DEBUG_INFO("cgi_val not able get tl_id");
 		cgi_print_header_error_page("Invalid cgi input parameters passed\n");
-	}
 
 	tl_id = atoi(tmp);
 
 	strcpy(tempfile, "/tmp/.quadstorindvvtl.XXXXXX");
 	fd = mkstemp(tempfile);
 	if (fd == -1)
-	{
 		cgi_print_header_error_page("Internal processing error\n");
-	}
+
 	close(fd);
 
-	retval = tl_client_vtl_info(tempfile, tl_id, MSG_ID_VTL_INFO);
-	if (retval)
-	{
+	retval = tl_client_vtl_info(tempfile, tl_id, MSG_ID_GET_VTL_CONF);
+	if (retval) {
 		remove(tempfile);
-		cgi_print_header_error_page("Unable to get VTL Configuration\n");
+		cgi_print_header_error_page("Unable to get VDrive Configuration\n");
 	}
 
 	fp = fopen(tempfile, "r");
-	if (!fp)
-	{
+	if (!fp) {
 		remove(tempfile);
 		cgi_print_header_error_page("Internal processing error\n");
 	}
@@ -103,25 +95,24 @@ int main()
 	fclose(fp);
 	remove(tempfile);
 	if (!vdevice)
-	{
 		cgi_print_header_error_page("Internal processing error\n");
-	}
 
-	vtlconf = (struct vtlconf *)vdevice;
+	driveconf = (struct tdriveconf *)vdevice;
+	add_drivetype(driveconf->type);
 
-	cgi_print_header("VTL Information", NULL, 0);
+	cgi_print_header("VDrive Information", NULL, 0);
 
-	cgi_print_thdr("VTL Information");
+	cgi_print_thdr("VDrive Information");
 
 	printf("<table class=\"ctable\">\n");
 
 	printf("<tr>\n");
-	printf("<td>VTL Type</td>\n");
-	printf("<td>%s</td>\n", vtltypes[vtlconf->type - 1].name);
+	printf("<td>VDrive Type</td>\n");
+	printf("<td>%s</td>\n", drivetypes[driveconf->type - 1].name);
 	printf("</tr>\n");
 
 	printf("<tr>\n");
-	printf("<td>VTL Name</td>\n");
+	printf("<td>VDrive Name</td>\n");
 	printf("<td>%s</td>\n", vdevice->name);
 	printf("</tr>\n");
 
@@ -131,41 +122,22 @@ int main()
 	printf("</tr>\n");
 
 	printf("<tr>\n");
-	printf("<td>Slots</td>\n");
-	printf("<td>%d</td>\n", vtlconf->slots);
-	printf("</tr>\n");
-
-	printf("<tr>\n");
-	printf("<td>I/E Ports</td>\n");
-	printf("<td>%d</td>\n", vtlconf->ieports);
+	printf("<td>VCartridge</td>\n");
+	printf("<td>%s</td>\n", driveconf->tape_label);
 	printf("</tr>\n");
 
 	printf("<tr>\n");
 	printf("<td>iSCSI</td>\n");
-	printf("<td><a href=\"iscsiconf.cgi?tl_id=%d&target_id=0&vtltype=%d\">View</a></td>\n", tl_id, T_CHANGER);
+	printf("<td><a href=\"iscsiconf.cgi?tl_id=%d&target_id=0&vtltype=%d\">View</a></td>\n", tl_id, T_SEQUENTIAL);
 	printf("</tr>\n");
 
 	printf("</table>\n");
 
-	printf("<form action=\"deletevtl.cgi\" method=\"post\" onSubmit=\"return confirm('Delete VTL %s ?');\">\n", vdevice->name);
+	printf("<form action=\"deletevtl.cgi\" method=\"post\" onSubmit=\"return confirm('Delete VDrive %s ?');\">\n", vdevice->name);
 	printf("<input type=\"hidden\" name=\"tl_id\" value=\"%d\">\n", tl_id);
-	printf("<input type=\"hidden\" name=\"vtltype\" value=\"%d\">\n", T_CHANGER);
-	cgi_print_submit_button("submit", "Delete VTL");
+	printf("<input type=\"hidden\" name=\"vtltype\" value=\"%d\">\n", T_SEQUENTIAL);
+	cgi_print_submit_button("submit", "Delete VDrive");
 	cgi_print_form_end();
-
-	TAILQ_FOREACH(dconf, &vtlconf->drive_list, q_entry) {
-		add_drivetype(dconf->type);
-	}
-
-	cgi_print_thdr("VDrive Information");
-	if (TAILQ_EMPTY(&vtlconf->drive_list)) {
-		cgi_print_div_start("center");
-		cgi_print_paragraph("None");
-		cgi_print_div_end();
-	}
-	else {
-		cgi_print_table_div("vtl-drives-table");
-	}
 
 	cgi_print_thdr("VCartridge Information");
 	if (TAILQ_EMPTY(&vdevice->vol_list)) {
@@ -181,7 +153,7 @@ int main()
 	cgi_print_form_start("addvcartridge", "addvcartridge.cgi", "post", 0);
 	printf("<input type=\"hidden\" name=\"tl_id\" value=\"%u\">\n", tl_id);
 	printf("<input type=\"hidden\" name=\"vtlname\" value=\"%s\">\n", vdevice->name);
-	printf("<input type=\"hidden\" name=\"vtltype\" value=\"%d\">\n", T_CHANGER);
+	printf("<input type=\"hidden\" name=\"vtltype\" value=\"%d\">\n", T_SEQUENTIAL);
 	printf("<input type=\"hidden\" name=\"nvoltypes\" value=\"%d\">\n", ntypes);
 	for (i = 0; i < ntypes; i++) {
 		printf("<input type=\"hidden\" name=\"vtype%d\" value=\"%d\">\n", i, vtypes_arr[i]);
@@ -192,28 +164,6 @@ int main()
 
 	cgi_print_div_trailer();
 
-	if (TAILQ_EMPTY(&vtlconf->drive_list))
-		goto skip_drives;
-
-	cgi_print_table_start("vtl-drives-table", cols, 1);
-	TAILQ_FOREACH(dconf, &vtlconf->drive_list, q_entry) {
-		cgi_print_row_start();
-		cgi_print_column_format("Name", "%s", dconf->vdevice.name);
-		cgi_print_comma();
-		cgi_print_column_format("DType", "%s", drivetypes[dconf->type - 1].name);
-		cgi_print_comma();
-		cgi_print_column_format("Name", "%s", dconf->vdevice.name);
-		cgi_print_comma();
-		cgi_print_column_format("Serial", "%s", dconf->vdevice.serialnumber);
-		cgi_print_comma();
-		cgi_print_column_format("VCartridge", "%s", dconf->tape_label);
-		cgi_print_comma();
-		cgi_print_column_format("iSCSI", "<a href=\"iscsiconf.cgi?tl_id=%d&target_id=%u&vtltype=%d\">View</a>", vdevice->tl_id, dconf->vdevice.target_id, T_CHANGER);
-		cgi_print_row_end();
-	}
-	cgi_print_table_end("vtl-drives-table");
-
-skip_drives:
 	if (TAILQ_EMPTY(&vdevice->vol_list))
 		goto skip_vcartridge;
 
@@ -223,10 +173,6 @@ skip_drives:
 		cgi_print_column_format("Pool", "%s", vcartridge->group_name);
 		cgi_print_comma();
 		cgi_print_column_format("Label", "%s", vcartridge->label);
-		cgi_print_comma();
-		cgi_print_column("Element", get_element_type_str(vcartridge->elem_type));
-		cgi_print_comma();
-		cgi_print_column_format("Address", "%d", vcartridge->elem_address);
 		cgi_print_comma();
 		cgi_print_column_format("VType", "%s", voltypes[vcartridge->type - 1].name);
 		cgi_print_comma();
@@ -241,7 +187,26 @@ skip_drives:
 		cgi_print_column_format("Used", "%d%%", (int)usage_percentage(vcartridge->size, vcartridge->used));
 		cgi_print_comma();
 
-		cgi_print_column_format("Delete", "<a href=\"deletevcartridge.cgi?tl_id=%u&tape_id=%u&vtltype=%d\"  onclick=\\'return confirm(\\\"Delete VCartrdige %s?\\\");\\'><img src=\"/quadstor/delete.png\" width=16px height=16px border=0></a>", tl_id, vcartridge->tape_id, T_CHANGER, vcartridge->label);
+		if (vcartridge->loaderror)
+			cgi_print_column("Status", "Load Error");
+		else if (vcartridge->vstatus & MEDIA_STATUS_ACTIVE && vcartridge->vstatus & MEDIA_STATUS_EXPORTED)
+			cgi_print_column("Status", "Active, Exported");
+		else if (vcartridge->vstatus & MEDIA_STATUS_ACTIVE)
+			cgi_print_column("Status", "Active");
+		else if (vcartridge->vstatus & MEDIA_STATUS_EXPORTED)
+			cgi_print_column("Status", "Exported");
+		else
+			cgi_print_column("Status", "Unknown");
+		cgi_print_comma();
+
+		if (strcmp(vcartridge->label, driveconf->tape_label))
+			cgi_print_column_format("LoadUnload", "<a href=\"loadvdrive.cgi?tid=%d&tl_id=%d&msg_id=%d\">Load</a>", vcartridge->tape_id, tl_id, MSG_ID_LOAD_DRIVE);
+		else
+			cgi_print_column_format("LoadUnload", "<a href=\"loadvdrive.cgi?tid=%d&tl_id=%d&msg_id=%d\">Unload</a>", vcartridge->tape_id, tl_id, MSG_ID_UNLOAD_DRIVE);
+		cgi_print_comma();
+
+		cgi_print_column_format("Delete", "<a href=\"deletevcartridge.cgi?tl_id=%u&tape_id=%u&vtltype=%d\"  onclick=\\'return confirm(\\\"Delete VCartrdige %s?\\\");\\'><img src=\"/quadstor/delete.png\" width=16px height=16px border=0></a>", tl_id, vcartridge->tape_id, T_SEQUENTIAL, vcartridge->label);
+
 		cgi_print_row_end();
 	}
 	cgi_print_table_end("vcartridges-table");

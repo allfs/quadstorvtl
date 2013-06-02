@@ -54,7 +54,7 @@ int main()
 	if (vtltype == T_CHANGER)
 		sprintf(cmd, "indvvtl.cgi?tl_id=%d", tl_id);
 	else
-		sprintf(cmd, "indvdrive.cgi?tl_id=%d", tl_id);
+		sprintf(cmd, "indvvdrive.cgi?tl_id=%d", tl_id);
 	cgi_redirect(cmd);
 	return 0;
 }

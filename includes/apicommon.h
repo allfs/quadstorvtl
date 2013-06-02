@@ -296,4 +296,24 @@ struct fc_rule_spec {
 	char vtl[TL_MAX_NAME_LEN];
 };
 
+#define MEDIUM_TRANSPORT_ELEMENT	0x01
+#define STORAGE_ELEMENT			0x02
+#define IMPORT_EXPORT_ELEMENT		0x03
+#define DATA_TRANSFER_ELEMENT		0x04
+
+static inline char *
+get_element_type_str(int type)
+{
+	switch (type) {
+	case STORAGE_ELEMENT:
+		return "Slot";
+	case IMPORT_EXPORT_ELEMENT:
+		return "Import/Export";
+	case DATA_TRANSFER_ELEMENT:
+		return "Drive";
+	case MEDIUM_TRANSPORT_ELEMENT:
+	default:
+		return "Unknown";
+	} 
+}
 #endif /* API_COMMON_H_ */

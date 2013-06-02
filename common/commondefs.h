@@ -47,7 +47,9 @@ struct vcartridge {
 	int tl_id;
 	uint32_t tape_id;
 	int worm; /* worm support */
-	int type;
+	uint8_t type;
+	uint8_t elem_type;
+	uint16_t elem_address;
 	uint32_t free_alloc;
 	uint32_t loaderror;
 	TAILQ_ENTRY(vcartridge) q_entry;

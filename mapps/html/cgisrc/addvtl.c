@@ -30,7 +30,7 @@ int main()
 
 	cgi_print_thdr("Add VTL");
 
-	cgi_print_form_start("addvtl", "addvtlpost.cgi", "post", 1);
+	cgi_print_form_start("addvtl", "addvtlseldrive.cgi", "post", 1);
 	printf("<input type=\"hidden\" name=\"vtype\" value=\"%d\">\n", T_CHANGER);
 	printf("<INPUT type=\"hidden\" name=\"ndrivetypes\" value=\"1\">\n");
 	printf("<INPUT type=\"hidden\" name=\"ndrivetype0\" value=\"0\">\n");

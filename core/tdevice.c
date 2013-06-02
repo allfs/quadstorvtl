@@ -85,7 +85,7 @@ vdevice_new_tdrive(struct vdeviceinfo *deviceinfo)
 			return -1;
 
 		tdrive = tdrive_new(NULL, deviceinfo);
-		tdevices[deviceinfo->tl_id] = (struct tdevice *)tdevice;
+		tdevices[deviceinfo->tl_id] = (struct tdevice *)tdrive;
 	}
 
 	if (unlikely(!tdrive))
@@ -249,8 +249,39 @@ vdevice_modify(struct vdeviceinfo *deviceinfo)
 }
 
 int
+vdevice_load(struct vdeviceinfo *deviceinfo)
+{
+	struct tdevice *tdevice;
+	uint32_t tl_id = deviceinfo->tl_id;
+
+	if (tl_id >= TL_MAX_DEVICES)
+		return -1;
+
+	tdevice = tdevices[tl_id];
+	if (!tdevice || tdevice->type != T_SEQUENTIAL)
+		return -1;
+
+	return tdrive_load((struct tdrive *)tdevice, deviceinfo); 
+}
+
+int
 vdevice_info(struct vdeviceinfo *deviceinfo)
 {
+	struct tdevice *tdevice;
+	uint32_t tl_id = deviceinfo->tl_id;
+
+	if (tl_id >= TL_MAX_DEVICES)
+		return -1;
+
+	tdevice = tdevices[tl_id];
+	if (!tdevice)
+		return -1;
+
+	if (tdevice->type == T_SEQUENTIAL)
+		tdrive_get_info((struct tdrive *)tdevice, deviceinfo);
+	else
+		mchanger_get_info((struct mchanger *)tdevice, deviceinfo);
+
 	return 0;
 }
 

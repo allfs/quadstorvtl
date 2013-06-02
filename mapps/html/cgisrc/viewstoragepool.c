@@ -27,21 +27,12 @@ int main()
 	int retval;
 	FILE *fp;
 	struct d_list configured_dlist;
-#if 0
-	struct tdisk_list tdisk_list;
-	struct tdisk_info *tdisk_info;
-#endif
 	struct physdisk *disk;
 	char databuf[64];
 	char *name;
 	uint32_t group_id;
-	double ratio;
 	char *tmp;
 	char *cols[] = {"ID", "Vendor", "Model", "{ key: 'Serial', label: 'Serial Number'}", "Name", "Size", "Used", "Status", NULL};
-	char *cols1[] = {"name", "value", NULL};
-#if 0
-	char *cols2[] = {"Name", "{ key: 'Serial', label: 'Serial Number'}", "Size", "Status", "{ key: 'Modify', allowHTML: true }", "{ key: 'Statistics', allowHTML: true }", "{ key: 'Delete', allowHTML: true }", NULL};
-#endif
 
 	read_cgi_input(&entries);
 
