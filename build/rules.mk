@@ -16,6 +16,8 @@ CFLAGS += -DFREEBSD
 CXXFLAGS += -DFREEBSD
 endif
 
+CFLAGS += -Werror
+
 ifeq "$(RELEASE_BUILD)" "1"
 CFLAGS += -O2
 else
