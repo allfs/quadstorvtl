@@ -391,6 +391,7 @@ cgi_redirect(char *cgiscript)
 	html_header();
 	printf("<html>\n");
 	printf("<head>\n");
+	printf("<meta http-equiv=\"content-type\" content=\"text/html;charset=UTF-8\" />\n");
 	if (strchr(cgiscript, '?'))
 		printf("<meta http-equiv=\"refresh\" content=\"0; url=%s&tjid=%ld.%ld\" />", cgiscript, (long)tv.tv_sec, (long)tv.tv_usec);
 	else

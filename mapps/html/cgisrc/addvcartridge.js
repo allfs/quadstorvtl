@@ -1,13 +1,5 @@
 <!-- 
 
-function changeauto()
-{
-	if (document.addvol.autoconf.checked == true)
-		document.addvol.barcode.disabled = true;
-	else
-		document.addvol.barcode.disabled = false;
-}
-
 function isNumeric(str){
 	var re = /[\D]/
 	if (re.test(str))
@@ -29,54 +21,43 @@ function ValidString(str){
 
 function checkform()
 {
+	var frm = document.getElementById('addvcartridge');
 
-	if (document.addvol.vtltype.value == 1)
-	{
-		if ((!document.addvol.autoconf || document.addvol.autoconf.checked != true) && (!document.addvol.barcode.value))
-		{
-			alert("Media label cannot be empty");
-			return false;
-		}
-	}
-	else
-	{
-		if (!document.addvol.barcode.value)
-		{
-			alert("Media label cannot be empty");
-			return false;
-		}
+	if (!frm.barcode.value) {
+		alert("Media label cannot be empty");
+		return false;
 	}
 
-	if (!ValidString(document.addvol.barcode.value))
+	if (!ValidString(frm.barcode.value))
 	{
 		alert("Media label can only contains alphabets or numbers");
 		return false;
 	}
 
-	if (!document.addvol.vtlname.value)
+	if (!frm.vtlname.value)
 	{
 		alert("VTL Name cannot be empty");
 		return false;
 	}
 
-	if (!ValidString(document.addvol.vtlname.value))
+	if (!ValidString(frm.vtlname.value))
 	{
 		alert("VTL Name can only contains alphabets or numbers");
 	}
 
-	if (!document.addvol.nvolumes.value)
+	if (!frm.nvolumes.value)
 	{
 		alert("Number of volumes cannot be empty");
 		return false;
 	}
 
-	if (!isNumeric(document.addvol.nvolumes.value))
+	if (!isNumeric(frm.nvolumes.value))
 	{
 		alert("Number of volumes should be a number");
 		return false;
 	}
 
-	var nvolumes = parseInt(document.addvol.nvolumes.value);
+	var nvolumes = parseInt(frm.nvolumes.value);
 
 	if (nvolumes <= 0)
 	{
@@ -90,9 +71,9 @@ function checkform()
 		return false;
 	}
 
-	if (document.addvol.autoconf.checked != true  && document.addvol.barcode.value.length != 6 && nvolumes != 1)
+	if (frm.barcode.value.length != 6 && nvolumes != 1)
 	{
-		alert("Media label start range has to be 6 characters");
+		alert("Barcode prefix has to be 6 characters");
 		return false;
 	}
 	return true;
