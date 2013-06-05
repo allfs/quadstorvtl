@@ -1584,9 +1584,6 @@ tape_partition_update_mam(struct tape_partition *partition, uint16_t first_attri
 {
 	uint64_t remaining;
 
-	if (first_attribute > 0x0001)
-		return;
-
 	remaining = partition->size - partition->used;
 	tape_partition_mam_set_long(partition, 0x0000, remaining >> 20);
 	tape_partition_mam_set_word(partition, 0x0001, partition->size >> 20);

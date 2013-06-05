@@ -2075,20 +2075,14 @@ tdrive_copy_supported_log_page_info(struct tdrive *tdrive, uint8_t *buffer, uint
 	struct scsi_log_page *page = (struct scsi_log_page *)buffer;
 	uint8_t num_pages = 0;
 
-	if (allocation_length < (sizeof(struct scsi_log_page)+tdrive->log_info.num_pages))
-	{
-		return -1;
-	}
-
 	bzero(page, sizeof(*page));
 	page->page_code = 0x00;
 	page->page_length = tdrive->log_info.num_pages;
 
 	for (num_pages = 0; num_pages < tdrive->log_info.num_pages; num_pages++)
-	{
 		page->page_data[num_pages] = tdrive->log_info.page_code[num_pages];
-	}
-	return (tdrive->log_info.num_pages + sizeof(struct scsi_log_page));
+
+	return min_t(int, allocation_length, tdrive->log_info.num_pages + sizeof(struct scsi_log_page));
 }
 
 static int
@@ -2350,7 +2344,7 @@ tdrive_cmd_log_sense6(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	uint8_t *cdb = ctio->cdb;
 	uint8_t sp, ppc;
 	uint8_t pc, page_code;
-	uint16_t parameter_pointer, allocation_length;
+	uint16_t parameter_pointer, allocation_length, max_allocation_length;
 	uint16_t page_length;
 
 	sp = READ_BIT(cdb[1], 0);
@@ -2374,15 +2368,15 @@ tdrive_cmd_log_sense6(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 		return 0;
 	}
 
-	ctio_allocate_buffer(ctio, allocation_length, Q_WAITOK);
-	if (unlikely(!ctio->data_ptr))
-	{
+	max_allocation_length = max_t(uint16_t, 64, allocation_length);
+	ctio_allocate_buffer(ctio, max_allocation_length, Q_WAITOK);
+	if (unlikely(!ctio->data_ptr)) {
 		/* Memory allocation failure */
 		debug_warn("Unable to allocate for allocation length %d\n", allocation_length);
 		return -1;
 	}
 
-	bzero(ctio->data_ptr, allocation_length);
+	bzero(ctio->data_ptr, ctio->dxfer_len);
 
 	page_length = 0;
 	switch (page_code)
@@ -2399,6 +2393,9 @@ tdrive_cmd_log_sense6(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 			}
 			page_length = (*tdrive->handlers.additional_log_sense)(tdrive, page_code, ctio->data_ptr, allocation_length, parameter_pointer);
 	}
+
+	if (!page_length)
+		ctio_free_data(ctio);
 	ctio->dxfer_len = page_length;
 	return 0;
 }
@@ -2872,11 +2869,6 @@ tdrive_copy_vital_product_page_info(struct tdrive *tdrive, uint8_t *buffer, uint
 	struct vital_product_page *page = (struct vital_product_page *)buffer;
 	uint8_t num_pages = 0;
 
-	if (allocation_length < (sizeof(struct vital_product_page)+tdrive->evpd_info.num_pages))
-	{
-		return -1;
-	}
-
 	bzero(page, sizeof(*page));
 	page->device_type = T_SEQUENTIAL;
 	page->page_code = 0x00;
@@ -2887,7 +2879,7 @@ tdrive_copy_vital_product_page_info(struct tdrive *tdrive, uint8_t *buffer, uint
 		page->page_type[num_pages] = tdrive->evpd_info.page_code[num_pages];
 	}
 
-	return (tdrive->evpd_info.num_pages + sizeof(struct vital_product_page));
+	return min_t(int, allocation_length, (tdrive->evpd_info.num_pages + sizeof(struct vital_product_page)));
 }	
 
 static int

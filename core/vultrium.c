@@ -52,15 +52,15 @@ vultrium_vendor_specific_page2_vpd(struct tdrive *tdrive, uint8_t *buffer, uint1
 static int
 vultrium_evpd_inquiry(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint8_t page_code, uint16_t allocation_length)
 {
+	uint16_t max_allocation_length;
 	int retval;
 
-	ctio_allocate_buffer(ctio, allocation_length, Q_WAITOK);
+	max_allocation_length = max_t(uint16_t, 64, allocation_length);
+	ctio_allocate_buffer(ctio, max_allocation_length, Q_WAITOK);
 	if (unlikely(!ctio->data_ptr))
-	{
 		return -1;
-	}
 
-	bzero(ctio->data_ptr, allocation_length);
+	bzero(ctio->data_ptr, ctio->dxfer_len);
 
 	switch (page_code)
 	{
