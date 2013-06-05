@@ -14,7 +14,7 @@ if [ -f /usr/bin/chcon ]; then
 fi
 
 #/sbin/modprobe netconsole netconsole=@10.0.13.101/eth0,6666@10.0.13.7/00:15:17:60:E7:B4
-/sbin/modprobe netconsole netconsole=@10.0.13.7/br0,@10.0.13.4/00:15:17:26:70:D2
+#/sbin/modprobe netconsole netconsole=@10.0.13.7/br0,@10.0.13.4/00:15:17:26:70:D2
 
 sync
 /quadstor/pgsql/etc/pgsql start
