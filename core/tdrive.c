@@ -618,11 +618,7 @@ tdrive_load_vcartridge(struct tdrive *tdrive, struct vcartridge *vinfo)
 	if (!tape)
 		return -1;
 
-	if (!tdrive->tape)
-		__tdrive_load_tape(tdrive, tape);
-
 	LIST_INSERT_HEAD(&tdrive->media_list, tape, t_list);
-
 	return 0;
 }
 
