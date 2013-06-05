@@ -3067,6 +3067,78 @@ tl_server_load_drive(struct tl_comm *comm, struct tl_msg *msg)
 
 int mdaemon_exit;
 
+static void
+vtl_update_element_addresses(struct vdevice *vdevice)
+{
+	struct vcartridge *volume;
+	PGconn *conn;
+	int retval;
+
+	conn = pgsql_begin();
+	if (!conn)
+		return;
+
+	retval = sql_clear_slot_configuration(conn, vdevice->tl_id);
+	if (retval != 0) {
+		pgsql_rollback(conn);
+		return;
+	}
+
+	TAILQ_FOREACH(volume, &vdevice->vol_list, q_entry) {
+		/* Updates the used percentage of the volume */
+		if (volume->loaderror)
+			continue;
+		retval = tl_ioctl(TLTARGIOCGETVCARTRIDGEINFO, volume);
+		if (retval != 0)
+			continue;
+		sql_update_element_address(conn, vdevice->tl_id, volume->tape_id, volume->elem_address);
+	}
+	pgsql_commit(conn);
+}
+
+static void
+vdevice_update_element_addresses(void)
+{
+	struct vdevice *vdevice;
+	int i;
+
+	for (i = 0; i < TL_MAX_DEVICES; i++) {
+		vdevice = device_list[i];
+
+		if (!vdevice)
+			continue;
+
+		if (vdevice->type != T_CHANGER)
+			continue;
+		vtl_update_element_addresses(vdevice);
+	}
+}
+
+static void
+vdevice_reset_element_addresses(void)
+{
+	struct vdevice *vdevice;
+	PGconn *conn;
+	int i;
+
+	conn = pgsql_begin();
+	if (!conn)
+		return;
+
+	for (i = 0; i < TL_MAX_DEVICES; i++) {
+		vdevice = device_list[i];
+
+		if (!vdevice)
+			continue;
+
+		if (vdevice->type != T_CHANGER)
+			continue;
+		vtl_update_element_addresses(vdevice);
+		sql_clear_slot_configuration(conn, vdevice->tl_id);
+	}
+	pgsql_commit(conn);
+}
+
 int
 tl_server_unload(void)
 {
@@ -3078,6 +3150,7 @@ tl_server_unload(void)
 	}
 	mdaemon_exit = 1;
 	pthread_mutex_unlock(&daemon_lock);
+	vdevice_update_element_addresses();
 	tl_ioctl_void(TLTARGIOCUNLOAD);
 	return 0;
 }
@@ -3142,6 +3215,7 @@ tl_server_load(void)
 	}
 
 	tl_ioctl_void(TLTARGIOCLOADDONE);
+	vdevice_reset_element_addresses();
 }
 
 static void

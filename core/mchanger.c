@@ -361,10 +361,35 @@ get_free_storage_element(struct mchanger *mchanger)
 	return NULL;
 }
 
+static int
+element_address_valid_for_voltype(struct mchanger_element *element, int vol_type)
+{
+	int retval;
+
+	if (!element || element->type == MEDIUM_TRANSPORT_ELEMENT)
+		return 0;
+
+	if (element->type != DATA_TRANSFER_ELEMENT) {
+		if (element->element_data)
+			return 0;
+		else
+			return 1;
+	}
+
+	retval = tdrive_media_valid((struct tdrive *)element->element_data, vol_type);
+	return (retval == 0);
+}
+
 static struct mchanger_element *
-get_free_element(struct mchanger *mchanger)
+get_free_element(struct mchanger *mchanger, int eaddress, int vol_type)
 {
 	struct mchanger_element *element = NULL, *ie_element = NULL;
+
+	if (eaddress) {
+		element = mchanger_get_element(mchanger, eaddress);
+		if (element_address_valid_for_voltype(element, vol_type))
+			return element;
+	}
 
 	element = get_free_storage_element(mchanger);
 	if (!element)
@@ -393,7 +418,7 @@ mchanger_load_vcartridge(struct mchanger *mchanger, struct vcartridge *vinfo)
 	struct mchanger_element *element = NULL;
 
 	if (!(vinfo->vstatus & MEDIA_STATUS_EXPORTED)) {
-		element = get_free_element(mchanger);
+		element = get_free_element(mchanger, vinfo->elem_address, vinfo->type);
 		if (!element) {
 			debug_warn("Cannot get a free element for tape\n");
 			return -1;
@@ -404,29 +429,22 @@ mchanger_load_vcartridge(struct mchanger *mchanger, struct vcartridge *vinfo)
 	if (!tape)
 		return -1;
 
-	if (!(vinfo->vstatus & MEDIA_STATUS_EXPORTED)) {
-		uint8_t asc, ascq;
-
-		element->element_data = tape;
-		update_mchanger_element_flags(element, get_mchanger_element_flags(element) | ELEMENT_DESCRIPTOR_ACCESS_MASK | ELEMENT_DESCRIPTOR_FULL_MASK);
-		if (element->type == IMPORT_EXPORT_ELEMENT)
-		{
-			update_mchanger_element_flags(element, get_mchanger_element_flags(element) | IE_MASK_IMPEXP);
-			asc = IMPORT_EXPORT_ACCESSED_ASC;
-			ascq = IMPORT_EXPORT_ACCESSED_ASCQ;
-		}
-		else
-		{
-			asc = MEDIUM_MAY_HAVE_CHANGED_ASC;
-			ascq = MEDIUM_MAY_HAVE_CHANGED_ASCQ;
-		}
-		update_mchanger_element_pvoltag(element);
-		mchanger_unit_attention_medium_changed(mchanger);
-	}
-	else
-	{
+	if (vinfo->vstatus & MEDIA_STATUS_EXPORTED) {
 		mchanger_insert_export_tape(mchanger, tape);
+		return 0;
 	}
+
+	if (element->type == DATA_TRANSFER_ELEMENT)
+		tdrive_load_tape((struct tdrive *)element->element_data, tape);
+	else if (element->type == IMPORT_EXPORT_ELEMENT) {
+		element->element_data = tape;
+		update_mchanger_element_flags(element, get_mchanger_element_flags(element) | IE_MASK_IMPEXP);
+	}
+	else 
+		element->element_data = tape;
+
+	update_mchanger_element_flags(element, get_mchanger_element_flags(element) | ELEMENT_DESCRIPTOR_ACCESS_MASK | ELEMENT_DESCRIPTOR_FULL_MASK);
+	update_mchanger_element_pvoltag(element);
 	return 0;
 }
 
@@ -466,7 +484,7 @@ mchanger_new_vcartridge(struct mchanger *mchanger, struct vcartridge *vinfo)
 	struct mchanger_element *element;
 	uint8_t asc, ascq;
 
-	element = get_free_element(mchanger);
+	element = get_free_element(mchanger, 0, vinfo->type);
 
 	if (!element) {
 		debug_warn("Couldnt find an empty slot/ieport");
@@ -1552,6 +1570,7 @@ mchanger_cmd_read_element_status(struct mchanger *mchanger, struct qsio_scsiio *
 	element_type_code = READ_NIBBLE_LOW(cdb[1]);
 
 	debug_info("start element address %d num elements %d allocation length %d dvcid %d curdata %d voltag %d element_type_code %d\n", start_element_address, num_elements, allocation_length, dvcid, curdata, voltag, element_type_code);
+
 	num_elements_read = 0;
 
 	if (allocation_length < sizeof(struct element_status_data))

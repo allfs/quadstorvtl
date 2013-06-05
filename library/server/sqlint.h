@@ -53,4 +53,6 @@ int sql_add_fc_rule(struct fc_rule *fc_rule);
 int sql_rename_pool(uint32_t group_id, char *name);
 int sql_delete_fc_rule(struct fc_rule *fc_rule);
 int sql_delete_vtl_fc_rules(int tl_id);
+int sql_clear_slot_configuration(PGconn *conn, int tl_id);
+int sql_update_element_address(PGconn *conn, int tl_id, int tid, int eaddress);
 #endif

@@ -630,7 +630,7 @@ sql_query_volumes(struct tl_blkdevinfo *binfo)
 	int i;
 	struct vcartridge *vinfo;
 
-	sprintf(sqlcmd, "SELECT TAPEID,TLID,VTYPE,LABEL,VSIZE,VSTATUS,WORM FROM VCARTRIDGE WHERE GROUPID='%u' ORDER BY TAPEID", binfo->group->group_id);
+	sprintf(sqlcmd, "SELECT TAPEID,TLID,VTYPE,LABEL,VSIZE,VSTATUS,WORM,EADDRESS FROM VCARTRIDGE WHERE GROUPID='%u' ORDER BY TAPEID", binfo->group->group_id);
 
 	res = pgsql_exec_query(sqlcmd, &conn);
 	if (res == NULL)
@@ -656,6 +656,7 @@ sql_query_volumes(struct tl_blkdevinfo *binfo)
 		vinfo->size = strtoull(PQgetvalue(res, i, 4), NULL, 10);
 		vinfo->vstatus = strtoul(PQgetvalue(res, i, 5), NULL, 10);
 		vinfo->worm = strtoul(PQgetvalue(res, i, 6), NULL, 10);
+		vinfo->elem_address = atoi(PQgetvalue(res, i, 7));
 		TAILQ_INSERT_TAIL(&binfo->vol_list, vinfo, q_entry);
 	}
 
@@ -975,6 +976,28 @@ sql_delete_vtl_fc_rules(int tl_id)
 
 	sprintf(sqlcmd, "DELETE FROM FCCONFIG WHERE TARGETID='%d'", tl_id);
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
+	return error;
+}
+
+int
+sql_clear_slot_configuration(PGconn *conn, int tl_id)
+{
+	char sqlcmd[512];
+	int error = 0;
+
+	sprintf(sqlcmd, "UPDATE VCARTRIDGE set EADDRESS='0' WHERE TLID='%d'", tl_id);
+	pgsql_exec_query3(conn, sqlcmd, 0, &error, NULL, NULL);
+	return error;
+}
+
+int
+sql_update_element_address(PGconn *conn, int tl_id, int tid, int eaddress)
+{
+	char sqlcmd[512];
+	int error = 0;
+
+	sprintf(sqlcmd, "UPDATE VCARTRIDGE set EADDRESS='%d' WHERE TLID='%d' AND TAPEID='%d'", eaddress, tl_id, tid);
+	pgsql_exec_query3(conn, sqlcmd, 0, &error, NULL, NULL);
 	return error;
 }
 
