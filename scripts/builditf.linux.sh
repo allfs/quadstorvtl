@@ -2,7 +2,7 @@
 
 checkerrorwarnonly() {
 	if [ "$?" != "0" ]; then
-		echo "ERROR: Building one or more kernel modules failed!. Skipping and continuing."
+		echo "WARNING: Building one or more kernel modules failed!. Skipping and continuing."
 	fi
 }
 
