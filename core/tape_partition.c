@@ -1538,18 +1538,12 @@ is_lto_tape(struct tape *tape)
 	}
 }
 
-static int
-tape_partition_create_mam(struct tape_partition *partition)
+static int 
+tape_partition_mam_write_default(struct tape_partition *partition)
 {
-	int i;
 	struct mam_attribute *mam_attr;
 	struct raw_attribute *raw_attr;
-
-	partition->mam_data = vm_pg_alloc(VM_ALLOC_ZERO);
-	if (unlikely(!partition->mam_data)) {
-		return -1;
-	}
-	tape_partition_mam_init(partition, 0);
+	int i;
 
 	tape_partition_mam_memset(partition, 0x0005, ' ', 1);
 	tape_partition_mam_memset(partition, 0x0008, ' ', 1);
@@ -1577,6 +1571,18 @@ tape_partition_create_mam(struct tape_partition *partition)
 		raw_attr->valid = mam_attr->valid;
 	}
 	return tape_partition_write_mam(partition);
+
+}
+
+static int
+tape_partition_create_mam(struct tape_partition *partition)
+{
+	partition->mam_data = vm_pg_alloc(VM_ALLOC_ZERO);
+	if (unlikely(!partition->mam_data))
+		return -1;
+
+	tape_partition_mam_init(partition, 0);
+	return tape_partition_mam_write_default(partition);
 }
 
 void
@@ -1717,6 +1723,7 @@ tape_partition_load_mam(struct tape_partition *partition)
 {
 	struct raw_mam *raw_mam;
 	int retval;
+	int write_default = 0;
 	uint16_t csum;
 
 	partition->mam_data = vm_pg_alloc(0);
@@ -1730,12 +1737,19 @@ tape_partition_load_mam(struct tape_partition *partition)
 	raw_mam = (struct raw_mam *)(vm_pg_address(partition->mam_data) + (LBA_SIZE - sizeof(*raw_mam)));
 	csum = net_calc_csum16(vm_pg_address(partition->mam_data), LBA_SIZE - sizeof(*raw_mam));
 	if (csum != raw_mam->csum) {
-		debug_warn("Tape %s Partition %u MAM corrupt\n", partition->tape->label, partition->partition_id);
-		atomic_set_bit(PARTITION_MAM_CORRUPT, &partition->flags);
+		if (!zero_page(partition->mam_data)) {
+			debug_warn("Tape %s Partition %u MAM corrupt\n", partition->tape->label, partition->partition_id);
+			atomic_set_bit(PARTITION_MAM_CORRUPT, &partition->flags);
+		}
+		else
+			write_default = 1; /* Cases were we didn't have MAM support */
 	}
 
 	tape_partition_mam_init(partition, 1);
-	return 0;
+	if (!write_default)
+		return 0;
+	else
+		return tape_partition_mam_write_default(partition);
 }
 
 struct tape_partition *
