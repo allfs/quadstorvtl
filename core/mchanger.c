@@ -1595,9 +1595,9 @@ mchanger_cmd_read_element_status(struct mchanger *mchanger, struct qsio_scsiio *
 		read_element_status(mchanger, res_buffer, &buffer_offset, start_element_address, num_elements, &num_elements_read, allocation_length, voltag, dvcid, &bytes_read, &num_elements_avail, MEDIUM_TRANSPORT_ELEMENT, &first_element_address);
 	}
 
-	if (element_type_code == ALL_ELEMENTS || element_type_code == STORAGE_ELEMENT)
+	if (element_type_code == ALL_ELEMENTS || element_type_code == DATA_TRANSFER_ELEMENT)
 	{
-		read_element_status(mchanger, res_buffer, &buffer_offset, start_element_address, num_elements, &num_elements_read, allocation_length, voltag, dvcid, &bytes_read, &num_elements_avail, STORAGE_ELEMENT, &first_element_address);
+		read_element_status(mchanger, res_buffer, &buffer_offset, start_element_address, num_elements, &num_elements_read, allocation_length, voltag, dvcid, &bytes_read, &num_elements_avail, DATA_TRANSFER_ELEMENT, &first_element_address);
 	}
 
 	if (element_type_code == ALL_ELEMENTS || element_type_code == IMPORT_EXPORT_ELEMENT)
@@ -1605,9 +1605,9 @@ mchanger_cmd_read_element_status(struct mchanger *mchanger, struct qsio_scsiio *
 		read_element_status(mchanger, res_buffer, &buffer_offset, start_element_address, num_elements, &num_elements_read, allocation_length, voltag, dvcid, &bytes_read, &num_elements_avail, IMPORT_EXPORT_ELEMENT, &first_element_address);
 	}
 
-	if (element_type_code == ALL_ELEMENTS || element_type_code == DATA_TRANSFER_ELEMENT)
+	if (element_type_code == ALL_ELEMENTS || element_type_code == STORAGE_ELEMENT)
 	{
-		read_element_status(mchanger, res_buffer, &buffer_offset, start_element_address, num_elements, &num_elements_read, allocation_length, voltag, dvcid, &bytes_read, &num_elements_avail, DATA_TRANSFER_ELEMENT, &first_element_address);
+		read_element_status(mchanger, res_buffer, &buffer_offset, start_element_address, num_elements, &num_elements_read, allocation_length, voltag, dvcid, &bytes_read, &num_elements_avail, STORAGE_ELEMENT, &first_element_address);
 	}
 
 	/* Now reset the res_buffer, to fill in the element_status_data */
