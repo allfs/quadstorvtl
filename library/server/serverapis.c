@@ -869,9 +869,7 @@ load_blkdev(struct tl_blkdevinfo *blkdev)
 	struct bdev_info binfo;
 	struct group_info *group_info;
 	int error;
-	uint64_t usize;
 
-	usize = blkdev->disk.size;
 	memset(&binfo, 0, sizeof(struct bdev_info));
 	binfo.bid = blkdev->bid;
 	strcpy(binfo.devpath, blkdev->devname);
@@ -2580,7 +2578,6 @@ static int
 tl_server_add_disk(struct tl_comm *comm, struct tl_msg *msg)
 {
 	struct group_info *group_info;
-	uint64_t usize;
 	uint32_t group_id;
 	struct physdisk *disk;
 	int retval;
@@ -2619,8 +2616,6 @@ tl_server_add_disk(struct tl_comm *comm, struct tl_msg *msg)
 		tl_server_msg_failure2(comm, msg, errmsg);
 		return -1;
 	}
-
-	usize = (disk->size - (disk->size & ~BINT_UNIT_MASK));
 
 	retval = check_blkdev_exists(disk->info.devname);
 	if (retval != 0) {
@@ -2689,7 +2684,6 @@ tl_server_reload_export(struct tl_comm *comm, struct tl_msg *msg)
 	int tl_id;
 	uint32_t tape_id;
 	struct vcartridge *vinfo;
-	struct vdevice *vdevice;
 
 	if (sscanf(msg->msg_data, "tl_id: %d\ntape_id: %u\n", &tl_id, &tape_id) != 2)
 	{
@@ -2704,7 +2698,6 @@ tl_server_reload_export(struct tl_comm *comm, struct tl_msg *msg)
 		return -1;
 	}
 
-	vdevice = device_list[tl_id];
 	vinfo->vstatus |= MEDIA_STATUS_ACTIVE;
 	tl_server_msg_success(comm, msg);
 	return 0;
@@ -3019,7 +3012,6 @@ tl_server_load_drive(struct tl_comm *comm, struct tl_msg *msg)
 	int retval;
 	int load;
 	struct vdevice *vdevice;
-	struct tdriveconf *driveconf;
 	struct vdeviceinfo dinfo;
 	int tl_id;
 	uint32_t tape_id;
@@ -3047,7 +3039,6 @@ tl_server_load_drive(struct tl_comm *comm, struct tl_msg *msg)
 		tl_server_msg_invalid(comm, msg);
 		return -1;
 	}
-	driveconf = (struct tdriveconf *)vdevice;
 	memset(&dinfo, 0, sizeof(struct vdeviceinfo));
 	dinfo.type = T_SEQUENTIAL;
 	dinfo.tl_id = vdevice->tl_id;

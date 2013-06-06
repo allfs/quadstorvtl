@@ -42,6 +42,8 @@ elif [ "$1" = "sles11sp2" ]; then
 elif [ "$1" = "sles11" ]; then
 	cd /quadstor/quadstor/target-mode/fc && ln -s qla2xxx.slessp1 qla2xxx
 	sed -i -e "s/:= qla2xxx.*/:= qla2xxx/" /quadstor/quadstor/target-mode/fc/Makefile
+elif [ "$1" = "debian7" ]; then
+	cd /quadstor/quadstor/target-mode/fc && ln -s qla2xxx.upstream qla2xxx
 elif [ "$1" = "debian6" ]; then
 	cd /quadstor/quadstor/target-mode/fc && ln -s qla2xxx.deb64 qla2xxx
 	sed -i -e "s/:= qla2xxx.*/:= qla2xxx/" /quadstor/quadstor/target-mode/fc/Makefile

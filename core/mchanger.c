@@ -482,7 +482,6 @@ mchanger_new_vcartridge(struct mchanger *mchanger, struct vcartridge *vinfo)
 {
 	struct tape *tape;
 	struct mchanger_element *element;
-	uint8_t asc, ascq;
 
 	element = get_free_element(mchanger, 0, vinfo->type);
 
@@ -500,15 +499,11 @@ mchanger_new_vcartridge(struct mchanger *mchanger, struct vcartridge *vinfo)
 	update_mchanger_element_pvoltag(element);
 	if (element->type == IMPORT_EXPORT_ELEMENT) {
 		update_mchanger_element_flags(element, get_mchanger_element_flags(element) | IE_MASK_IMPEXP);
-		asc = IMPORT_EXPORT_ACCESSED_ASC;
-		ascq = IMPORT_EXPORT_ACCESSED_ASCQ;
+		mchanger_unit_attention_ie_accessed(mchanger);
 	}
-	else {
-		asc = MEDIUM_MAY_HAVE_CHANGED_ASC;
-		ascq = MEDIUM_MAY_HAVE_CHANGED_ASCQ;
-	}
+	else
+		mchanger_unit_attention_medium_changed(mchanger);
 
-	mchanger_unit_attention_medium_changed(mchanger);
 	return 0;
 }
 
@@ -1550,7 +1545,7 @@ mchanger_cmd_read_element_status(struct mchanger *mchanger, struct qsio_scsiio *
 	uint16_t start_element_address;
 	uint16_t num_elements;
 	uint32_t allocation_length;
-	uint8_t  curdata, dvcid;
+	uint8_t  dvcid;
 	uint8_t element_type_code;
 	uint8_t voltag;
 	uint16_t num_elements_read;
@@ -1565,7 +1560,6 @@ mchanger_cmd_read_element_status(struct mchanger *mchanger, struct qsio_scsiio *
 	num_elements = be16toh(*(uint16_t *)(&cdb[4]));
 	allocation_length = READ_24(cdb[7], cdb[8], cdb[9]);
 	dvcid = READ_BIT(cdb[6], 0);
-	curdata = READ_BIT(cdb[6], 1);
 	voltag = READ_BIT(cdb[1], 4);
 	element_type_code = READ_NIBBLE_LOW(cdb[1]);
 
@@ -1737,17 +1731,14 @@ static int
 mchanger_cmd_log_sense6(struct mchanger *mchanger, struct qsio_scsiio *ctio)
 {
 	uint8_t *cdb = ctio->cdb;
-	uint8_t sp, ppc;
-	uint8_t pc, page_code;
-	uint16_t parameter_pointer, allocation_length;
+	uint8_t sp;
+	uint8_t page_code;
+	uint16_t allocation_length;
 	uint16_t page_length;
 
 	sp = READ_BIT(cdb[1], 0);
-	ppc = READ_BIT(cdb[1], 1);
-	pc = (cdb[2] & 0xC0); /* ??? find the correct mask */ 
 	page_code = (cdb[2] & 0x3F); /* ??? check the mask */
 
-	parameter_pointer = be16toh(*(uint16_t *)(&cdb[5]));
 	allocation_length = be16toh(*(uint16_t *)(&cdb[7]));
 
 	if (sp)
@@ -2021,11 +2012,10 @@ mchanger_cmd_persistent_reserve_out(struct mchanger *mchanger, struct qsio_scsii
 {
 	uint8_t *cdb = ctio->cdb;
 	uint8_t service_action;
-	uint8_t scope, type;
+	uint8_t scope;
 	uint16_t parameter_list_length;
 	int retval;
 
-	type = READ_NIBBLE_LOW(cdb[2]);
 	scope = READ_NIBBLE_HIGH(cdb[2]);
 
 	if (scope)
@@ -2524,7 +2514,6 @@ mchanger_delete_vcartridge(struct mchanger *mchanger, struct vcartridge *vcartri
 	struct mchanger_element_list *element_list = NULL;
 	struct tape *tape;
 	int retval = -1; 
-	int found = 0;
 
 	mchanger_lock(mchanger);
 	while ((element_list = mchanger_elem_list(mchanger, element_list)) != NULL) {
@@ -2536,7 +2525,6 @@ mchanger_delete_vcartridge(struct mchanger *mchanger, struct vcartridge *vcartri
 				if (!tape || tape->tape_id != vcartridge->tape_id)
 					continue;
 
-				found = 1;
 				retval = tdrive_delete_vcartridge(tdrive, vcartridge);
 				if (unlikely(retval != 0)) {
 					debug_warn("mchanger_delete_vcartridge: tdrive delete vcartridge failed\n");
@@ -2550,29 +2538,20 @@ mchanger_delete_vcartridge(struct mchanger *mchanger, struct vcartridge *vcartri
 			}
 			else if (element->type == STORAGE_ELEMENT || element->type == IMPORT_EXPORT_ELEMENT)
 			{
-				uint8_t asc, ascq;
-	
 				tape = element->element_data;
 				if (!tape || tape->tape_id != vcartridge->tape_id)
 					continue;
-				found = 1;
 				tape_flush_buffers(tape);
 				tape_free(tape, vcartridge->free_alloc);
 				element->element_data = NULL;
 				update_mchanger_element_pvoltag(element);
 				update_mchanger_element_flags(element, get_mchanger_element_flags(element) & ~ELEMENT_DESCRIPTOR_FULL_MASK);
-				if (element->type == IMPORT_EXPORT_ELEMENT)
-				{
+				if (element->type == IMPORT_EXPORT_ELEMENT) {
 					update_mchanger_element_flags(element, get_mchanger_element_flags(element) & ~IE_MASK_IMPEXP);
-					asc = IMPORT_EXPORT_ACCESSED_ASC;
-					ascq = IMPORT_EXPORT_ACCESSED_ASCQ;
+					mchanger_unit_attention_ie_accessed(mchanger);
 				}
 				else
-				{
-					asc = MEDIUM_MAY_HAVE_CHANGED_ASC;
-					ascq = MEDIUM_MAY_HAVE_CHANGED_ASCQ;
-				}
-				mchanger_unit_attention_medium_changed(mchanger);
+					mchanger_unit_attention_medium_changed(mchanger);
 				retval = 0;
 				goto out;
 			}

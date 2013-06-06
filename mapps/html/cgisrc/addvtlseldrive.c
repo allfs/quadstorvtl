@@ -33,7 +33,6 @@ build_drivespec(llist entries, int drivetype, int ndrivetype, int start)
 int main()
 {
 	llist entries;
-	int vdevicetype;
 	char *tmp;
 	char *name;
 	int vtltype = 0;
@@ -48,12 +47,6 @@ int main()
 
 	if (!name || (strlen(name) == 0))
 		cgi_print_header_error_page("No name specified for Virtual Library/Drive\n");
-
-	tmp = cgi_val(entries, "vtype");
-	if (!tmp)
-		cgi_print_header_error_page("No virtual device type specified\n");
-
-	vdevicetype = atoi(tmp);
 
 	tmp = cgi_val(entries, "vselect");
 	if (!tmp || !(vtltype = atoi(tmp)))

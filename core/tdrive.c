@@ -854,12 +854,11 @@ static int
 tdrive_cmd_erase(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 {
 	uint8_t *cdb = ctio->cdb;
-	uint8_t immed, longbit;
+	uint8_t longbit;
 	uint8_t sense_key = 0, asc = 0, ascq = 0;
 	int retval;
 
 	longbit = READ_BIT(cdb[1], 0);
-	immed = READ_BIT(cdb[1], 1);
 
 	/* Ignore immed */
 	tdrive_empty_write_queue(tdrive);
@@ -903,14 +902,11 @@ static int
 tdrive_cmd_load_unload(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 {
 	uint8_t *cdb = ctio->cdb;
-	uint8_t immed;
-	uint8_t hold, eot, reten, load;
+	uint8_t hold, eot, load;
 	int retval;
 	struct initiator_state *istate;
 
-	immed = READ_BIT(cdb[1], 0);
 	load = READ_BIT(cdb[4], 0);
-	reten = READ_BIT(cdb[4], 1);
 	eot = READ_BIT(cdb[4], 2);
 	hold = READ_BIT(cdb[4], 3);
 
@@ -1080,9 +1076,6 @@ static void
 tdrive_construct_overwrite_worm_media_sense(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint8_t fixed, uint32_t num_blocks, uint32_t done_blocks, uint32_t block_size)
 {
 	uint32_t info = 0;
-	struct initiator_state *istate;
-
-	istate = ctio->istate;
 
 	INFORMATION_FIELD(info, fixed, num_blocks, done_blocks, block_size, 0);
 
@@ -1093,9 +1086,6 @@ static void
 tdrive_construct_vcartridge_overflow_sense(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint8_t fixed, uint32_t num_blocks, uint32_t done_blocks, uint32_t block_size)
 {
 	uint32_t info = 0;
-	struct initiator_state *istate;
-
-	istate = ctio->istate;
 
 	INFORMATION_FIELD(info, fixed, num_blocks, done_blocks, block_size, 0);
 
@@ -1111,9 +1101,6 @@ static void
 tdrive_construct_ew_reached_sense(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint8_t fixed, uint32_t num_blocks, uint32_t done_blocks, uint32_t block_size)
 {
 	uint32_t info = 0;
-	struct initiator_state *istate;
-
-	istate = ctio->istate;
 
 	INFORMATION_FIELD(info, fixed, num_blocks, done_blocks, block_size, block_size);
 
@@ -1232,7 +1219,7 @@ tdrive_cmd_format_medium(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	uint8_t *cdb = ctio->cdb;
 	int i, count, retval;
 	uint8_t format;
-	uint8_t fdp, sdp, idp;
+	uint8_t fdp;
 	int64_t psize0 = 0 , psize1 = 0;
 	int fill_to_max = 0;
 	int num_partitions, partition_units;
@@ -1263,8 +1250,6 @@ tdrive_cmd_format_medium(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	}
 
 	fdp = (page->fdp >> 7) & 0x1;
-	sdp = (page->fdp >> 6) & 0x1;
-	idp = (page->fdp >> 5) & 0x1;
 
 	partition_units = page->partition_units & 0xF;
 
@@ -1439,12 +1424,11 @@ static int
 tdrive_cmd_write_filemarks(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 {
 	uint8_t *cdb = ctio->cdb;
-	uint8_t immed, wmsk;
+	uint8_t wmsk;
 	uint32_t transfer_length;
 	uint8_t sense_key, asc, ascq;
 	int retval;
 
-	immed = READ_BIT(cdb[1], 0);
 	wmsk = READ_BIT(cdb[1], 1);
 	transfer_length = READ_24(cdb[2], cdb[3], cdb[4]);
 
@@ -1964,13 +1948,8 @@ tdrive_cmd_report_density_support(struct tdrive *tdrive, struct qsio_scsiio *cti
 static int
 tdrive_cmd_rewind(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 {
-	uint8_t *cdb = ctio->cdb;
-	uint8_t immed;
 	int retval;
 
-	immed = READ_BIT(cdb[1], 0);
-
-	/* immed bit as of now has no significance */
 	tdrive_empty_write_queue(tdrive);
 	retval = tape_cmd_rewind(tdrive->tape, 0);
 	if (retval != 0) 
@@ -2338,14 +2317,12 @@ static int
 tdrive_cmd_log_sense6(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 {
 	uint8_t *cdb = ctio->cdb;
-	uint8_t sp, ppc;
-	uint8_t pc, page_code;
+	uint8_t sp;
+	uint8_t page_code;
 	uint16_t parameter_pointer, allocation_length, max_allocation_length;
 	uint16_t page_length;
 
 	sp = READ_BIT(cdb[1], 0);
-	ppc = READ_BIT(cdb[1], 1);
-	pc = (cdb[2] & 0xC0); /* ??? find the correct mask */ 
 	page_code = (cdb[2] & 0x3F); /* ??? check the mask */
 
 	parameter_pointer = be16toh(*(uint16_t *)(&cdb[5]));
@@ -2588,12 +2565,11 @@ static int
 tdrive_cmd_log_select6(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 {
 	uint8_t *cdb = ctio->cdb;
-	uint8_t sp, pcr, pc;
+	uint8_t sp, pcr;
 	uint16_t parameter_length;
 
 	sp = READ_BIT(cdb[1], 0);
 	pcr = READ_BIT(cdb[1], 1);
-	pc = cdb[2] >> 6;
 	parameter_length = be16toh(*(uint16_t *)(&cdb[7]));
 
 	/* No saved parameters supported */
@@ -3198,11 +3174,10 @@ tdrive_cmd_persistent_reserve_out(struct tdrive *tdrive, struct qsio_scsiio *cti
 {
 	uint8_t *cdb = ctio->cdb;
 	uint8_t service_action;
-	uint8_t scope, type;
+	uint8_t scope;
 	uint16_t parameter_list_length;
 	int retval;
 
-	type = READ_NIBBLE_LOW(cdb[2]);
 	scope = READ_NIBBLE_HIGH(cdb[2]);
 
 	if (scope)

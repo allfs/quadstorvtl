@@ -905,7 +905,6 @@ blk_map_readahead(struct blk_entry *entry)
 static int
 __blk_map_read(struct blk_map *map, uint32_t read_block_size, uint32_t needed_blocks, int *pglist_cnt, uint32_t *data_blocks, int *error, uint8_t fixed, uint32_t *ili_block_size)
 {
-	struct blk_entry *start_entry;
 	struct blk_map *end_map;
 	struct blk_entry *entry;
 	struct tape_partition *partition;
@@ -939,7 +938,7 @@ __blk_map_read(struct blk_map *map, uint32_t read_block_size, uint32_t needed_bl
 		return __blk_map_read(next, read_block_size, needed_blocks, pglist_cnt, data_blocks, error, fixed, ili_block_size);
 	}
 
-	start_entry = entry = map->c_entry;
+	entry = map->c_entry;
 	end_map = map;
 	debug_check(!entry);
 
@@ -1071,8 +1070,7 @@ blk_map_read(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_
 	struct blk_entry *orig_entry;
 	uint32_t data_blocks = 0;
 	int error = 0, i;
-	uint32_t read_size, size;
-	uint32_t offset;
+	uint32_t read_size;
 	int pg_idx, entry_idx;
 	struct blk_entry *read_entry;
 	struct blk_map *read_map;
@@ -1124,7 +1122,6 @@ blk_map_read(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_
 	debug_check(!read_entry);	
 	pg_idx = 0;
 
-	size = read_size;
 	while (read_entry) {
 		if (!entry_is_data_block(read_entry) || read_entry == partition->cur_map->c_entry)
 			break;
@@ -1142,7 +1139,6 @@ blk_map_read(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_
 		entry_idx = 0;
 		entry_pglist_map(pglist, &pg_idx, pglist_cnt, read_entry->pglist, &entry_idx, read_entry->pglist_cnt);
 		blk_entry_free_data(read_entry);
-		offset = 0;
 		debug_check(pg_idx > pglist_cnt);
 		if (pg_idx == pglist_cnt)
 			break;

@@ -44,9 +44,6 @@ enum {
 static inline void
 devq_insert_ccb(struct qs_devq *devq, struct qsio_hdr *ccb_h)
 {
-	unsigned long flags;
-
-	flags = 0;
 	chan_lock(devq->devq_wait);
 	STAILQ_INSERT_TAIL(&devq->pending_queue, ccb_h, c_list);
 	atomic_inc(&devq->pending_cmds);

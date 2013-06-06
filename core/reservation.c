@@ -190,13 +190,11 @@ registrants_unit_attention(struct tdevice *tdevice, uint8_t asc, uint8_t ascq, u
 {
 	struct reservation *reservation = &tdevice->reservation;
 	struct registration *registration;
-	int send_sync = 0;
 
 	SLIST_FOREACH(registration, &reservation->registration_list, r_list) {
 		if (skip && iid_equal(registration->i_prt, registration->t_prt, registration->init_int, i_prt, t_prt, init_int))
 			continue;
 		registrant_unit_attention(tdevice, registration, asc, ascq);
-		send_sync = 1;
 	}
 }
 
@@ -700,7 +698,6 @@ persistent_reservation_handle_preempt(struct tdevice *tdevice, struct qsio_scsii
 	uint8_t type;
 	int retval;
 	int is_ar = 0;
-	int send_sync = 0;
 
 	param = (struct reservation_parameter *)(ctio->data_ptr);
 	key = be64toh(param->key);
@@ -746,7 +743,6 @@ persistent_reservation_handle_preempt(struct tdevice *tdevice, struct qsio_scsii
 			persistent_reservation_abort_tasks(tdevice, tmp->i_prt, tmp->t_prt, tmp->r_prt, tmp->init_int);
 
 		registrant_unit_attention(tdevice, tmp, REGISTRATIONS_PREEMPTED_ASC, REGISTRATIONS_PREEMPTED_ASCQ);
-		send_sync = 1;
 		free(tmp, M_RESERVATION);
 	}
 

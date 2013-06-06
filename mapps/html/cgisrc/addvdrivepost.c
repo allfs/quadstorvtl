@@ -11,7 +11,6 @@
 int main()
 {
 	llist entries;
-	int tl_id = -1;
 	char *tmp;
 	char *name;
 	int drivetype;
@@ -25,12 +24,6 @@ int main()
 	name = cgi_val(entries, "name");
 	if (!name)
 		cgi_print_header_error_page("No name specified for VDrive");
-
-	tmp = cgi_val(entries, "tl_id");
-	if (tmp)
-	{
-		tl_id = atoi(tmp);
-	}
 
 	tmp = cgi_val(entries, "drivetype");
 	if (!tmp)
