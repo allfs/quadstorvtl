@@ -369,12 +369,11 @@ element_address_valid_for_voltype(struct mchanger_element *element, int vol_type
 	if (!element || element->type == MEDIUM_TRANSPORT_ELEMENT)
 		return 0;
 
-	if (element->type != DATA_TRANSFER_ELEMENT) {
-		if (element->element_data)
-			return 0;
-		else
-			return 1;
-	}
+	if (element_vcartridge(element))
+		return 0;
+
+	if (element->type != DATA_TRANSFER_ELEMENT)
+		return 1;
 
 	retval = tdrive_media_valid((struct tdrive *)element->element_data, vol_type);
 	return (retval == 0);
