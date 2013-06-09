@@ -135,7 +135,7 @@ int main()
 	printf("</tr>\n");
 
 	printf("<tr>\n");
-	printf("<td>VCartdrige Label/Prefix</td>\n");
+	printf("<td>VCartridge Label/Prefix</td>\n");
 	cgi_print_text_input_td("barcode", 10, "", 32);
 	printf("</tr>\n");
 
