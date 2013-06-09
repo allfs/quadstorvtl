@@ -30,11 +30,11 @@ coremod_ioctl(struct cdev *dev, unsigned long cmd, caddr_t arg, int fflag, struc
 {
 	void __user *userp = (void __user *)arg;
 	int retval = 0;
-	struct bdev_info *bdev_info = NULL; 
+	struct bdev_info *bdev_info;
 	struct mdaemon_info mdaemon_info;
-	struct group_conf *group_conf = NULL;
-	struct vdeviceinfo *deviceinfo = NULL;
-	struct vcartridge *vcartridge = NULL;
+	struct group_conf *group_conf;
+	struct vdeviceinfo *deviceinfo;
+	struct vcartridge *vcartridge;
 	struct fc_rule_config fc_rule_config;
 
 	sx_xlock(&ioctl_lock);
@@ -73,6 +73,7 @@ coremod_ioctl(struct cdev *dev, unsigned long cmd, caddr_t arg, int fflag, struc
 		else if (cmd == TLTARGIOCUNMAPCONFIG)
 			retval = (*kcbs.bdev_unmap_config)(bdev_info);
 		memcpy(userp, bdev_info, sizeof(*bdev_info));
+		free(bdev_info, M_COREBSD);
 		break;
 	case TLTARGIOCNEWDEVICE:
 	case TLTARGIOCDELETEDEVICE:
@@ -98,6 +99,7 @@ coremod_ioctl(struct cdev *dev, unsigned long cmd, caddr_t arg, int fflag, struc
 			retval = (*kcbs.vdevice_load)(deviceinfo);
 
 		memcpy(userp, deviceinfo, sizeof(*deviceinfo));
+		free(deviceinfo, M_COREBSD);
 		break;
 	case TLTARGIOCNEWVCARTRIDGE:
 	case TLTARGIOCLOADVCARTRIDGE:
@@ -118,6 +120,7 @@ coremod_ioctl(struct cdev *dev, unsigned long cmd, caddr_t arg, int fflag, struc
 		else if (cmd == TLTARGIOCGETVCARTRIDGEINFO)
 			retval = (*kcbs.vcartridge_info)(vcartridge);
 		memcpy(userp, vcartridge, sizeof(*vcartridge));
+		free(vcartridge, M_COREBSD);
 		break;
 	case TLTARGIOCCHECKDISKS:
 		retval = (*kcbs.coremod_check_disks)();
@@ -149,16 +152,6 @@ coremod_ioctl(struct cdev *dev, unsigned long cmd, caddr_t arg, int fflag, struc
 		break;
 	}
 	sx_xunlock(&ioctl_lock);
-
-	/* move the frees above */
-	if (deviceinfo)
-		free(deviceinfo, M_COREBSD);
-
-	if (vcartridge)
-		free(vcartridge, M_COREBSD);
-
-	if (bdev_info)
-		free(bdev_info, M_COREBSD);
 
 	if (retval == -1)
 		retval = (EIO);

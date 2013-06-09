@@ -1355,12 +1355,11 @@ static int coremod_ioctl(vnode_t *i, struct file *f, uint32_t cmd, unsigned long
 	void __user *userp = (void __user *)arg;
 	int err = 0;
 	int retval = 0;
-	struct bdev_info *bdev_info = NULL; 
-	struct tdisk_info *tdisk_info = NULL;
+	struct bdev_info *bdev_info;
 	struct mdaemon_info mdaemon_info;
-	struct group_conf *group_conf = NULL;
-	struct vdeviceinfo *deviceinfo = NULL;
-	struct vcartridge *vcartridge = NULL;
+	struct group_conf *group_conf;
+	struct vdeviceinfo *deviceinfo;
+	struct vcartridge *vcartridge;
 	struct fc_rule_config fc_rule_config;
 
 	/* Check the capabilities of the user */
@@ -1417,8 +1416,10 @@ static int coremod_ioctl(vnode_t *i, struct file *f, uint32_t cmd, unsigned long
 			break;
 		}
 
-		if ((retval = copyin(userp, bdev_info, sizeof(struct bdev_info))) != 0)
+		if ((retval = copyin(userp, bdev_info, sizeof(struct bdev_info))) != 0) {
+			free(bdev_info, M_QUADSTOR);
 			break;
+		}
 
 		if (cmd == TLTARGIOCNEWBLKDEV)
 			retval = (*kcbs.bdev_add_new)(bdev_info);
@@ -1432,6 +1433,7 @@ static int coremod_ioctl(vnode_t *i, struct file *f, uint32_t cmd, unsigned long
 			retval = copyout(bdev_info, userp, sizeof(struct bdev_info));
 		else
 			err = copyout(bdev_info, userp, sizeof(struct bdev_info));
+		free(bdev_info, M_QUADSTOR);
 		break;
 	case TLTARGIOCNEWDEVICE:
 	case TLTARGIOCDELETEDEVICE:
@@ -1444,8 +1446,10 @@ static int coremod_ioctl(vnode_t *i, struct file *f, uint32_t cmd, unsigned long
 			break;
 		}
 
-		if ((retval = copyin(userp, deviceinfo, sizeof(*deviceinfo))) != 0)
+		if ((retval = copyin(userp, deviceinfo, sizeof(*deviceinfo))) != 0) {
+			free(deviceinfo, M_QUADSTOR);
 			break;
+		}
 
 		if (cmd == TLTARGIOCNEWDEVICE)
 			retval = (*kcbs.vdevice_new)(deviceinfo);
@@ -1462,6 +1466,7 @@ static int coremod_ioctl(vnode_t *i, struct file *f, uint32_t cmd, unsigned long
 			retval = copyout(deviceinfo, userp, sizeof(*deviceinfo));
 		else
 			err = copyout(deviceinfo, userp, sizeof(*deviceinfo));
+		free(deviceinfo, M_QUADSTOR);
 		break;
 	case TLTARGIOCNEWVCARTRIDGE:
 	case TLTARGIOCLOADVCARTRIDGE:
@@ -1472,8 +1477,12 @@ static int coremod_ioctl(vnode_t *i, struct file *f, uint32_t cmd, unsigned long
 			retval = -ENOMEM;
 			break;
 		}
-		if ((retval = copyin(userp, vcartridge, sizeof(*vcartridge))) != 0)
+
+		if ((retval = copyin(userp, vcartridge, sizeof(*vcartridge))) != 0) {
+			free(vcartridge, M_QUADSTOR);
 			break;
+		}
+
 		if (cmd == TLTARGIOCNEWVCARTRIDGE)
 			retval = (*kcbs.vcartridge_new)(vcartridge);
 		else if (cmd == TLTARGIOCLOADVCARTRIDGE)
@@ -1486,6 +1495,7 @@ static int coremod_ioctl(vnode_t *i, struct file *f, uint32_t cmd, unsigned long
 			retval = copyout(vcartridge, userp, sizeof(*vcartridge));
 		else
 			err = copyout(vcartridge, userp, sizeof(*vcartridge));
+		free(vcartridge, M_QUADSTOR);
 		break;
 	case TLTARGIOCCHECKDISKS:
 		retval = (*kcbs.coremod_check_disks)();
@@ -1505,8 +1515,10 @@ static int coremod_ioctl(vnode_t *i, struct file *f, uint32_t cmd, unsigned long
 			break;
 		}
 
-		if ((retval = copyin(userp, group_conf, sizeof(*group_conf))) != 0)
+		if ((retval = copyin(userp, group_conf, sizeof(*group_conf))) != 0) {
+			free(group_conf, M_QUADSTOR);
 			break;
+		}
 
 		if (cmd == TLTARGIOCADDGROUP)
 			retval = (*kcbs.bdev_add_group)(group_conf);
@@ -1520,19 +1532,6 @@ static int coremod_ioctl(vnode_t *i, struct file *f, uint32_t cmd, unsigned long
 		break;
 	}
 	sx_xunlock(&ioctl_lock);
-
-	/* move the frees above */
-	if (deviceinfo)
-		free(deviceinfo, M_COREBSD);
-
-	if (vcartridge)
-		free(vcartridge, M_COREBSD);
-
-	if (bdev_info)
-		free(bdev_info, M_QUADSTOR);
-
-	if (tdisk_info)
-		free(tdisk_info, M_QUADSTOR);
 
 	return retval;
 }
