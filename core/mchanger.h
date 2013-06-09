@@ -33,18 +33,6 @@
 #define IE_MASK_INENAB		0x20
 #define IE_MASK_EXENAB		0x10
 
-enum {
-	MEDIA_STATUS_ACTIVE = 0x01,
-	MEDIA_STATUS_EXPORTED = 0x02,
-	MEDIA_STATUS_FOREIGN = 0x04,
-	MEDIA_STATUS_UNKNOWN = 0x08,
-	MEDIA_STATUS_BLANK = 0x10,
-	MEDIA_STATUS_CLEANING = 0x20,
-	MEDIA_STATUS_REUSE = 0x40,
-	MEDIA_STATUS_SCAN  = 0x80,
-	MEDIA_STATUS_DIAGNOSTICS = 0x100,
-};
-
 #define ELEMENT_DESCRIPTOR_SVALID_MASK		0x80
 #define ELEMENT_DESCRIPTOR_INVERT_MASK		0x40
 #define ELEMENT_DESCRIPTOR_ACCESS_MASK		0x08
@@ -240,8 +228,7 @@ void mchanger_reset(struct mchanger *mchanger, uint64_t i_prt[], uint64_t t_prt[
 struct mchanger_element * mchanger_add_element(struct mchanger *mchanger, int type, void *element);
 int mchanger_delete_vcartridge(struct mchanger *mchanger, struct vcartridge *vcartridge);
 int mchanger_vcartridge_info(struct mchanger *mchanger, struct vcartridge *vcartridge);
-int mchanger_reload_export_vcartridge(struct mchanger *mchanger, char *label);
-int mchanger_export_vcartridge(struct mchanger *mchanger, struct vcartridge *vinfo, int noexport);
+int mchanger_reload_export_vcartridge(struct mchanger *mchanger, struct vcartridge *vcartridge);
 int mchanger_copy_vital_product_page_info(struct mchanger *mchanger, uint8_t *buffer, uint16_t allocation_length);
 int mchanger_get_info(struct mchanger *mchanger, struct vdeviceinfo *deviceinfo);
 

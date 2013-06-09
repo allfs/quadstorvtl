@@ -105,6 +105,7 @@ coremod_ioctl(struct cdev *dev, unsigned long cmd, caddr_t arg, int fflag, struc
 	case TLTARGIOCLOADVCARTRIDGE:
 	case TLTARGIOCDELETEVCARTRIDGE:
 	case TLTARGIOCGETVCARTRIDGEINFO:
+	case TLTARGIOCRELOADEXPORT:
 		vcartridge = malloc(sizeof(*vcartridge), M_COREBSD, M_WAITOK);
 		if (!vcartridge) {
 			retval = -ENOMEM;
@@ -119,6 +120,8 @@ coremod_ioctl(struct cdev *dev, unsigned long cmd, caddr_t arg, int fflag, struc
 			retval = (*kcbs.vcartridge_delete)(vcartridge);
 		else if (cmd == TLTARGIOCGETVCARTRIDGEINFO)
 			retval = (*kcbs.vcartridge_info)(vcartridge);
+		else if (cmd == TLTARGIOCRELOADEXPORT)
+			retval = (*kcbs.vcartridge_reload)(vcartridge);
 		memcpy(userp, vcartridge, sizeof(*vcartridge));
 		free(vcartridge, M_COREBSD);
 		break;

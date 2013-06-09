@@ -405,6 +405,12 @@ get_free_element(struct mchanger *mchanger, int eaddress, int vol_type)
 }
 
 static void
+mchanger_remove_export_tape(struct mchanger *mchanger, struct tape *tape)
+{
+	LIST_REMOVE_INIT(tape, t_list);
+}
+
+static void
 mchanger_insert_export_tape(struct mchanger *mchanger, struct tape *tape)
 {
 	LIST_INSERT_HEAD(&mchanger->export_list, tape, t_list);
@@ -414,21 +420,21 @@ int
 mchanger_load_vcartridge(struct mchanger *mchanger, struct vcartridge *vinfo)
 {
 	struct tape *tape;
+	struct raw_tape *raw_tape;
 	struct mchanger_element *element = NULL;
 
-	if (!(vinfo->vstatus & MEDIA_STATUS_EXPORTED)) {
-		element = get_free_element(mchanger, vinfo->elem_address, vinfo->type);
-		if (!element) {
-			debug_warn("Cannot get a free element for tape\n");
-			return -1;
-		}
+	element = get_free_element(mchanger, vinfo->elem_address, vinfo->type);
+	if (!element) {
+		debug_warn("Cannot get a free element for tape\n");
+		return -1;
 	}	
 	
 	tape = tape_load((struct tdevice *)mchanger, vinfo);
 	if (!tape)
 		return -1;
 
-	if (vinfo->vstatus & MEDIA_STATUS_EXPORTED) {
+	raw_tape = (struct raw_tape *)(vm_pg_address(tape->metadata));
+	if (raw_tape->vstatus & MEDIA_STATUS_EXPORTED) {
 		mchanger_insert_export_tape(mchanger, tape);
 		return 0;
 	}
@@ -2348,21 +2354,21 @@ out:
 }
 
 int
-mchanger_reload_export_vcartridge(struct mchanger *mchanger, char *label)
+mchanger_reload_export_vcartridge(struct mchanger *mchanger, struct vcartridge *vcartridge)
 {
-	struct tape *tape, *ret_tape = NULL;
+	struct raw_tape *raw_tape;
+	struct tape *iter, *tape = NULL;
 	struct mchanger_element *element;
 
 	mchanger_lock(mchanger);
-
-	LIST_FOREACH(tape, &mchanger->export_list, t_list) {
-		if (strcmp(tape->label, label))
+	LIST_FOREACH(iter, &mchanger->export_list, t_list) {
+		if (iter->tape_id != vcartridge->tape_id)
 			continue;
-		ret_tape = tape;
+		tape = iter;
 		break;
 	}
 
-	if (!ret_tape) {
+	if (!tape) {
 		mchanger_unlock(mchanger);
 		return -1;
 	}
@@ -2373,79 +2379,26 @@ mchanger_reload_export_vcartridge(struct mchanger *mchanger, char *label)
 		return -1;
 	}
 
-	LIST_REMOVE_INIT(ret_tape, t_list);
-	element->element_data = ret_tape;
-	update_mchanger_element_flags(element, get_mchanger_element_flags(element) | ELEMENT_DESCRIPTOR_ACCESS_MASK | ELEMENT_DESCRIPTOR_FULL_MASK);
-	if (element->type == IMPORT_EXPORT_ELEMENT)
-	{
-		update_mchanger_element_flags(element, get_mchanger_element_flags(element) | IE_MASK_IMPEXP);
-	}
-	update_mchanger_element_pvoltag(element);
-
-	mchanger_unit_attention_medium_changed(mchanger);
-	mchanger_unlock(mchanger);
-	return 0;
-}
-
-int
-mchanger_export_vcartridge(struct mchanger *mchanger, struct vcartridge *vinfo, int noexport) 
-{
-	struct mchanger_element *element;
-	struct mchanger_element_list *element_list = NULL;
-	struct tape *ret_tape = NULL;
-	int retval;
-
-	while ((element_list = mchanger_elem_list(mchanger, element_list)) != NULL) {
-		STAILQ_FOREACH(element, element_list, me_list) {
-			if (element->type == DATA_TRANSFER_ELEMENT) {
-				struct tdrive *tdrive = element->element_data;
-				if (tdrive->tape && strcmp(tdrive->tape->label, vinfo->label) == 0) {
-					ret_tape = tdrive->tape;
-	
-					retval = tdrive_unload_tape(tdrive, NULL);
-					if (unlikely(retval != 0))
-					{
-						return -1;
-					}
-	
-					update_mchanger_element_pvoltag(element);
-					update_mchanger_element_flags(element, get_mchanger_element_flags(element) & ~ELEMENT_DESCRIPTOR_FULL_MASK);
-					mchanger_unit_attention_medium_changed(mchanger);
-					break;
-				}
-			}
-			else if (element->type == STORAGE_ELEMENT || element->type == IMPORT_EXPORT_ELEMENT)
-			{
-				struct tape *tape = element->element_data;
-	
-				if (tape && strcmp(tape->label, vinfo->label) == 0)
-				{
-					ret_tape = tape;
-					element->element_data = NULL;
-					update_mchanger_element_pvoltag(element);
-					update_mchanger_element_flags(element, get_mchanger_element_flags(element) & ~ELEMENT_DESCRIPTOR_FULL_MASK);
-					if (element->type == STORAGE_ELEMENT)
-					{
-						mchanger_unit_attention_medium_changed(mchanger);
-					}
-					else
-					{
-						update_mchanger_element_flags(element, get_mchanger_element_flags(element) & ~IE_MASK_IMPEXP);
-						mchanger_unit_attention_ie_accessed(mchanger);
-					}
-					break;
-				}
-			}
-		}
-	}
-
-	if (!ret_tape)
-	{
-		debug_warn("Cannot find tape at %s\n", vinfo->label);
+	raw_tape = (struct raw_tape *)(vm_pg_address(tape->metadata));
+	raw_tape->vstatus &= ~MEDIA_STATUS_EXPORTED;
+	if (tape_write_metadata(tape) != 0) {
+		raw_tape->vstatus |= MEDIA_STATUS_EXPORTED;
+		mchanger_unlock(mchanger);
 		return -1;
 	}
 
-	LIST_INSERT_HEAD(&mchanger->export_list, ret_tape, t_list);
+	mchanger_remove_export_tape(mchanger, tape);
+	element->element_data = tape;
+	update_mchanger_element_flags(element, get_mchanger_element_flags(element) | ELEMENT_DESCRIPTOR_ACCESS_MASK | ELEMENT_DESCRIPTOR_FULL_MASK);
+	if (element->type == IMPORT_EXPORT_ELEMENT) {
+		update_mchanger_element_flags(element, get_mchanger_element_flags(element) | IE_MASK_IMPEXP);
+		mchanger_unit_attention_ie_accessed(mchanger);
+	}
+	else
+		mchanger_unit_attention_medium_changed(mchanger);
+	update_mchanger_element_pvoltag(element);
+	vcartridge->vstatus = raw_tape->vstatus;
+	mchanger_unlock(mchanger);
 	return 0;
 }
 
@@ -2463,6 +2416,37 @@ mchanger_get_info(struct mchanger *mchanger, struct vdeviceinfo *deviceinfo)
 
 	return tdrive_get_info(tdrive, deviceinfo);
 }
+
+static void
+mchanger_check_for_exported_volumes(struct mchanger *mchanger, struct vcartridge *vcartridge)
+{
+	struct mchanger_element *element;
+	struct tape *tape;
+	struct raw_tape *raw_tape; 
+	uint8_t flags;
+
+	STAILQ_FOREACH(element, &mchanger->ielem_list, me_list) {
+		tape = element_vcartridge(element);
+		if (!tape)
+			continue;
+		flags = get_mchanger_element_flags(element);
+		if (flags & IE_MASK_IMPEXP)
+			continue;
+		raw_tape = (struct raw_tape *)(vm_pg_address(tape->metadata));
+		raw_tape->vstatus |= MEDIA_STATUS_EXPORTED;
+		if (tape_write_metadata(tape) != 0)
+			continue;
+		element->element_data = NULL;
+		update_mchanger_element_flags(element, get_mchanger_element_flags(element) & ~ELEMENT_DESCRIPTOR_FULL_MASK);
+		update_mchanger_element_flags(element, get_mchanger_element_flags(element) & ~IE_MASK_IMPEXP);
+		update_mchanger_element_pvoltag(element);
+		mchanger_unit_attention_medium_changed(mchanger);
+		mchanger_insert_export_tape(mchanger, tape);
+		if (tape->tape_id == vcartridge->tape_id)
+			vcartridge->vstatus = raw_tape->vstatus;
+	}
+}
+
 int
 mchanger_vcartridge_info(struct mchanger *mchanger, struct vcartridge *vcartridge)
 {
@@ -2502,6 +2486,7 @@ mchanger_vcartridge_info(struct mchanger *mchanger, struct vcartridge *vcartridg
 		break;
 	}
 out:
+	mchanger_check_for_exported_volumes(mchanger, vcartridge);
 	mchanger_unlock(mchanger);
 	return 0;
 }

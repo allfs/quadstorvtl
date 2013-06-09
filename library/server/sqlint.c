@@ -654,7 +654,6 @@ sql_query_volumes(struct tl_blkdevinfo *binfo)
 		vinfo->type = atoi(PQgetvalue(res, i, 2));
 		memcpy(vinfo->label, PQgetvalue(res, i, 3), PQgetlength(res, i, 3));
 		vinfo->size = strtoull(PQgetvalue(res, i, 4), NULL, 10);
-		vinfo->vstatus = strtoul(PQgetvalue(res, i, 5), NULL, 10);
 		vinfo->worm = strtoul(PQgetvalue(res, i, 6), NULL, 10);
 		vinfo->elem_address = atoi(PQgetvalue(res, i, 7));
 		TAILQ_INSERT_TAIL(&binfo->vol_list, vinfo, q_entry);

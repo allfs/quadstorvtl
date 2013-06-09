@@ -1,6 +1,6 @@
 include ../../../build/rules.mk
 
-CGILIST = system.cgi listvtl.cgi addvtl.cgi addvtlpost.cgi adddisk.cgi adddiskcomp.cgi adddiskpost.cgi indvvtl.cgi liststoragepool.cgi modifystoragepool.cgi addstoragepool.cgi addstoragepoolpost.cgi deletestoragepool.cgi viewstoragepool.cgi iscsiconfpost.cgi iscsiconf.cgi addvcartridge.cgi addvcartridgepost.cgi deletevcartridge.cgi deletevtl.cgi rescandisk.cgi addlvdrive.cgi listvdrive.cgi addvdrive.cgi addvdrivepost.cgi indvvdrive.cgi loadvdrive.cgi addvtlseldrive.cgi
+CGILIST = system.cgi listvtl.cgi addvtl.cgi addvtlpost.cgi adddisk.cgi adddiskcomp.cgi adddiskpost.cgi indvvtl.cgi liststoragepool.cgi modifystoragepool.cgi addstoragepool.cgi addstoragepoolpost.cgi deletestoragepool.cgi viewstoragepool.cgi iscsiconfpost.cgi iscsiconf.cgi addvcartridge.cgi addvcartridgepost.cgi deletevcartridge.cgi deletevtl.cgi rescandisk.cgi addlvdrive.cgi listvdrive.cgi addvdrive.cgi addvdrivepost.cgi indvvdrive.cgi loadvdrive.cgi addvtlseldrive.cgi reloadexp.cgi
 
 all: $(CGILIST) strip install
 
@@ -102,6 +102,9 @@ loadvdrive.cgi: loadvdrive.o cgimain.o
 
 addvtlseldrive.cgi: addvtlseldrive.o cgimain.o
 	$(CC) $(CFLAGS) -o addvtlseldrive.cgi addvtlseldrive.o cgimain.o $(CGIHTML) $(LDFLAGS)
+
+reloadexp.cgi: reloadexp.o cgimain.o
+	$(CC) $(CFLAGS) -o reloadexp.cgi reloadexp.o cgimain.o $(CGIHTML) $(LDFLAGS)
 
 clean:
 	rm -f *.o *.cgi

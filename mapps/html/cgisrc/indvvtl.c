@@ -63,7 +63,7 @@ int main()
 	int fd, i;
 	FILE *fp;
 	char *cols[] = {"Name", "{ key: 'DType', label: 'Drive Type'}", "Name", "{ key: 'Serial', label: 'Serial Number'}", "VCartridge", "{ key: 'iSCSI', label: 'iSCSI', allowHTML: true }", NULL};
-	char *cols1[] = {"Pool", "Label", "{key: 'Element', sortable: true }", "Address", "{ key: 'VType', label: 'VCart Type', sortable: true }", "WORM", "Size", "Used", "{ key: 'Delete', label: 'Delete', allowHTML: true }", NULL};
+	char *cols1[] = {"Pool", "Label", "{key: 'Element', sortable: true }", "Address", "{ key: 'VType', label: 'VCart Type', sortable: true }", "WORM", "Size", "Used", "Status", "{key: 'Reload', label: 'Reload', allowHTML: true}", "{ key: 'Delete', label: 'Delete', allowHTML: true }", NULL};
 
 	read_cgi_input(&entries);
 
@@ -239,6 +239,20 @@ skip_drives:
 		cgi_print_column_format("Size", "%llu", (unsigned long long)(vcartridge->size/(1024 * 1024 * 1024)));
 		cgi_print_comma();
 		cgi_print_column_format("Used", "%d%%", (int)usage_percentage(vcartridge->size, vcartridge->used));
+		cgi_print_comma();
+
+		if (vcartridge->loaderror)
+			cgi_print_column("Status", "Load Error");
+		else if (vcartridge->vstatus & MEDIA_STATUS_EXPORTED)
+			cgi_print_column("Status", "Exported");
+		else
+			cgi_print_column("Status", "Active");
+		cgi_print_comma();
+
+		if (vcartridge->vstatus & MEDIA_STATUS_EXPORTED)
+			cgi_print_column_format("Reload", "<a href=\"reloadexp.cgi?tape_id=%u&tl_id=%d\">Reload</a>", vcartridge->tape_id, tl_id);
+		else
+			cgi_print_column("Reload", "N/A");
 		cgi_print_comma();
 
 		cgi_print_column_format("Delete", "<a href=\"deletevcartridge.cgi?tl_id=%u&tape_id=%u&vtltype=%d\"  onclick=\\'return confirm(\\\"Delete VCartrdige %s?\\\");\\'><img src=\"/quadstor/delete.png\" width=16px height=16px border=0></a>", tl_id, vcartridge->tape_id, T_CHANGER, vcartridge->label);

@@ -359,7 +359,6 @@ add_new_vcartridge(struct vcartridge *vinfo, char *errmsg)
 		return -1;
 	}
 
-	vinfo->vstatus = MEDIA_STATUS_ACTIVE;
 	retval = sql_add_vcartridge(conn, vinfo);
 	if (retval != 0) {
 		sprintf(errmsg, "Adding VCartridge information to DB failed\n");
@@ -2681,24 +2680,26 @@ err:
 static int
 tl_server_reload_export(struct tl_comm *comm, struct tl_msg *msg)
 {
-	int tl_id;
-	uint32_t tape_id;
 	struct vcartridge *vinfo;
+	uint32_t tape_id;
+	int tl_id, retval;
 
-	if (sscanf(msg->msg_data, "tl_id: %d\ntape_id: %u\n", &tl_id, &tape_id) != 2)
-	{
+	if (sscanf(msg->msg_data, "tl_id: %d\ntape_id: %u\n", &tl_id, &tape_id) != 2) {
 		tl_server_msg_failure(comm, msg);
 		return -1;
 	}
 
 	vinfo = find_volume(tl_id, tape_id);
-	if (!vinfo)
-	{
+	if (!vinfo) {
 		tl_server_msg_invalid(comm, msg);
 		return -1;
 	}
 
-	vinfo->vstatus |= MEDIA_STATUS_ACTIVE;
+	retval = tl_ioctl(TLTARGIOCRELOADEXPORT, vinfo);
+	if (retval != 0) {
+		tl_server_msg_failure(comm, msg);
+		return -1;
+	}
 	tl_server_msg_success(comm, msg);
 	return 0;
 }

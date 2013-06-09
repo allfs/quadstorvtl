@@ -455,6 +455,8 @@ struct raw_partition {
 
 struct raw_tape {
 	uint16_t csum;
+	uint32_t  vstatus;
+	uint8_t  pad[2];
 	uint64_t size;
 	uint64_t set_size; /* SET CAPACITY */
 	char label[40];
@@ -466,7 +468,7 @@ struct raw_tape {
 	struct vtl_info vtl_info;
 	uint64_t pad1[4];
 	struct raw_partition raw_partitions[MAX_TAPE_PARTITIONS];
-};
+} __attribute__ ((__packed__));
 
 #define MAX_VTAPES		60000
 #define BDEV_META_RESERVED	262144
@@ -479,5 +481,17 @@ struct raw_tape {
 
 #define VTAPES_OFFSET		(BDEV_META_OFFSET + LBA_SIZE)
 #define DEFAULT_IE_PORTS	0x04
+
+enum {
+	MEDIA_STATUS_ACTIVE = 0x01,
+	MEDIA_STATUS_EXPORTED = 0x02,
+	MEDIA_STATUS_FOREIGN = 0x04,
+	MEDIA_STATUS_UNKNOWN = 0x08,
+	MEDIA_STATUS_BLANK = 0x10,
+	MEDIA_STATUS_CLEANING = 0x20,
+	MEDIA_STATUS_REUSE = 0x40,
+	MEDIA_STATUS_SCAN  = 0x80,
+	MEDIA_STATUS_DIAGNOSTICS = 0x100,
+};
 
 #endif /* COMMONDEFS_H_ */

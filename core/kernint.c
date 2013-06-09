@@ -404,6 +404,7 @@ kern_interface_init(struct qs_kern_cbs *kern_cbs)
 	kern_cbs->vcartridge_load = vcartridge_load;
 	kern_cbs->vcartridge_delete = vcartridge_delete;
 	kern_cbs->vcartridge_info = vcartridge_info;
+	kern_cbs->vcartridge_reload = vcartridge_reload;
 	kern_cbs->target_add_fc_rule = target_add_fc_rule;
 	kern_cbs->target_remove_fc_rule = target_remove_fc_rule;
 

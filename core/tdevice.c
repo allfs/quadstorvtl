@@ -196,6 +196,27 @@ vcartridge_delete(struct vcartridge *vcartridge)
 }
 
 int
+vcartridge_reload(struct vcartridge *vcartridge)
+{
+	struct tdevice *tdevice;
+	int retval;
+
+	if (vcartridge->tl_id >= TL_MAX_DEVICES)
+		return -1;
+
+	tdevice = tdevices[vcartridge->tl_id];
+	if (!tdevice)
+		return -1;
+
+	if (tdevice->type != T_CHANGER)
+		return -1;
+
+	retval = mchanger_reload_export_vcartridge((struct mchanger *)tdevice, vcartridge);
+	return retval;
+
+}
+
+int
 vcartridge_info(struct vcartridge *vcartridge)
 {
 	struct tdevice *tdevice;

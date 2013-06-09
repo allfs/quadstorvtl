@@ -96,6 +96,7 @@ int vcartridge_new(struct vcartridge *vcartridge);
 int vcartridge_load(struct vcartridge *vcartridge);
 int vcartridge_delete(struct vcartridge *vcartridge);
 int vcartridge_info(struct vcartridge *vcartridge);
+int vcartridge_reload(struct vcartridge *vcartridge);
 
 #define tdevice_get(tdev)	do {} while (0)
 #define tdevice_put(tdev)	do {} while (0)

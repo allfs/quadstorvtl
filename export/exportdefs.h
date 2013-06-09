@@ -194,6 +194,7 @@ struct qs_kern_cbs {
 	int (*vcartridge_load)(struct vcartridge *);
 	int (*vcartridge_delete)(struct vcartridge *);
 	int (*vcartridge_info)(struct vcartridge *);
+	int (*vcartridge_reload)(struct vcartridge *);
 	int (*coremod_load_done)(void);
 	int (*coremod_check_disks)(void);
 	int (*coremod_exit)(void);

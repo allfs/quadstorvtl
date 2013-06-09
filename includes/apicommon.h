@@ -266,18 +266,6 @@ void get_transfer_rate(double bytes, long elapsed, char *buf);
 #define DEBUG_ERR_SERVER		DEBUG_WARN_NEW
 #define DEBUG_CRIT_SERVER		DEBUG_WARN_NEW
 
-enum {
-	MEDIA_STATUS_ACTIVE = 0x01,
-	MEDIA_STATUS_EXPORTED = 0x02,
-	MEDIA_STATUS_FOREIGN = 0x04,
-	MEDIA_STATUS_UNKNOWN = 0x08,
-	MEDIA_STATUS_BLANK = 0x10,
-	MEDIA_STATUS_CLEANING = 0x20,
-	MEDIA_STATUS_REUSE = 0x40,
-	MEDIA_STATUS_SCAN  = 0x80,
-	MEDIA_STATUS_DIAGNOSTICS = 0x100,
-};
-
 struct fc_rule {
 	int rule;
 	int target_id;

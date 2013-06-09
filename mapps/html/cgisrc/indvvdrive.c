@@ -189,14 +189,10 @@ int main()
 
 		if (vcartridge->loaderror)
 			cgi_print_column("Status", "Load Error");
-		else if (vcartridge->vstatus & MEDIA_STATUS_ACTIVE && vcartridge->vstatus & MEDIA_STATUS_EXPORTED)
-			cgi_print_column("Status", "Active, Exported");
-		else if (vcartridge->vstatus & MEDIA_STATUS_ACTIVE)
-			cgi_print_column("Status", "Active");
 		else if (vcartridge->vstatus & MEDIA_STATUS_EXPORTED)
 			cgi_print_column("Status", "Exported");
 		else
-			cgi_print_column("Status", "Unknown");
+			cgi_print_column("Status", "Active");
 		cgi_print_comma();
 
 		if (strcmp(vcartridge->label, driveconf->tape_label))

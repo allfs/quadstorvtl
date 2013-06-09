@@ -609,5 +609,9 @@ tape_validate_format(struct tape *tape)
 void
 tape_get_info(struct tape *tape, struct vcartridge *vcartridge)
 {
+	struct raw_tape *raw_tape;
+
+	raw_tape = (struct raw_tape *)(vm_pg_address(tape->metadata));
 	vcartridge->used = tape_usage(tape);
+	vcartridge->vstatus = raw_tape->vstatus;
 }
