@@ -133,6 +133,45 @@ add_vtl_drive(struct vtlconf *vtlconf, struct drive_info *drive_info, int target
 }
 
 static struct vdevice *
+add_vdrive(struct vtl_info *vtl_info, int testmode, char *errmsg)
+{
+	struct vdevice *vdevice;
+	struct tdriveconf *driveconf;
+	int retval;
+
+	retval = vtl_name_exists(vtl_info->name);
+	if (retval) {
+		sprintf(errmsg, "A VTL with name %s already exists", vtl_info->name);
+		return NULL;
+	}
+
+	driveconf = tdriveconf_new(vtl_info->tl_id, 0, vtl_info->name, vtl_info->serialnumber);
+	if (!driveconf) {
+		sprintf(errmsg, "Memory allocation failure\n");
+		return NULL;
+	}
+
+	vdevice = (struct vdevice *)driveconf;
+	driveconf->type = vtl_info->type;
+	fprintf(stdout, "Adding VDrive %s\n", vtl_info->name);
+	if (!testmode) {
+		retval = sql_add_drive(driveconf);
+		if (retval != 0) {
+			sprintf(errmsg, "sql add vdrive failed\n");
+			return NULL;
+		}
+
+		retval  = ietadm_default_settings(vdevice, NULL);
+		if (retval != 0) {
+			sprintf(errmsg, "Setting iSCSI default failed\n");
+			return NULL;
+		}
+	}
+	device_list[vtl_info->tl_id] = vdevice;
+	return vdevice;
+}
+
+static struct vdevice *
 add_vtl(struct vtl_info *vtl_info, int testmode, char *errmsg)
 {
 	struct vtlconf *vtlconf;
@@ -188,7 +227,6 @@ check_vtl_info(struct raw_tape *raw_tape, int testmode)
 	struct vtl_info *vtl_info = &raw_tape->vtl_info;
 	char errmsg[256];
 
-	printf("name %s\n", vtl_info->name);
 	vdevice = find_vdevice(vtl_info->tl_id, 0);
 	if (vdevice)
 		return vdevice;
@@ -201,6 +239,14 @@ check_vtl_info(struct raw_tape *raw_tape, int testmode)
 		}
 		return vdevice;
 	}
+	else {
+		vdevice = add_vdrive(vtl_info, testmode, errmsg);
+		if (!vdevice) {
+			fprintf(stderr, "Adding VDrive failed. Err msg is %s\n", errmsg);
+			exit(1);
+		}
+		return vdevice;
+	} 
 	return NULL;
 }
 
