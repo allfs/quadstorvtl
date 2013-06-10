@@ -591,16 +591,15 @@ tdrive_delete_vcartridge(struct tdrive *tdrive, struct vcartridge *vcartridge)
 	int retval;
 	struct tape *tape;
 
-	tape = tdrive->tape;
-	if (unlikely(!tape))
+	tape = tdrive_find_tape(tdrive, vcartridge->tape_id);
+	if (!tape)
 		return -1;
 
-	if (tape->tape_id != vcartridge->tape_id)
-		return -1;
-
-	retval = tdrive_unload_tape(tdrive, NULL);
-	if (unlikely(retval != 0))
-		return -1;
+	if (tape == tdrive->tape) {
+		retval = tdrive_unload_tape(tdrive, NULL);
+		if (unlikely(retval != 0))
+			return -1;
+	}
 
 	LIST_REMOVE(tape, t_list);
 	tape_free(tape, vcartridge->free_alloc);
@@ -2328,15 +2327,7 @@ tdrive_cmd_log_sense6(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	parameter_pointer = be16toh(*(uint16_t *)(&cdb[5]));
 	allocation_length = be16toh(*(uint16_t *)(&cdb[7]));
 
-	if (sp)
-	{
-		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);  
-		return 0;
-	}
-
-	if (allocation_length < sizeof(struct scsi_log_page))
-	{
-		/* Minimum size needed by us */
+	if (sp) {
 		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);  
 		return 0;
 	}
