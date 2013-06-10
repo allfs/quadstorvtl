@@ -193,6 +193,12 @@ struct scsi_log_page {
 	uint8_t page_data[0];
 } __attribute__ ((__packed__));
 
+struct log_parameter {
+	uint16_t parameter_code;
+	uint8_t parameter_flags;
+	uint8_t parameter_length;
+} __attribute__ ((__packed__));
+
 struct log_parameter32 {
 	uint16_t parameter_code;
 	uint8_t parameter_flags;
@@ -217,6 +223,7 @@ struct log_parameter8 {
 /* Log Pages */
 #define WRITE_ERROR_LOG_PAGE		0x02
 #define READ_ERROR_LOG_PAGE		0x03
+#define VOLUME_STATISTICS_LOG_PAGE	0x17
 #define COMPRESSION_LOG_PAGE		0x32
 #define TAPE_ALERT_LOG_PAGE		0x2E
 #define TAPE_CAPACITY_LOG_PAGE		0x31 /* Check if specific to drive */

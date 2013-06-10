@@ -211,6 +211,7 @@ vultrium_update_data_compression_page(struct tdrive *tdrive)
 static void
 vultrium_init_inquiry_data(struct tdrive *tdrive)
 {
+	char *revision;
 	struct inquiry_data *inquiry = &tdrive->inquiry;
 
 	bzero(inquiry, sizeof(*inquiry));
@@ -225,13 +226,108 @@ vultrium_init_inquiry_data(struct tdrive *tdrive)
 #endif
 	memcpy(&inquiry->vendor_id, tdrive->unit_identifier.vendor_id, 8);
 	memcpy(&inquiry->product_id, tdrive->unit_identifier.product_id, 16);
-	memcpy(&inquiry->revision_level, PRODUCT_REVISION_QUADSTOR, strlen(PRODUCT_REVISION_QUADSTOR));
+	if (is_hp_drive(tdrive))
+		revision = PRODUCT_REVISION_QUADSTOR;
+	else
+		revision = PRODUCT_REVISION_IBM_LTFS;
+
+	memcpy(&inquiry->revision_level, revision, strlen(revision));
 }
 
 #define MAIN_PARTITION_REMAINING_CAPACITY	0x01
 #define ALT_PARTITION_REMAINING_CAPACITY	0x02
 #define MAIN_PARTITION_MAXIMUM_CAPACITY		0x03
 #define ALT_PARTITION_MAXIMUM_CAPACITY		0x04
+
+struct vol_stats_partition_record32 {
+	uint8_t length;
+	uint8_t rsvd;
+	uint16_t partition_num;
+	uint32_t counter;
+} __attribute__ ((__packed__));
+
+static uint16_t
+vultrium_volume_statistics_log_sense(struct tdrive *tdrive, uint8_t *buffer, uint16_t buffer_length, uint16_t parameter_pointer)
+{
+	struct log_parameter *param, tmp;
+	struct vol_stats_partition_record32 *record, tmp1;
+	struct tape *tape;
+	struct tape_partition *partition;
+	struct scsi_log_page page;
+	int count, done, page_length = 0;
+	uint64_t remaining;
+	int min_len;
+	int i;
+
+	tape = tdrive->tape;
+	count = tape_partition_count(tape);
+
+	bzero(&page, sizeof(page));
+	page.page_code = VOLUME_STATISTICS_LOG_PAGE;
+	done = min_t(int, sizeof(page), buffer_length);
+
+	if (parameter_pointer > 0x203)
+		goto skip1;
+
+	param = (struct log_parameter *)(buffer+done);
+	bzero(param, sizeof(*param));
+	tmp.parameter_code = htobe16(0x203);
+	tmp.parameter_flags = 0x3;
+	tmp.parameter_length = (count * sizeof(tmp1));
+	min_len = min_t(int, sizeof(tmp), buffer_length - done);
+	memcpy(param, &tmp, min_len);
+	done += min_len;
+	page_length += sizeof(tmp);
+
+	for (i = 0; i < count; i++) {
+		partition = tape_get_partition(tape, i);
+		bzero(&tmp1, sizeof(tmp1));
+		tmp1.length = sizeof(tmp1) - 1;
+		tmp1.partition_num = htobe16(i);
+		tmp1.counter = htobe32((partition->used >> 20));
+		min_len = min_t(int, sizeof(tmp1), buffer_length - done);
+		record = (struct vol_stats_partition_record32 *)(buffer+done);
+		memcpy(record, &tmp1, min_len);
+		done += min_len;
+		page_length += sizeof(tmp1);
+	} 
+skip1:
+	if (parameter_pointer > 0x204)
+		goto skip2;
+
+	param = (struct log_parameter *)(buffer+done);
+	tmp.parameter_code = htobe16(0x204);
+	tmp.parameter_length = (count * sizeof(tmp1));
+	tmp.parameter_flags = 0x3;
+	min_len = min_t(int, sizeof(tmp), buffer_length - done);
+	memcpy(param, &tmp, min_len);
+	done += min_len;
+	page_length += sizeof(tmp);
+
+	for (i = 0; i < count; i++) {
+		partition = tape_get_partition(tape, i);
+		bzero(&tmp1, sizeof(tmp1));
+		tmp1.length = sizeof(tmp1) - 1;
+		tmp1.partition_num = htobe16(i);
+		if (partition->used >= partition->size)
+			remaining = 0;
+		else
+			remaining = (partition->size - partition->used);
+		if (remaining <= EW_SIZE)
+			remaining = 0;
+		tmp1.counter = htobe32((remaining >> 20));
+		min_len = min_t(int, sizeof(tmp1), buffer_length - done);
+		record = (struct vol_stats_partition_record32 *)(buffer+done);
+		memcpy(record, &tmp1, min_len);
+		done += min_len;
+		page_length += sizeof(tmp1);
+	} 
+skip2:
+	page.page_length = htobe16(page_length);
+	min_len = min_t(int, sizeof(page), buffer_length);
+	memcpy(buffer, &page, min_len);
+	return done;
+}
 
 static uint16_t
 vultrium_tape_capacity_log_sense(struct tdrive *tdrive, uint8_t *buffer, uint16_t buffer_length, uint16_t parameter_pointer)
@@ -324,6 +420,8 @@ vultrium_log_sense(struct tdrive *tdrive, uint8_t page_code, uint8_t *buffer, ui
 	switch (page_code) {
 	case TAPE_CAPACITY_LOG_PAGE:
 		return vultrium_tape_capacity_log_sense(tdrive, buffer, buffer_length, parameter_pointer);
+	case VOLUME_STATISTICS_LOG_PAGE:
+		return vultrium_volume_statistics_log_sense(tdrive, buffer, buffer_length, parameter_pointer);
 	default:
 		break;
 	}
@@ -591,9 +689,10 @@ vultrium_init_handlers(struct tdrive *tdrive)
 	tdrive->evpd_info.page_code[2] = UNIT_SERIAL_NUMBER_PAGE;
 	tdrive->supports_evpd = 1;
 
-	tdrive->log_info.num_pages = 0x02;
+	tdrive->log_info.num_pages = 0x03;
 	tdrive->log_info.page_code[0] = 0x00;
-	tdrive->log_info.page_code[1] = TAPE_CAPACITY_LOG_PAGE;
+	tdrive->log_info.page_code[1] = VOLUME_STATISTICS_LOG_PAGE;
+	tdrive->log_info.page_code[2] = TAPE_CAPACITY_LOG_PAGE;
 
 	/* Ideally we should be moving this elsewhere */
 	vultrium_update_device_configuration_page(tdrive);
