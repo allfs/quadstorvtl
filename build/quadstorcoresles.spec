@@ -1,7 +1,7 @@
-%define libvers 2.2.3
+%define libvers 2.2.4
 Summary: QuadStor Storage Virtualization 
 Name: quadstor-vtl-core 
-Version: 2.2.3
+Version: 2.2.4
 Release: sles11sp1
 Source0: %{name}-%{version}.tar.gz
 License: None 
@@ -90,7 +90,7 @@ cd $RPM_BUILD_ROOT/quadstor/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 
 	cp -f /srv/www/htdocs/qsindex.html /srv/www/htdocs/index.html
 	mkdir -p /quadstor/etc
-	echo "2.2.3 for SLES 11 SP1" > /quadstor/etc/quadstor-vtl-core-version
+	echo "2.2.4 for SLES 11 SP1" > /quadstor/etc/quadstor-vtl-core-version
 	exit 0
 
 %preun
