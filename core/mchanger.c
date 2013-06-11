@@ -1329,12 +1329,9 @@ element_descriptor_copy_status(struct mchanger_element *element, uint8_t *buffer
 
 	if (voltag) {
 		min_len = min_t(int, avail, sizeof(struct voltag));
-		if (min_len > 0)
-		{
+		if (min_len > 0) {
 			memcpy(buffer, &element->edesc.voltag, min_len);
 			done += min_len;
-			buffer += min_len;
-			avail -= min_len;
 		}
 	}
 
@@ -1774,8 +1771,8 @@ mchanger_cmd_log_sense6(struct mchanger *mchanger, struct qsio_scsiio *ctio)
 		page_length = mchanger_copy_supported_log_page_info(mchanger, ctio->data_ptr, allocation_length);
 		break;
 	default:
-		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);  
-		return 0;
+		ctio_free_data(ctio);
+		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);
 	}
 	ctio->dxfer_len = page_length;
 	return 0;
@@ -2276,14 +2273,12 @@ mchanger_proc_cmd(void *changer, void *iop)
 			break;
 		ctio_free_data(ctio);
 		device_move_sense(ctio, sinfo);
-		retval = 0;
 		goto out;
 	}
 
 	if (mchanger_cmd_access_ok(mchanger, ctio) != 0) {
 		ctio->scsi_status = SCSI_STATUS_RESERV_CONFLICT;
 		ctio_free_data(ctio);
-		retval = 0;
 		goto out;
 	}
 

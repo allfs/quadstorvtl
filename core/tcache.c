@@ -189,7 +189,7 @@ void
 __tcache_entry_rw(struct tcache *tcache, int rw, void *end_bio)
 {
 	int i;
-	struct bdevint *prev_b_dev = NULL, *b_dev;
+	struct bdevint *b_dev;
 
 	atomic_set_bit(TCACHE_IO_SUBMITTED, &tcache->flags);
 	tcache_get(tcache);
@@ -202,7 +202,6 @@ __tcache_entry_rw(struct tcache *tcache, int rw, void *end_bio)
 
 		b_dev = bio->bint;
 		send_biot(bio, rw, end_bio);
-		prev_b_dev = b_dev;
 	}
 }
 

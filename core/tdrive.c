@@ -2342,20 +2342,17 @@ tdrive_cmd_log_sense6(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 
 	bzero(ctio->data_ptr, ctio->dxfer_len);
 
-	page_length = 0;
-	switch (page_code)
-	{
-		case 0x00:
-			page_length = tdrive_copy_supported_log_page_info(tdrive, ctio->data_ptr, allocation_length);
-			break;
-		default:
-			if (!tdrive->handlers.additional_log_sense || !tdrive_log_page_supported(tdrive, page_code)) {
-
-				ctio_free_data(ctio);
-				ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);  
-				return 0;
-			}
-			page_length = (*tdrive->handlers.additional_log_sense)(tdrive, page_code, ctio->data_ptr, allocation_length, parameter_pointer);
+	switch (page_code) {
+	case 0x00:
+		page_length = tdrive_copy_supported_log_page_info(tdrive, ctio->data_ptr, allocation_length);
+		break;
+	default:
+		if (!tdrive->handlers.additional_log_sense || !tdrive_log_page_supported(tdrive, page_code)) {
+			ctio_free_data(ctio);
+			ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);  
+			return 0;
+		}
+		page_length = (*tdrive->handlers.additional_log_sense)(tdrive, page_code, ctio->data_ptr, allocation_length, parameter_pointer);
 	}
 
 	if (!page_length)
@@ -3608,7 +3605,6 @@ tdrive_proc_cmd(void *drive, void *iop)
 			break;
 		ctio_free_data(ctio);
 		device_move_sense(ctio, sinfo);
-		retval = 0;
 		goto out;
 	}
 
@@ -3663,7 +3659,6 @@ tdrive_proc_cmd(void *drive, void *iop)
 			default:
 				ctio_free_data(ctio);
 				ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_NOT_READY, 0, asc, ascq);
-				retval = 0;
 				goto out;
 		}
 	}
@@ -3672,7 +3667,6 @@ tdrive_proc_cmd(void *drive, void *iop)
 	{
 		ctio->scsi_status = SCSI_STATUS_RESERV_CONFLICT;
 		ctio_free_data(ctio);
-		retval = 0;
 		goto out;
 	}
 
@@ -3874,7 +3868,6 @@ tdrive_device_identification(struct tdrive *tdrive, uint8_t *buffer, int length)
 
 	unit_identifier = (struct logical_unit_identifier *)(buffer+done);
 	memcpy(unit_identifier, &tdrive->unit_identifier, idlength);
-	page_length += idlength;
 	done += idlength;
 	return done;
 }

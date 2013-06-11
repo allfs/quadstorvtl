@@ -220,7 +220,6 @@ bint_index_load(struct bdevint *bint, int index_id)
 		return NULL;
 	}
 
-	retval = bint_index_validate(index);
 	return index;
 }
 

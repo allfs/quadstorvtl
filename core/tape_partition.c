@@ -1811,6 +1811,11 @@ tape_partition_load(struct tape *tape, int partition_id)
 
 	tsegment = &partition->msegment;
 	retval = tape_partition_lookup_segment(partition, SEGMENT_TYPE_META, 0, tsegment);
+	if (unlikely(retval != 0)) {
+		tape_partition_free(partition, 0);
+		return NULL;
+	}
+
 	if (!tsegment->b_start)
 		return partition;
 

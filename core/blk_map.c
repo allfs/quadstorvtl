@@ -727,7 +727,7 @@ blk_entry_read_next(struct blk_entry *entry, struct blk_map **end_map, int load,
 
 	retval = blk_map_load_meta(map);
 	if (unlikely(retval != 0)) {
-		debug_warn("blk_map_load_meta failed for map at %llu, bid %u\n", (unsigned long long)next->b_start, next->bint->bid);
+		debug_warn("blk_map_load_meta failed for map at %llu, bid %u\n", (unsigned long long)map->b_start, map->bint->bid);
 		blk_map_free_from_map(partition, map);
 		return NULL;
 	}
