@@ -189,18 +189,15 @@ void
 __tcache_entry_rw(struct tcache *tcache, int rw, void *end_bio)
 {
 	int i;
-	struct bdevint *b_dev;
 
 	atomic_set_bit(TCACHE_IO_SUBMITTED, &tcache->flags);
 	tcache_get(tcache);
-	for (i = 0; i < tcache->bio_count; i++)
-	{
+	for (i = 0; i < tcache->bio_count; i++) {
 		struct biot *bio = tcache->bio_list[i];
 
 		if (!bio)
 			break;
 
-		b_dev = bio->bint;
 		send_biot(bio, rw, end_bio);
 	}
 }
