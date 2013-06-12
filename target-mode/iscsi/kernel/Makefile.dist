@@ -21,7 +21,7 @@ ifneq ($(KERNELRELEASE),)
 
 KBUILD_EXTRA_SYMBOLS = $(QUADSTOR_ROOT)/export/Module.symvers
 
-EXTRA_CFLAGS += -I$(src)/../include   -Winit-self -Werror
+EXTRA_CFLAGS += -I$(src)/../include   -Winit-self
 EXTRA_CFLAGS += -I$(QUADSTOR_ROOT)/export -I$(KDIR)/drivers/scsi -DLINUX -DEXPORT_SYMTAB
 
 obj-m		+= iscsit.o

@@ -7,7 +7,7 @@ ifeq ($(QUADSTOR_ROOT),)
 endif
 
 ifneq ($(KERNELRELEASE),)
-EXTRA_CFLAGS += -I$(QUADSTOR_ROOT)/target-mode/fc/srpt -I$(QUADSTOR_ROOT)/export -I$(QUADSTOR_ROOT)/common -I$(QUADSTOR_ROOT)/target-mode/fc/common -DLINUX -Werror -g
+EXTRA_CFLAGS += -I$(QUADSTOR_ROOT)/target-mode/fc/srpt -I$(QUADSTOR_ROOT)/export -I$(QUADSTOR_ROOT)/common -I$(QUADSTOR_ROOT)/target-mode/fc/common -DLINUX -g
 
 obj-m		+= ib_srpt.o
 ib_srpt-objs	:= fcbridge.o fcq.o qla_sc.o ibsrpt.o

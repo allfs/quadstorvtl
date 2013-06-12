@@ -8,7 +8,7 @@ ifeq ($(QUADSTOR_ROOT),)
 endif
 
 ifneq ($(KERNELRELEASE),)
-EXTRA_CFLAGS += -I$(QUADSTOR_ROOT)/target-mode/fc/qla2xxx -I$(QUADSTOR_ROOT)/export -I$(QUADSTOR_ROOT)/common -I$(QUADSTOR_ROOT)/target-mode/fc/common -DLINUX -Werror
+EXTRA_CFLAGS += -I$(QUADSTOR_ROOT)/target-mode/fc/qla2xxx -I$(QUADSTOR_ROOT)/export -I$(QUADSTOR_ROOT)/common -I$(QUADSTOR_ROOT)/target-mode/fc/common -DLINUX
 
 obj-m		+= qla2xxx.o
 
