@@ -666,7 +666,7 @@ istate_abort_tasks_other_initiators(struct initiator_state *istate, uint64_t i_p
 	TAILQ_FOREACH(iter, &istate->queue_list, ta_list) {
 		if (iter->ccb_h.flags & QSIO_IN_DEVQ)
 			continue;
-		if (iter->i_prt == i_prt && iter->t_prt == t_prt && iter->init_int == init_int) {
+		if (port_equal(iter->i_prt, i_prt) && port_equal(iter->t_prt, t_prt) && iter->init_int == init_int) {
 			iter->ccb_h.flags |= QSIO_CTIO_ABORTED;
 			iter->ccb_h.flags |= QSIO_SEND_ABORT_STATUS;
 		}
