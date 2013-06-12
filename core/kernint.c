@@ -89,6 +89,8 @@ qs_inflate_block(uint8_t *in_buf, int comp_len, uint8_t *out_buf, int uncomp_len
 	return 0;
 }
 
+uma_t *tape_cache;
+uma_t *tape_partition_cache;
 uma_t *bentry_cache;
 uma_t *bmap_cache;
 uma_t *map_lookup_cache;
@@ -127,6 +129,14 @@ mdaemon_set_info(struct mdaemon_info *info)
 static void
 exit_caches(void)
 {
+	debug_print("free tape_cache\n");
+	if (tape_cache)
+		__uma_zdestroy("tape cache", tape_cache);
+
+	debug_print("free tape_partition_cache\n");
+	if (tape_partition_cache)
+		__uma_zdestroy("tape_partition cache", tape_partition_cache);
+
 	debug_print("free bentry_cache\n");
 	if (bentry_cache)
 		__uma_zdestroy("bentry cache", bentry_cache);
@@ -196,6 +206,18 @@ do {							\
 static int
 init_caches(void)
 {
+	CREATE_CACHE(tape_cache, "tape cache", sizeof(struct tape));
+	if (!tape_cache) {
+		debug_warn("Cannot create tape cache\n");
+		return -1;
+	}
+
+	CREATE_CACHE(tape_partition_cache, "tape_partition cache", sizeof(struct tape_partition));
+	if (!tape_partition_cache) {
+		debug_warn("Cannot create tape_partition cache\n");
+		return -1;
+	}
+
 	CREATE_CACHE(bentry_cache, "bentry cache", sizeof(struct blk_entry));
 	if (!bentry_cache) {
 		debug_warn("Cannot create bentry cache\n");

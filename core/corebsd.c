@@ -25,8 +25,6 @@ MALLOC_DEFINE(M_TSEGMENT, "quad tsegment", "QUADStor allocations");
 MALLOC_DEFINE(M_BLKENTRY, "quad blkentry", "QUADStor allocations");
 MALLOC_DEFINE(M_QCACHE, "quad qcache", "QUADStor allocations");
 MALLOC_DEFINE(M_DRIVE, "quad drive", "QUADStor allocations");
-MALLOC_DEFINE(M_TAPE, "quad tape", "QUADStor allocations");
-MALLOC_DEFINE(M_TAPE_PARTITION, "quad tape partition", "QUADStor allocations");
 MALLOC_DEFINE(M_TMAPS, "quad tmaps", "QUADStor allocations");
 MALLOC_DEFINE(M_MCHANGERELEMENT, "quad mchanger element", "QUADStor allocations");
 MALLOC_DEFINE(M_MCHANGER, "quad mchanger", "QUADStor allocations");

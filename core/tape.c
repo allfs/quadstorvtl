@@ -23,6 +23,8 @@
 #include "qs_lib.h"
 #include "mchanger.h"
 
+extern uma_t *tape_cache;
+
 struct raw_partition *
 tape_get_raw_partition_info(struct tape *tape, int partition_id)
 {
@@ -50,7 +52,7 @@ tape_free(struct tape *tape, int free_alloc)
 	if (tape->metadata)
 		vm_pg_free(tape->metadata);
 
-	free(tape, M_TAPE);
+	uma_zfree(tape_cache, tape);
 }
 
 static struct tape *
@@ -58,13 +60,13 @@ tape_alloc(struct vcartridge *vinfo)
 {
 	struct tape *tape;
 
-	tape = zalloc(sizeof(struct tape), M_TAPE, Q_WAITOK);
+	tape = __uma_zalloc(tape_cache, Q_WAITOK|Q_ZERO, sizeof(*tape));
 	if (unlikely(!tape))
 		return NULL;
 
 	tape->metadata = vm_pg_alloc(VM_ALLOC_ZERO);
 	if (unlikely(!tape->metadata)) {
-		free(tape, M_TAPE);
+		uma_zfree(tape_cache, tape);
 		return NULL;
 	}
 

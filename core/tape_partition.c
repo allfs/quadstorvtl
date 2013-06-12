@@ -22,6 +22,8 @@
 #include "tape.h"
 #include "qs_lib.h"
 
+extern uma_t *tape_partition_cache;
+
 /*
  * 00 - Binary
  * 01 - Ascii
@@ -1310,7 +1312,7 @@ tape_partition_free(struct tape_partition *partition, int free_alloc)
 	tmap_list_free_all(&partition->data_tmap_list);
 	if (partition->mam_data)
 		vm_pg_free(partition->mam_data);
-	free(partition, M_TAPE_PARTITION);
+	uma_zfree(tape_partition_cache, partition);
 }
 
 void
@@ -1639,7 +1641,7 @@ tape_partition_new(struct tape *tape, uint64_t size, int partition_id)
 		return NULL;
 	}
 
-	partition = zalloc(sizeof(*partition), M_TAPE_PARTITION, Q_WAITOK);
+	partition = __uma_zalloc(tape_partition_cache, Q_WAITOK|Q_ZERO, sizeof(*partition));
 	partition->size = size;
 	partition->partition_id = partition_id;
 	partition->tmaps_b_start = b_start;
@@ -1777,7 +1779,7 @@ tape_partition_load(struct tape *tape, int partition_id)
 		return NULL;
 	}
 
-	partition = zalloc(sizeof(*partition), M_TAPE_PARTITION, Q_WAITOK);
+	partition = __uma_zalloc(tape_partition_cache, Q_WAITOK|Q_ZERO, sizeof(*partition));
 	partition->size = raw_partition->size;
 	debug_check(!raw_partition->size);
 	partition->partition_id = partition_id;

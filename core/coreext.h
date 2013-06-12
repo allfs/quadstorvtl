@@ -105,8 +105,6 @@ typedef void bio_t;
 #define M_BLKENTRY		0
 #define M_QCACHE		0
 #define M_DRIVE			0
-#define M_TAPE			0
-#define M_TAPE_PARTITION	0
 #define M_TMAPS			0
 #define M_MCHANGERELEMENT	0
 #define M_MCHANGER		0
