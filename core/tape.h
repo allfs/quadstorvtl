@@ -30,7 +30,6 @@ enum {
 struct tape {
 	struct bdevint *bint;
 	struct bdevgroup *group;
-	struct tdrive* tdrive; /* The drive this belongs to */
 
 	uint64_t size; /* Size of tape in MB/GB */
 	uint64_t set_size; /* SET CAPACITY size */

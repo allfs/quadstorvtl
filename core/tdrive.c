@@ -440,6 +440,8 @@ tdrive_free(struct tdrive *tdrive, int delete)
 	if (tdrive->tape && (!tdrive->tape->locked || tdrive->tape->locked_by == tdrive)) {
 		tdrive_empty_write_queue(tdrive);
 		tape_flush_buffers(tdrive->tape);
+		if (tdrive->mchanger)
+			tape_free(tdrive->tape, delete);
 	}
 
 	tdrive_cbs_remove(tdrive);
@@ -489,7 +491,6 @@ __tdrive_load_tape(struct tdrive *tdrive, struct tape *tape)
 	}
 
 	tdrive->tape = tape;
-	tape->tdrive = tdrive;
 	if (tdrive->handlers.load_tape)
 	{
 		(*tdrive->handlers.load_tape)(tdrive, tape);
@@ -591,7 +592,10 @@ tdrive_delete_vcartridge(struct tdrive *tdrive, struct vcartridge *vcartridge)
 	int retval;
 	struct tape *tape;
 
-	tape = tdrive_find_tape(tdrive, vcartridge->tape_id);
+	if (tdrive->mchanger)
+		tape = tdrive->tape;
+	else
+		tape = tdrive_find_tape(tdrive, vcartridge->tape_id);
 	if (!tape)
 		return -1;
 
@@ -601,7 +605,7 @@ tdrive_delete_vcartridge(struct tdrive *tdrive, struct vcartridge *vcartridge)
 			return -1;
 	}
 
-	LIST_REMOVE(tape, t_list);
+	LIST_REMOVE_INIT(tape, t_list);
 	tape_free(tape, vcartridge->free_alloc);
 	return 0;
 }
@@ -649,7 +653,6 @@ int tdrive_unload_tape(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	}
 
 	if (!atomic_test_bit(TDRIVE_FLAGS_TAPE_LOADED, &tdrive->flags)) {
-		tdrive->tape->tdrive = NULL;
 		tdrive->tape = NULL;
 		tdrive_init_medium_partition_page(tdrive);
 		tdrive_unlock(tdrive);
@@ -673,20 +676,16 @@ int tdrive_unload_tape(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	/* Keeping track how the tape was priorly unloaded */
 	tdrive_empty_write_queue(tdrive);
 	retval = tape_cmd_unload(tdrive->tape, tdrive_rewind_on_unload(tdrive));
-	if (unlikely(retval != 0))
-	{
+	if (unlikely(retval != 0)) {
 		debug_warn("tape_cmd_unload failed\n");
 		tdrive_unlock(tdrive);
 		return -1;
 	}
 	atomic_clear_bit(TDRIVE_FLAGS_TAPE_LOADED, &tdrive->flags);
 
-	tdrive->tape->tdrive = NULL;
 	tdrive->tape = NULL;
 	if (tdrive->handlers.unload_tape)
-	{
 		(*tdrive->handlers.unload_tape)(tdrive);
-	}
 	tdrive_init_medium_partition_page(tdrive);
 	tdrive_unlock(tdrive);
 	return 0;
