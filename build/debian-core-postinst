@@ -13,6 +13,6 @@ update-rc.d quadstor defaults
 
 /usr/sbin/setsebool -P httpd_enable_cgi 1 > /dev/null 2>&1
 mkdir -p /quadstor/etc
-echo "2.2.4 for Debian" > /quadstor/etc/quadstor-vtl-core-version
+echo "2.2.5 for Debian" > /quadstor/etc/quadstor-vtl-core-version
 
 exit 0
