@@ -417,7 +417,6 @@ void
 blk_map_free_all(struct tape_partition *partition)
 {
 	__blk_map_free_all(&partition->map_list);
-	partition->map_count = 0;
 }
 
 static void
@@ -429,7 +428,6 @@ blk_map_free_till_cur(struct tape_partition *partition)
 		if (map == partition->cur_map)
 			break;
 		TAILQ_REMOVE(&partition->map_list, map, m_list);
-		partition->map_count--;
 		blk_map_put(map);
 	}
 	map_lookup_free_till_cur(partition);
@@ -443,7 +441,6 @@ blk_map_free_from_map(struct tape_partition *partition, struct blk_map *map)
 	while (map) {
 		next = TAILQ_NEXT(map, m_list);
 		TAILQ_REMOVE(&partition->map_list, map, m_list);
-		partition->map_count--;
 		blk_map_put(map);
 		map = next;
 	}
@@ -805,8 +802,9 @@ blk_entry_add_to_tcache(struct tcache *tcache, struct blk_map *map, struct blk_e
 }
 
 static int
-blk_map_setup_read(struct blk_map *map, struct blk_entry *entry)
+blk_map_setup_read(struct blk_entry *entry)
 {
+	struct blk_map *map;
 	struct blk_entry *start = entry;
 	struct tcache *tcache;
 	int read_size, entry_pglist_cnt, retval;
@@ -816,6 +814,7 @@ blk_map_setup_read(struct blk_map *map, struct blk_entry *entry)
 	if (entry->cpglist || entry->pglist)
 		return 0;
 
+	map = entry->map;
 	pages = max_t(int, 128, pgdata_get_count(entry->block_size, 1));
 	tcache = tcache_alloc(pages);
 	while (entry && entry_is_data_block(entry)) {
@@ -894,7 +893,7 @@ blk_map_readahead(struct blk_entry *entry)
 		if (unlikely(!entry_is_data_block(entry)))
 			break;
 
-		retval = blk_map_setup_read(map, entry);
+		retval = blk_map_setup_read(entry);
 		if (retval != 0)
 			break;
 
@@ -957,7 +956,7 @@ __blk_map_read(struct blk_map *map, uint32_t read_block_size, uint32_t needed_bl
 			break;
 		}
 
-		blk_map_setup_read(map, entry);
+		blk_map_setup_read(entry);
 		if (entry->block_size != read_block_size) {
 			if (entry->block_size < read_block_size)
 				*error = UNDERLENGTH_COND_ENCOUNTERED;
@@ -1432,13 +1431,11 @@ blk_entries_write_insert(struct tape_partition *partition, struct blk_map *start
 	while ((map = TAILQ_FIRST(&map_list)) != NULL) {
 		TAILQ_REMOVE(&map_list, map, m_list);
 		TAILQ_INSERT_TAIL(&partition->map_list, map, m_list);
-		partition->map_count++;
 	}
 
 	while ((mlookup = TAILQ_FIRST(&mlookup_list)) != NULL) {
 		TAILQ_REMOVE(&mlookup_list, mlookup, l_list);
 		TAILQ_INSERT_TAIL(&partition->mlookup_list, mlookup, l_list);
-		partition->mlookup_count++;
 	}
 
 	return 0;

@@ -77,14 +77,12 @@ static inline void
 map_lookup_insert_before(struct map_lookup *mlookup, struct map_lookup *new)
 {
 	TAILQ_INSERT_BEFORE(mlookup, new, l_list);
-	mlookup->partition->mlookup_count++;
 }
 
 static inline void
 map_lookup_insert_after(struct map_lookup *mlookup, struct map_lookup *new)
 {
 	TAILQ_INSERT_AFTER(&mlookup->partition->mlookup_list, mlookup, new, l_list);
-	mlookup->partition->mlookup_count++;
 }
 
 void
@@ -216,7 +214,6 @@ void
 map_lookup_free_all(struct tape_partition *partition)
 {
 	__map_lookup_free_all(&partition->mlookup_list);
-	partition->mlookup_count = 0;
 }
 
 void
@@ -227,7 +224,6 @@ map_lookup_free_from_mlookup(struct tape_partition *partition, struct map_lookup
 	while (mlookup) {
 		next = TAILQ_NEXT(mlookup, l_list);
 		TAILQ_REMOVE(&partition->mlookup_list, mlookup, l_list);
-		partition->mlookup_count--;
 		wait_on_chan(mlookup->map_lookup_wait, !atomic_test_bit(META_DATA_DIRTY, &mlookup->flags) && !atomic_test_bit(META_DATA_READ_DIRTY, &mlookup->flags));
 		map_lookup_put(mlookup);
 		mlookup = next;
@@ -969,6 +965,5 @@ void
 map_lookup_insert(struct tape_partition *partition, struct map_lookup *mlookup)
 {
 	TAILQ_INSERT_TAIL(&partition->mlookup_list, mlookup, l_list);
-	partition->mlookup_count++;
 }
 

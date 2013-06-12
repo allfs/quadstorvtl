@@ -1552,7 +1552,7 @@ tdrive_cmd_validate_write6(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 		tdrive_construct_ew_reached_sense(tdrive, ctio, 1, num_blocks, num_blocks, block_size);
 
 		if (tdrive_synchronize_at_ew(tdrive))
-			tape_flush_buffers(tape);
+			tdrive_empty_write_queue(tdrive);
 		break;
 	default:
 		debug_check(1);

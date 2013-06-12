@@ -209,8 +209,6 @@ struct tape_partition {
 	struct blk_map *cur_map;
 	struct blkmap_list map_list;
 	struct maplookup_list mlookup_list;
-	uint32_t map_count;
-	uint32_t mlookup_count;
 	SLIST_ENTRY(tape_partition) p_list;
 	int flags;
 	pagestruct_t *mam_data;

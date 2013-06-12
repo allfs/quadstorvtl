@@ -181,7 +181,6 @@ static inline void
 blk_map_insert(struct tape_partition *partition, struct blk_map *map)
 {
 	TAILQ_INSERT_TAIL(&partition->map_list, map, m_list);
-	partition->map_count++;
 }
 
 static inline uint64_t
