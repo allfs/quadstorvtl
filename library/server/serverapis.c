@@ -1062,11 +1062,15 @@ vhba_add_device(int vhba_id)
 {
 #ifdef LINUX
 	char cmd[128];
+	struct stat stbuf;
 
 	if (vhba_id < 0)
 		return;
 
-	sprintf(cmd, "echo \"scsi add-single-device %d 0 0 0\" > /proc/scsi/scsi", vhba_id);
+	if (stat("/proc/scsi/scsi", &stbuf) == 0)
+		sprintf(cmd, "echo \"scsi add-single-device %d 0 0 0\" > /proc/scsi/scsi", vhba_id);
+	else
+		sprintf(cmd, "echo \"0 0 0\" > /sys/class/scsi_host/host%d/scan", vhba_id);
 	system(cmd);
 #endif
 }
@@ -1076,13 +1080,17 @@ vhba_remove_device(struct vdevice *vdevice)
 {
 #ifdef LINUX
 	char cmd[128];
+	struct stat stbuf;
 #endif
 
 	if (vdevice->vhba_id < 0)
 		return;
 
 #ifdef LINUX
-	sprintf(cmd, "echo \"scsi remove-single-device %d 0 0 0\" > /proc/scsi/scsi", vdevice->vhba_id);
+	if (stat("/proc/scsi/scsi", &stbuf) == 0)
+		sprintf(cmd, "echo \"scsi remove-single-device %d 0 0 0\" > /proc/scsi/scsi", vdevice->vhba_id);
+	else
+		sprintf(cmd, "echo 1 > /sys/class/scsi_device/%d:0:0:0/device/delete", vdevice->vhba_id);
 	system(cmd);
 #endif
 	vdevice->vhba_id = -1;
