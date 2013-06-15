@@ -1,4 +1,4 @@
-/* $FreeBSD: src/sys/dev/isp/isp_stds.h,v 1.5.2.2.4.1 2010/12/21 17:09:25 kensmith Exp $ */
+/* $FreeBSD: release/8.4.0/sys/dev/isp/isp_stds.h 203786 2010-02-11 18:34:06Z mjacob $ */
 /*-
  *  Copyright (c) 1997-2009 by Matthew Jacob
  *  All rights reserved.

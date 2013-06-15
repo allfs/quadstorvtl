@@ -1,4 +1,4 @@
-/* $FreeBSD: src/sys/dev/isp/ispvar.h,v 1.86.2.4.4.1 2010/12/21 17:09:25 kensmith Exp $ */
+/* $FreeBSD: release/8.4.0/sys/dev/isp/ispvar.h 219332 2011-03-06 11:43:02Z marius $ */
 /*-
  *  Copyright (c) 1997-2009 by Matthew Jacob
  *  All rights reserved.

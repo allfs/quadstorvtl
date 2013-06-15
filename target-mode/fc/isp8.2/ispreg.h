@@ -1,4 +1,4 @@
-/* $FreeBSD: src/sys/dev/isp/ispreg.h,v 1.30.2.2.4.1 2010/12/21 17:09:25 kensmith Exp $ */
+/* $FreeBSD: release/8.4.0/sys/dev/isp/ispreg.h 204524 2010-03-01 17:36:45Z mjacob $ */
 /*-
  *  Copyright (c) 1997-2009 by Matthew Jacob
  *  All rights reserved.

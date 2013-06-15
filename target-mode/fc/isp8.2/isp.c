@@ -47,7 +47,7 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #endif
 #ifdef	__FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: src/sys/dev/isp/isp.c,v 1.151.2.8.2.1 2010/12/21 17:09:25 kensmith Exp $");
+__FBSDID("$FreeBSD: release/8.4.0/sys/dev/isp/isp.c 238588 2012-07-18 10:45:38Z brueffer $");
 #include "isp_freebsd.h"
 #endif
 #ifdef	__OpenBSD__
@@ -2146,7 +2146,7 @@ isp_plogx(ispsoftc_t *isp, int chan, uint16_t handle, uint32_t portid, int flags
 		goto out;
 	} else if (plp->plogx_status != PLOGX_STATUS_IOCBERR) {
 		isp_prt(isp, ISP_LOGWARN,
-		    "status 0x%x on port login IOCB chanel %d",
+		    "status 0x%x on port login IOCB channel %d",
 		    plp->plogx_status, chan);
 		rval = -1;
 		goto out;
