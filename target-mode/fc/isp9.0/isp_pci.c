@@ -28,7 +28,7 @@
  * FreeBSD Version.
  */
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: release/9.0.0/sys/dev/isp/isp_pci.c 224856 2011-08-13 23:34:17Z mjacob $");
+__FBSDID("$FreeBSD: release/9.1.0/sys/dev/isp/isp_pci.c 237209 2012-06-17 21:30:24Z mjacob $");
 
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -373,6 +373,8 @@ static driver_t isp_pci_driver = {
 };
 static devclass_t isp_devclass;
 DRIVER_MODULE(ispmod, pci, isp_pci_driver, isp_devclass, 0, 0);
+MODULE_DEPEND(isp, cam, 1, 1, 1);
+MODULE_DEPEND(isp, firmware, 1, 1, 1);
 
 static int
 isp_pci_probe(device_t dev)
@@ -482,6 +484,7 @@ isp_get_generic_options(device_t dev, ispsoftc_t *isp, int *nvp)
 	if (bootverbose) {
 		isp->isp_dblev |= ISP_LOGCONFIG|ISP_LOGINFO;
 	}
+	tval = 0;
 	(void) resource_int_value(device_get_name(dev), device_get_unit(dev), "vports", &tval);
 	if (tval > 0 && tval < 127) {
 		*nvp =  tval;

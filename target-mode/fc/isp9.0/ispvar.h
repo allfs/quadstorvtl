@@ -1,4 +1,4 @@
-/* $FreeBSD: release/9.0.0/sys/dev/isp/ispvar.h 224856 2011-08-13 23:34:17Z mjacob $ */
+/* $FreeBSD: release/9.1.0/sys/dev/isp/ispvar.h 237208 2012-06-17 21:28:11Z mjacob $ */
 /*-
  *  Copyright (c) 1997-2009 by Matthew Jacob
  *  All rights reserved.
@@ -725,7 +725,16 @@ struct ispsoftc {
 #define	ISP_ROLE_BOTH		(ISP_ROLE_TARGET|ISP_ROLE_INITIATOR)
 #define	ISP_ROLE_EITHER		ISP_ROLE_BOTH
 #ifndef	ISP_DEFAULT_ROLES
+/*
+ * Counterintuitively, we prefer to default to role 'none'
+ * if we are enable target mode support. This gives us the
+ * maximum flexibility as to which port will do what.
+ */
+#ifdef	ISP_TARGET_MODE
+#define	ISP_DEFAULT_ROLES	ISP_ROLE_NONE
+#else
 #define	ISP_DEFAULT_ROLES	ISP_ROLE_INITIATOR
+#endif
 #endif
 
 

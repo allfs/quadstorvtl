@@ -1,4 +1,4 @@
-/* $FreeBSD: release/9.0.0/sys/dev/isp/isp_freebsd.h 226303 2011-10-12 15:02:06Z marius $ */
+/* $FreeBSD: release/9.1.0/sys/dev/isp/isp_freebsd.h 237208 2012-06-17 21:28:11Z mjacob $ */
 /*-
  * Qlogic ISP SCSI Host Adapter FreeBSD Wrapper Definitions
  *
@@ -480,7 +480,7 @@ default:							\
 
 #define	XS_SAVE_SENSE(xs, sense_ptr, slen)	do {			\
 		(xs)->ccb_h.status |= CAM_AUTOSNS_VALID;		\
-		memset(&(xs)->sense_data, 0, sizeof(&(xs)->sense_data));\
+		memset(&(xs)->sense_data, 0, sizeof((xs)->sense_data));	\
 		memcpy(&(xs)->sense_data, sense_ptr, imin(XS_SNSLEN(xs),\
 		       slen)); 						\
 		if (slen < (xs)->sense_len) 				\

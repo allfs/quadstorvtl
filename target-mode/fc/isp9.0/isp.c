@@ -47,7 +47,7 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #endif
 #ifdef	__FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: release/9.0.0/sys/dev/isp/isp.c 224856 2011-08-13 23:34:17Z mjacob $");
+__FBSDID("$FreeBSD: release/9.1.0/sys/dev/isp/isp.c 238586 2012-07-18 10:42:30Z brueffer $");
 #include "isp_freebsd.h"
 #endif
 #ifdef	__OpenBSD__
@@ -2144,7 +2144,7 @@ isp_plogx(ispsoftc_t *isp, int chan, uint16_t handle, uint32_t portid, int flags
 		goto out;
 	} else if (plp->plogx_status != PLOGX_STATUS_IOCBERR) {
 		isp_prt(isp, ISP_LOGWARN,
-		    "status 0x%x on port login IOCB chanel %d",
+		    "status 0x%x on port login IOCB channel %d",
 		    plp->plogx_status, chan);
 		rval = -1;
 		goto out;
@@ -2279,6 +2279,11 @@ isp_port_login(ispsoftc_t *isp, uint16_t handle, uint32_t portid)
 	}
 }
 
+/*
+ * Pre-24XX fabric port logout
+ *
+ * Note that portid is not used
+ */
 static int
 isp_port_logout(ispsoftc_t *isp, uint16_t handle, uint32_t portid)
 {
@@ -2723,7 +2728,7 @@ not_on_fabric:
  * layer appropriately).
  *
  * We also do initiator map target id assignment here for new initiator
- * devices and refresh old ones ot make sure that they point to the corret
+ * devices and refresh old ones ot make sure that they point to the correct
  * entities.
  */
 static int
