@@ -6,7 +6,6 @@ CFLAGS += -Wall -pthread -I. -I../../includes -I../common/ -I$(QUADSTOR_ROOT)/pg
 #CFLAGS +=  -O1 -Wall -I../../includes -I../common/ -I$(QUADSTOR_ROOT)/pgsql/include/ -I../../io -fpic -Winit-self -Wuninitialized
 
 #CFLAGS += -DENABLE_DEBUG
-#CFLAGS += -DENABLE_PARSER_TEST
 CFLAGS += -DENABLE_ASSERT
 
 CFLAGS += -DENABLE_IMPEXP

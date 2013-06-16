@@ -1153,11 +1153,7 @@ tl_server_load_conf(struct tl_comm *comm, struct tl_msg *msg)
 #ifdef EVAL_HACK
 uint64_t get_size_spec(int voltype)
 {
-#ifdef ENABLE_PARSER_TEST
-	return (296 * 1024 * 1024);
-#else
 	return (10ULL * 1024 * 1024 * 1024);
-#endif
 }
 #else
 uint64_t
