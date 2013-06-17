@@ -34,6 +34,7 @@ struct group_list group_list = TAILQ_HEAD_INITIALIZER(group_list);
 struct fc_rule_list fc_rule_list = TAILQ_HEAD_INITIALIZER(fc_rule_list);  
 pthread_mutex_t pmap_lock = PTHREAD_MUTEX_INITIALIZER;
 char default_group[TDISK_MAX_NAME_LEN];
+uint64_t max_vcart_size;
 
 int done_socket_init;
 int done_server_init;
@@ -732,6 +733,21 @@ get_config_value(char *path, char *name, char *value)
 	return 0;
 }
 
+static void 
+check_max_vcart_size(void)
+{
+	char buf[256];
+	int tmp_size;
+
+	buf[0] = 0;
+	get_config_value(QUADSTOR_CONFIG_FILE, "MaxVCartSize", buf);
+	if (buf[0]) {
+		tmp_size = atoi(buf);
+		if (tmp_size >= 1 && tmp_size <= 1600)
+			max_vcart_size = tmp_size;
+	}
+}
+
 int
 load_quadstor_conf(void)
 {
@@ -1150,16 +1166,13 @@ tl_server_load_conf(struct tl_comm *comm, struct tl_msg *msg)
 	tl_server_msg_success(comm, msg);
 }
 
-#ifdef EVAL_HACK
-uint64_t get_size_spec(int voltype)
-{
-	return (10ULL * 1024 * 1024 * 1024);
-}
-#else
 uint64_t
 get_size_spec(int voltype)
 {
 	uint64_t size_in_gb = 0;
+
+	if (max_vcart_size)
+		return (max_vcart_size * 1024 * 1024 * 1024);
 
 	switch (voltype) {
 	case VOL_TYPE_LTO_1:
@@ -1204,7 +1217,6 @@ get_size_spec(int voltype)
 
 	return (size_in_gb * 1024 * 1024 * 1024);
 }
-#endif
 
 int
 vollabel_valid(char *label, int voltype)
@@ -1477,6 +1489,7 @@ __tl_server_add_vol_conf(struct tl_comm *comm, struct tl_msg *msg)
 		return -1;
 	}
 
+	check_max_vcart_size();
 	retval = vdevice_add_volumes(vdevice, group_info, voltype, nvolumes, worm, errmsg, label);
 	if (retval != 0)
 	{
