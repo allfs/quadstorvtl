@@ -833,17 +833,17 @@ map_lookup_space_forward(struct tape_partition *partition, uint8_t code, int *co
 		sids = MENTRY_SETMARKS(entry);
 		switch (code) {
 		case SPACE_CODE_BLOCKS:
-			if (fids || sids || lids > todo)
+			if (fids || sids || lids >= todo)
 				goto out;
 			todo -= lids;
 			break;
 		case SPACE_CODE_FILEMARKS:
-			if (sids || fids > todo)
+			if (sids || fids >= todo)
 				goto out;
 			todo -= fids;
 			break;
 		case SPACE_CODE_SETMARKS:
-			if (sids > todo)
+			if (sids >= todo)
 				goto out;
 			todo -= sids;
 			break;
@@ -899,17 +899,17 @@ map_lookup_space_backward(struct tape_partition *partition, uint8_t code, int *c
 		sids = MENTRY_SETMARKS(entry);
 		switch (code) {
 		case SPACE_CODE_BLOCKS:
-			if (fids || sids || lids > todo)
+			if (fids || sids || lids >= todo)
 				goto out;
 			todo -= lids;
 			break;
 		case SPACE_CODE_FILEMARKS:
-			if (sids || fids > todo)
+			if (sids || fids >= todo)
 				goto out;
 			todo -= fids;
 			break;
 		case SPACE_CODE_SETMARKS:
-			if (sids > todo)
+			if (sids >= todo)
 				goto out;
 			todo -= sids;
 			break;
