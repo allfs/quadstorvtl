@@ -493,7 +493,6 @@ tape_partition_add_map(struct tape_partition *partition, uint64_t l_ids_start, u
 			return NULL;
 	}
 
-	debug_check(!meta_segment->bint);
 	meta_blocks = LBA_SIZE >> meta_segment->bint->sector_shift;
 	debug_check(!meta_segment->b_cur);
 	if ((meta_segment->b_cur + meta_blocks) <= meta_segment->b_end)
@@ -896,7 +895,6 @@ tape_partition_locate_file(struct tape_partition *partition, uint64_t block_addr
 	}
 
 	map = partition->cur_map;
-	debug_check(!map);
 	if (MENTRY_LID_START(entry) != map->l_ids_start) {
 		map = blk_map_load(partition, BLOCK_BLOCKNR(entry->block), BLOCK_BID(entry->block), 0, mlookup, entry_id, 0);
 		if (unlikely(!map))
@@ -927,7 +925,6 @@ tape_partition_locate_block(struct tape_partition *partition, uint64_t block_add
 	}
 
 	map = partition->cur_map;
-	debug_check(!map);
 	if (MENTRY_LID_START(entry) != map->l_ids_start) {
 		map = blk_map_load(partition, BLOCK_BLOCKNR(entry->block), BLOCK_BID(entry->block), 0, mlookup, entry_id, 0);
 		if (unlikely(!map))
@@ -1605,7 +1602,6 @@ tape_update_volume_change_reference(struct tape *tape)
 	uint32_t vcr;
 
 	partition = tape_get_partition(tape, 0);
-	debug_check(!partition);
 
 	if (atomic_test_bit(PARTITION_MAM_CORRUPT, &partition->flags))
 		return;

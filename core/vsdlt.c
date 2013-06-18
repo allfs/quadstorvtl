@@ -290,7 +290,7 @@ tdrive_add_dlt4_density_descriptor(struct tdrive *tdrive, uint8_t isdefault, uin
 	desc = zalloc(sizeof(struct density_descriptor), M_DRIVE, Q_WAITOK);
 	desc->pdensity_code = DENSITY_DLT_4_DEFAULT;
 	desc->sdensity_code = DENSITY_DLT_4_DEFAULT;
-	desc->wrtok |= wrtok << 7;
+	desc->wrtok = wrtok << 7;
 	desc->wrtok |= isdefault << 5;
 	bits_per_mm = 577250;
 	desc->bits_per_mm[0] = (bits_per_mm >> 16) & 0xFF;
@@ -315,7 +315,7 @@ tdrive_add_vstape_density_descriptor(struct tdrive *tdrive, uint8_t isdefault, u
 	desc = zalloc(sizeof(struct density_descriptor), M_DRIVE, Q_WAITOK);
 	desc->pdensity_code = DENSITY_VSTAPE_DEFAULT;
 	desc->sdensity_code = DENSITY_VSTAPE_DEFAULT;
-	desc->wrtok |= wrtok << 7;
+	desc->wrtok = wrtok << 7;
 	desc->wrtok |= isdefault << 5;
 	bits_per_mm = 4375000;
 	desc->bits_per_mm[0] = (bits_per_mm >> 16) & 0xFF;
@@ -340,7 +340,7 @@ tdrive_add_sdlt220_density_descriptor(struct tdrive *tdrive, uint8_t isdefault, 
 	desc = zalloc(sizeof(struct density_descriptor), M_DRIVE, Q_WAITOK);
 	desc->pdensity_code = DENSITY_SUPER_DLT_2_DEFAULT;
 	desc->sdensity_code = DENSITY_SUPER_DLT_2_DEFAULT;
-	desc->wrtok |= wrtok << 7;
+	desc->wrtok = wrtok << 7;
 	desc->wrtok |= isdefault << 5;
 	bits_per_mm = 3325000;
 	desc->bits_per_mm[0] = (bits_per_mm >> 16) & 0xFF;
@@ -365,7 +365,7 @@ tdrive_add_sdlt600_density_descriptor(struct tdrive *tdrive, uint8_t isdefault, 
 	desc = zalloc(sizeof(struct density_descriptor), M_DRIVE, Q_WAITOK);
 	desc->pdensity_code = DENSITY_SUPER_DLT_3_DEFAULT;
 	desc->sdensity_code = DENSITY_SUPER_DLT_3_DEFAULT;
-	desc->wrtok |= wrtok << 7;
+	desc->wrtok = wrtok << 7;
 	desc->wrtok |= isdefault << 5;
 	bits_per_mm = 5825000;
 	desc->bits_per_mm[0] = (bits_per_mm >> 16) & 0xFF;
@@ -390,7 +390,7 @@ tdrive_add_sdlt320_density_descriptor(struct tdrive *tdrive, uint8_t isdefault, 
 	desc = zalloc(sizeof(struct density_descriptor), M_DRIVE, Q_WAITOK);
 	desc->pdensity_code = DENSITY_SUPER_DLT_2_DEFAULT;
 	desc->sdensity_code = DENSITY_SUPER_DLT_2_DEFAULT;
-	desc->wrtok |= wrtok << 7;
+	desc->wrtok = wrtok << 7;
 	desc->wrtok |= isdefault << 5;
 	bits_per_mm = 4750000;
 	desc->bits_per_mm[0] = (bits_per_mm >> 16) & 0xFF;

@@ -512,9 +512,7 @@ blk_maps_readahead(struct tape_partition *partition, int count)
 	uint16_t entry_id;
 
 	prev = tape_partition_last_map(partition);
-	debug_check(!prev);
-	for (i = 0; i < count; i++) 
-	{
+	for (i = 0; i < count; i++) {
 		struct blk_map *tmp;
 
 		if (next && !blk_map_next_mlookup_avail(prev))

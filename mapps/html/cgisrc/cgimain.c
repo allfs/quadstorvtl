@@ -359,7 +359,7 @@ cgi_print_text_input_td(char *name, int size, char *value, int maxlength)
 }
 
 void
-cgi_print_error_page(char *msg)
+__cgi_print_error_page(char *msg)
 {
 	cgi_print_div_start("center");
 	printf("<div class=\"error\">ERROR: %s</div>\n", msg);
@@ -370,7 +370,7 @@ cgi_print_error_page(char *msg)
 }
 
 void
-cgi_print_header_error_page(char *msg)
+__cgi_print_header_error_page(char *msg)
 {
 	cgi_print_header("Configuration Error", NULL, 1);
 	cgi_print_div_start("center");

@@ -375,7 +375,6 @@ tape_format_default(struct tape *tape, uint64_t set_size, int set_tape_size)
 	}
 
 	partition = tape_get_partition(tape, 0);
-	debug_check(!partition);
 	debug_check(tape->cur_partition != partition);
 	debug_info("before format partition used %llu\n", (unsigned long long)partition->used);
 	retval = tape_partition_free_alloc(partition, 1);

@@ -51,10 +51,25 @@ void cgi_print_text_input(char *name, int size, char *value, int maxlength);
 void cgi_print_text_input_td(char *name, int size, char *value, int maxlength);
 void cgi_print_checkbox_input(char *name, int checked);
 void cgi_print_checkbox_input_td(char *name, int checked);
-void cgi_print_error_page(char *msg);
-void cgi_print_header_error_page(char *msg);
+void __cgi_print_error_page(char *msg);
+void __cgi_print_header_error_page(char *msg);
 void cgi_print_break(void);
 void cgi_redirect(char *cgiscript);
+
+/* We now inline this, the exit(0) is an indication for static analyzers */
+static inline void
+cgi_print_error_page(char *msg)
+{
+	__cgi_print_error_page(msg);
+	exit(0);
+}
+
+static inline void
+cgi_print_header_error_page(char *msg)
+{
+	__cgi_print_header_error_page(msg);
+	exit(0);
+}
 
 enum {
 	CGI_DELETE_VCARTRIDGE,

@@ -478,7 +478,7 @@ tdrive_add_lto1_density_descriptor(struct tdrive *tdrive, uint8_t isdefault, uin
 	desc = zalloc(sizeof(struct density_descriptor), M_DRIVE, Q_WAITOK);
 	desc->pdensity_code = DENSITY_ULTRIUM_1;
 	desc->sdensity_code = DENSITY_ULTRIUM_1;
-	desc->wrtok |= wrtok << 7;
+	desc->wrtok = wrtok << 7;
 	desc->wrtok |= isdefault << 5;
 	bits_per_mm = 4880;
 	desc->bits_per_mm[0] = (bits_per_mm >> 16) & 0xFF;
@@ -504,7 +504,7 @@ tdrive_add_lto2_density_descriptor(struct tdrive *tdrive, uint8_t isdefault, uin
 	desc = zalloc(sizeof(struct density_descriptor), M_DRIVE, Q_WAITOK);
 	desc->pdensity_code = DENSITY_ULTRIUM_2;
 	desc->sdensity_code = DENSITY_ULTRIUM_2;
-	desc->wrtok |= wrtok << 7;
+	desc->wrtok = wrtok << 7;
 	desc->wrtok |= isdefault << 5;
 	bits_per_mm = 7398;
 	desc->bits_per_mm[0] = (bits_per_mm >> 16) & 0xFF;
@@ -530,7 +530,7 @@ tdrive_add_lto3_density_descriptor(struct tdrive *tdrive, uint8_t isdefault, uin
 	desc = zalloc(sizeof(struct density_descriptor), M_DRIVE, Q_WAITOK);
 	desc->pdensity_code = DENSITY_ULTRIUM_3;
 	desc->sdensity_code = DENSITY_ULTRIUM_3;
-	desc->wrtok |= wrtok << 7;
+	desc->wrtok = wrtok << 7;
 	desc->wrtok |= isdefault << 5;
 	bits_per_mm = 9638;
 	desc->bits_per_mm[0] = (bits_per_mm >> 16) & 0xFF;
@@ -556,7 +556,7 @@ tdrive_add_lto4_density_descriptor(struct tdrive *tdrive, uint8_t isdefault, uin
 	desc = zalloc(sizeof(struct density_descriptor), M_DRIVE, Q_WAITOK);
 	desc->pdensity_code = DENSITY_ULTRIUM_4;
 	desc->sdensity_code = DENSITY_ULTRIUM_4;
-	desc->wrtok |= wrtok << 7;
+	desc->wrtok = wrtok << 7;
 	desc->wrtok |= isdefault << 5;
 	bits_per_mm = 12725;
 	desc->bits_per_mm[0] = (bits_per_mm >> 16) & 0xFF;
@@ -582,7 +582,7 @@ tdrive_add_lto5_density_descriptor(struct tdrive *tdrive, uint8_t isdefault, uin
 	desc = zalloc(sizeof(struct density_descriptor), M_DRIVE, Q_WAITOK);
 	desc->pdensity_code = DENSITY_ULTRIUM_5;
 	desc->sdensity_code = DENSITY_ULTRIUM_5;
-	desc->wrtok |= wrtok << 7;
+	desc->wrtok = wrtok << 7;
 	desc->wrtok |= isdefault << 5;
 	bits_per_mm = 15142;
 	desc->bits_per_mm[0] = (bits_per_mm >> 16) & 0xFF;
@@ -608,7 +608,7 @@ tdrive_add_lto6_density_descriptor(struct tdrive *tdrive, uint8_t isdefault, uin
 	desc = zalloc(sizeof(struct density_descriptor), M_DRIVE, Q_WAITOK);
 	desc->pdensity_code = DENSITY_ULTRIUM_6;
 	desc->sdensity_code = DENSITY_ULTRIUM_6;
-	desc->wrtok |= wrtok << 7;
+	desc->wrtok = wrtok << 7;
 	desc->wrtok |= isdefault << 5;
 	bits_per_mm = 15142;
 	desc->bits_per_mm[0] = (bits_per_mm >> 16) & 0xFF;
