@@ -1724,27 +1724,26 @@ tl_common_scan_physdisk(void)
 
 	while (fgets(buf, sizeof(buf), fp) != NULL)
 	{
+#ifdef FREEBSD
 		int devtype;
-
+#endif
 		int has_devid = 1;
 
 		DEBUG_INFO("tl_common_scan_physdisk: Got buf %s\n", buf);
 #ifdef FREEBSD
 		retval = sscanf(buf, "%s %x %8c %16c %4c", devname, &devtype, vendor, product, revision);
-		if (retval != 5)
-		{
+		if (retval != 5) {
 			DEBUG_INFO("tl_common_scan_physdisk devname %s devtype 0x%x vendor %.8s product %.16s revision %.4s\n", devname, devtype, vendor, product, revision);
 			continue;
 		}
+
+		if (devtype != T_DIRECT)
+			continue;
 #else
 		retval = sscanf(buf, "%*s %s %s %s %s", devname, vendor, product, revision);
 		if (retval != 4)
 			continue;
-		devtype = T_DIRECT;
 #endif
-
-		if (devtype != T_DIRECT)
-			continue;
 
 		if (is_ignore_dev(devname))
 			continue;
