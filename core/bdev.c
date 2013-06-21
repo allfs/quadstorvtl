@@ -524,6 +524,7 @@ bint_sync(struct bdevint *bint)
 void
 bdev_finalize(void)
 {
+	struct bdevgroup *group;
 	struct bdevint *bint;
 	int i;
 
@@ -534,8 +535,9 @@ bdev_finalize(void)
 			continue;
 		bint_list[i] = NULL;
 		bdev_remove_from_alloc_list(bint);
-		atomic_dec(&bint->group->bdevs);
-		bint_clear_group_master(bint);
+		group = bint->group;
+		atomic_dec(&group->bdevs);
+		bint_clear_group_master(group, bint);
 		bint_free(bint, 0);
 	}
 	sx_xunlock(gchain_lock);
@@ -568,7 +570,7 @@ bdev_remove(struct bdev_info *binfo)
 	bdev_remove_from_alloc_list(bint);
 	retval = bint_free(bint, 1);
 	if (retval == 0) {
-		bint_clear_group_master(bint);
+		bint_clear_group_master(group, bint);
 		bint_list[binfo->bid] = NULL;
 		atomic_dec(&group->bdevs);
 	}

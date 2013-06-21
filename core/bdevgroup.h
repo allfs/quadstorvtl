@@ -60,10 +60,10 @@ bint_set_group_master(struct bdevint *bint)
 }
 
 static inline void
-bint_clear_group_master(struct bdevint *bint)
+bint_clear_group_master(struct bdevgroup *group, struct bdevint *bint)
 {
-	if (bint->group->master_bint == bint)
-		bint->group->master_bint = NULL;
+	if (group->master_bint == bint)
+		group->master_bint = NULL;
 }
 
 static inline int
