@@ -196,9 +196,9 @@ fcbridge_init_unit_identifier(struct fcbridge *fcbridge, struct logical_unit_ide
 	unit_identifier->code_set = 0x02; /*logical unit idenifier */
 	unit_identifier->identifier_type = UNIT_IDENTIFIER_T10_VENDOR_ID;
 	memset(unit_identifier->vendor_id, ' ', 8);
-	strncpy(unit_identifier->vendor_id, VENDOR_ID_QUADSTOR, strlen(VENDOR_ID_QUADSTOR));
+	memcpy(unit_identifier->vendor_id, VENDOR_ID_QUADSTOR, strlen(VENDOR_ID_QUADSTOR));
 	memset(unit_identifier->product_id, ' ', 16);
-	strncpy(unit_identifier->product_id, PRODUCT_ID_QUADSTOR_FCBRIDGE, strlen(PRODUCT_ID_QUADSTOR_FCBRIDGE));
+	memcpy(unit_identifier->product_id, PRODUCT_ID_QUADSTOR_FCBRIDGE, strlen(PRODUCT_ID_QUADSTOR_FCBRIDGE));
 	unit_identifier->identifier_length = offsetof(struct logical_unit_identifier, serial_number) - offsetof(struct logical_unit_identifier, vendor_id);
 	sprintf(unit_identifier->serial_number, "%08llX%08llX", (unsigned long long)wwpn[1], (unsigned long long)wwpn[0]);
 	unit_identifier->identifier_length += strlen(unit_identifier->serial_number);
