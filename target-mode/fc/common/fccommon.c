@@ -1031,10 +1031,7 @@ __local_ctio_free_all(struct qsio_scsiio *ctio)
 void
 __ctio_free_data(struct qsio_scsiio *ctio)
 {
-	struct fcbridge *fcbridge;
 	tgtcmd_t *cmd = ctio_cmd(ctio);
-
-	fcbridge = ctio_fcbridge(ctio);
 
 	if (!cmd->local_pool)
 	{
@@ -1053,10 +1050,6 @@ __ctio_free_data(struct qsio_scsiio *ctio)
 void
 __ctio_free_all(struct qsio_scsiio *ctio, int local_pool)
 {
-	struct fcbridge *fcbridge;
-
-	fcbridge = ctio_fcbridge(ctio);
-
 	if (!local_pool)
 	{
 		(*icbs.ctio_free_all)(ctio);

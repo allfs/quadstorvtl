@@ -115,7 +115,6 @@ static int
 qla_end_ctio(struct qsio_scsiio *ctio)
 {
 	int retval;
-	struct fcbridge *fcbridge;
 	struct ccb_list ctio_list;
 	struct qla_tgt_cmd *cmd = ctio_cmd(ctio);
 	struct se_cmd *se_cmd = &cmd->se_cmd;
@@ -125,7 +124,6 @@ qla_end_ctio(struct qsio_scsiio *ctio)
 		(*icbs.device_remove_ctio)(ctio, &ctio_list);
 	}
 
-	fcbridge = ctio_fcbridge(ctio);
 	if ((ctio->ccb_h.flags & QSIO_CTIO_ABORTED)) {
 		if ((ctio->ccb_h.flags & QSIO_SEND_ABORT_STATUS)) {
 			__ctio_free_data(ctio);
@@ -215,10 +213,8 @@ static void
 qla_sc_handle_data(struct qla_tgt_cmd *cmd)
 {
 	struct qsio_scsiio *ctio = (struct qsio_scsiio *)cmd->se_cmd.ccb;
-	struct fcbridge *fcbridge;
 
 	cmd_sg_free(cmd);
- 	fcbridge = ctio_fcbridge(ctio);
 	if (ctio->ccb_h.flags & QSIO_DIR_OUT && cmd->state != QLA_TGT_STATE_ABORTED) {
 		ctio->ccb_h.flags &= ~QSIO_DIR_OUT;
 		__ctio_queue_cmd(ctio);
