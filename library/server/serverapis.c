@@ -2566,7 +2566,7 @@ tl_server_delete_disk(struct tl_comm *comm, struct tl_msg *msg)
 	retval = tl_ioctl(TLTARGIOCDELBLKDEV, &binfo);
 	if (retval != 0)
 	{
-		if (binfo.errmsg)
+		if (binfo.errmsg[0])
 			strcpy(errmsg, binfo.errmsg);
 		else
 			sprintf(errmsg, "Unable to delete disk from kernel\n");
