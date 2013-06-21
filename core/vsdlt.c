@@ -266,6 +266,7 @@ vsdlt_valid_medium(struct tdrive *tdrive, int voltype)
 			{
 				return -1;
 			}
+			return 0;
 		case DRIVE_TYPE_VHP_SDLT600:
 		case DRIVE_TYPE_VQUANTUM_SDLT600:
 			if ((voltype != VOL_TYPE_SDLT_1) && (voltype != VOL_TYPE_SDLT_2) && (voltype != VOL_TYPE_SDLT_3))
