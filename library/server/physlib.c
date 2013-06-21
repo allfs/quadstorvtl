@@ -357,7 +357,8 @@ build_swap_list(void)
 		return 0;
 
 	while (fgets(buf, sizeof(buf), fp) != NULL) {
-		sscanf(buf, "%s", swapdev);
+		if (sscanf(buf, "%s", swapdev) != 1)
+			continue;
 		if (strcmp(swapdev, "Device") == 0)
 			continue;
 		ignore_dev_add(swapdev);
@@ -509,7 +510,8 @@ build_swap_list(void)
 		return 0;
 
 	while (fgets(buf, sizeof(buf), fp) != NULL) {
-		sscanf(buf, "%s", swapdev);
+		if (sscanf(buf, "%s", swapdev) != 1)
+			continue;
 		if (strcmp(buf, "Filename") == 0)
 			continue;
 		ignore_dev_add(swapdev);
@@ -1224,7 +1226,8 @@ is_valid_mddev(char *mddev, char *raidtype)
 		if ((tmp = strstr(buf, "Raid Level")))
 		{
 			tmp += (strlen("Raid Level : "));
-			sscanf(tmp, "%[^\n]", raidtype);
+			if (sscanf(tmp, "%[^\n]", raidtype) != 1)
+				continue;
 			mdraid_disk = 1;
 			break;
 		}
