@@ -485,7 +485,8 @@ build_pvs(void)
 		return 0;
 
 	while (fgets(buf, sizeof(buf), fp) != NULL) {
-		sscanf(buf, "%s", devname);
+		if (sscanf(buf, "%s", devname) != 1)
+			continue;
 		if (strcmp(buf, "PV") == 0)
 			continue;
 		ignore_dev_add(devname);

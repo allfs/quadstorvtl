@@ -125,7 +125,9 @@ is_swap_disk(char *devname)
 		return 0;
 
 	while (fgets(buf, sizeof(buf), fp) != NULL) {
-		sscanf(buf, "%s", swapdev);
+		if (sscanf(buf, "%s", swapdev) != 1)
+			continue;
+
 		if (strcmp(swapdev, devname) == 0) {
 			fclose(fp);
 			return 1;
