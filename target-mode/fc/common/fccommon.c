@@ -151,10 +151,9 @@ fcbridge_remove_device_cb(struct tdevice *device, int tid, void *hpriv)
 	device_list[base_id] = NULL;
 	dinfo->disabled = 1;
 	mtx_unlock(&qs_device_lock);
-	while (atomic_read(&dinfo->refs) > 1) {
+	while (atomic_read(&dinfo->refs) > 1)
 		pause("psg", 10);
-		free(dinfo, M_QISP);
-	}
+	free(dinfo, M_QISP);
 	return 0;
 }
 
