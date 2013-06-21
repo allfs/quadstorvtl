@@ -67,6 +67,7 @@ struct identifier {
 	uint8_t identifier_type;
 	uint8_t rsvd2;
 	uint8_t identifier_length;
+	uint8_t   idbuffer[128];
 };
 
 struct voltag {
@@ -88,7 +89,6 @@ struct element_descriptor {
 	struct element_descriptor_common common; /* The common part for all */
 	struct voltag voltag;
 	struct identifier identifier;
-	uint8_t   idbuffer[128];
 };
 
 struct mchanger_element {
