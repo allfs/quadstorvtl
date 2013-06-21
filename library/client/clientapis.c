@@ -441,7 +441,9 @@ int tl_client_add_vtl_conf(char *tempfile, int *tl_id, char *reply)
 	if (retval != 0)
 		return retval;
 
-	sscanf(reply, "tl_id: %d\n", tl_id);
+	retval = sscanf(reply, "tl_id: %d\n", tl_id);
+	if (retval != 1)
+		return -1;
 	return 0;
 }
 
@@ -453,9 +455,8 @@ int tl_client_add_drive_conf(char *name, int drivetype, int *ret_tl_id, char *re
 	msg.msg_id = MSG_ID_ADD_DRIVE_CONF;
 
 	msg.msg_data = malloc(512);
-	if (!msg.msg_data) {
+	if (!msg.msg_data)
 		return -1;
-	}
 
 	sprintf(msg.msg_data, "name: %s\ndrivetype: %d\n", name, drivetype);
 	msg.msg_len = strlen(msg.msg_data)+1;
@@ -464,7 +465,9 @@ int tl_client_add_drive_conf(char *name, int drivetype, int *ret_tl_id, char *re
 	if (retval != 0)
 		return retval;
 
-	sscanf(reply, "tl_id: %d\n", ret_tl_id);
+	retval = sscanf(reply, "tl_id: %d\n", ret_tl_id);
+	if (retval != 1)
+		return -1;
 	return 0;
 }
 
