@@ -205,7 +205,7 @@ slab_cache_alloc(struct kmem_cache * cachep, allocflags_t flags, size_t len)
 	void *ret;
 
 	ret = kmem_cache_alloc(cachep, flags & ~(__GFP_ZERO));
-	if (ret && (flags | __GFP_ZERO))
+	if (ret && (flags & __GFP_ZERO))
 		memset(ret, 0, len);
 	return ret;
 }
