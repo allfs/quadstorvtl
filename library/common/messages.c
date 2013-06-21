@@ -280,20 +280,22 @@ tl_msg_make_connection(void)
 
 	status = do_connect(sockfd, (struct sockaddr *)&un_addr, sizeof(un_addr));
 	if (status < 0)
-	{
-		close(sockfd);
-		free(tl_comm);
-		return NULL;
-	}
+		goto err;
 
-	if ((status = fcntl(sockfd, F_GETFL, 0)) != -1)
-	{
-		status |= O_NONBLOCK;
-		fcntl(sockfd, F_SETFL, status);
-	}
+	status = fcntl(sockfd, F_GETFL, 0);
+	if (status < 0)
+		goto err;
+
+	status |= O_NONBLOCK;
+	if (fcntl(sockfd, F_SETFL, status) < 0)
+		goto err;
 
 	tl_comm->sockfd = sockfd;
 	return tl_comm;
+err:
+	close(sockfd);
+	free(tl_comm);
+	return NULL;
 }
 
 int
