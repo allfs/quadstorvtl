@@ -275,9 +275,9 @@ ib_sc_free_ctio(srpt_cmd_t *cmd)
 		(*icbs.device_queue_ctio_list)(&ctio_list);
 	}
 
+	__ctio_free_all(ctio, se_cmd->local_pool);
 free_cmd:
 	se_cmd_free_ctio(cmd);
-	__ctio_free_all(ctio, se_cmd->local_pool);
 }
 
 static void

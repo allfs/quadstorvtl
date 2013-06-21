@@ -237,9 +237,9 @@ qla_sc_free_cmd(struct qla_tgt_cmd *cmd)
 		(*icbs.device_queue_ctio_list)(&ctio_list);
 	}
 
+	__ctio_free_all(ctio, cmd->local_pool);
 free_cmd:
 	cmd_sg_free(cmd);
-	__ctio_free_all(ctio, cmd->local_pool);
 	qlt_free_cmd(cmd);
 }
 
