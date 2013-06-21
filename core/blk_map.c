@@ -863,7 +863,7 @@ blk_map_setup_read(struct blk_entry *entry)
 err:
 	while (start) {
 		blk_entry_free_data(start);
-		if (start == entry);
+		if (start == entry)
 			break;
 		start = blk_entry_get_next(start);
 	}
