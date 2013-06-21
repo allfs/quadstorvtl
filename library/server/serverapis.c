@@ -1554,7 +1554,7 @@ tl_server_vtl_vol_info(struct tl_comm *comm, struct tl_msg *msg)
 		return -1;
 	}
 
-	if (tl_id  < 0 || tl_id > TL_MAX_DEVICES)
+	if (tl_id  < 0 || tl_id >= TL_MAX_DEVICES)
 	{
 		DEBUG_ERR("Invalid tl_id %d\n", tl_id);
 		tl_server_msg_failure(comm, msg);
