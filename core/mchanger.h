@@ -302,6 +302,7 @@ update_mchanger_element_pvoltag(struct mchanger_element *element)
 {
 	struct element_descriptor *edesc = &element->edesc;
 	struct tape *vcartridge = element_vcartridge(element);
+	int min_len;
 
 	if (!vcartridge)
 	{
@@ -312,9 +313,9 @@ update_mchanger_element_pvoltag(struct mchanger_element *element)
 	{
 		sys_memset(edesc->voltag.pvoltag, ' ', 32);
 		bzero(edesc->voltag.pvoltag+32, 4);
-		strncpy(edesc->voltag.pvoltag, vcartridge->label, strlen(vcartridge->label)); 
+		min_len = min_t(int, strlen(vcartridge->label), 32);
+		memcpy(edesc->voltag.pvoltag, vcartridge->label, min_len);
 	}
-	return;
 }
 
 static inline void
