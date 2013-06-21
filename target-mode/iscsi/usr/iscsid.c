@@ -386,7 +386,7 @@ static void login_start(struct connection *conn)
 	struct iscsi_login_req_hdr *req =
 				(struct iscsi_login_req_hdr *)&conn->req.bhs;
 
-	char *name, *alias, *session_type, *target_name;
+	char *name, *session_type, *target_name;
 	struct sockaddr_storage ss;
 	socklen_t slen = sizeof(struct sockaddr_storage);
 
@@ -405,7 +405,6 @@ static void login_start(struct connection *conn)
 		return;
 	}
 	conn->initiator = strdup(name);
-	alias = text_key_find(conn, "InitiatorAlias");
 	session_type = text_key_find(conn, "SessionType");
 	target_name = text_key_find(conn, "TargetName");
 
