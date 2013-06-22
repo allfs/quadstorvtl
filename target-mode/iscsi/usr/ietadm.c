@@ -243,7 +243,7 @@ static int ietd_connect(void)
 static int ietd_request(struct ietadm_req *req, void *rsp_data,
 			size_t rsp_data_sz)
 {
-	int fd = -1, err = -EIO;
+	int fd, err = -EIO;
 
 	if ((fd = ietd_connect()) < 0) {
 		err = fd;
@@ -256,7 +256,7 @@ static int ietd_request(struct ietadm_req *req, void *rsp_data,
 	err = ietd_response_recv(fd, req, rsp_data, rsp_data_sz);
 
 out:
-	if (fd > 0)
+	if (fd >= 0)
 		close(fd);
 
 	if (err < 0)
