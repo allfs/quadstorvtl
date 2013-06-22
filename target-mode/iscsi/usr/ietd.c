@@ -149,16 +149,20 @@ static void create_listen_socket(struct pollfd *array)
 
 		opt = 1;
 		if (res->ai_family == AF_INET6 &&
-		    setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &opt, sizeof(opt)))
+		    setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &opt, sizeof(opt))) {
+			close(sock);
 			continue;
+		}
 
 		if (bind(sock, res->ai_addr, res->ai_addrlen)) {
 			log_error("unable to bind server socket (%s)!", strerror(errno));
+			close(sock);
 			continue;
 		}
 
 		if (listen(sock, INCOMING_MAX)) {
 			log_error("unable to listen to server socket (%s)!", strerror(errno));
+			close(sock);
 			continue;
 		}
 
