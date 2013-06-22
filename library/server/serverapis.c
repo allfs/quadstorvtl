@@ -3443,7 +3443,7 @@ tl_server_rename_pool(struct tl_comm *comm, struct tl_msg *msg)
 	char err[256];
 	struct group_info *group_info;
 	struct group_conf group_conf;
-	char name[64], newname[64];
+	char name[TDISK_MAX_NAME_LEN], newname[TDISK_MAX_NAME_LEN];
 	uint32_t group_id;
 	int retval;
 
