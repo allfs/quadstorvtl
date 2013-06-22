@@ -8,7 +8,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-dev_t get_device_id(char *devname);
+dev_t get_device_id(char *devname, int *error);
 int check_blkdev_valid(char *devname);
 int is_mount_exists(char *dirname);
 int disk_getsize(char *device, uint64_t *size);

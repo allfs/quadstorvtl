@@ -406,10 +406,10 @@ update_blkdev_info(struct tl_blkdevinfo *blkdev)
 {
 	dev_t b_dev;
 	char *devname = blkdev->devname;
+	int error = 0;
 
-	b_dev = get_device_id(devname);
-	if (b_dev < 0)
-	{
+	b_dev = get_device_id(devname, &error);
+	if (error < 0) {
 		DEBUG_ERR("Unable to get device id\n");
 		return -1;
 	}
@@ -422,10 +422,10 @@ blkdev_new(char *devname)
 {
 	struct tl_blkdevinfo *blkdev;
 	dev_t b_dev;
+	int error = 0;
 
-	b_dev = get_device_id(devname);
-	if (b_dev < 0)
-	{
+	b_dev = get_device_id(devname, &error);
+	if (error < 0) {
 		DEBUG_ERR("Unable to get device id\n");
 		return NULL;
 	}

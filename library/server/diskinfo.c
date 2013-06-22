@@ -5,13 +5,15 @@
 #include "diskinfo.h"
 
 dev_t 
-get_device_id(char *devname)
+get_device_id(char *devname, int *error)
 {
 	struct stat stbuf;
 
-	if (stat(devname, &stbuf) < 0)
-		return -1;
-	else
+	if (stat(devname, &stbuf) < 0) {
+		*error = -1;
+		return 0;
+	}
+	else 
 		return stbuf.st_rdev;
 }
 
