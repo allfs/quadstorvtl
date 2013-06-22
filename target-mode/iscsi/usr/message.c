@@ -56,11 +56,15 @@ int ietadm_request_listen(void)
 	memcpy((char *) &addr.sun_path + 1, IETADM_NAMESPACE, strlen(IETADM_NAMESPACE));
 #endif
 
-	if ((err = bind(fd, (struct sockaddr *) &addr, sizeof(addr))) < 0)
+	if ((err = bind(fd, (struct sockaddr *) &addr, sizeof(addr))) < 0) {
+		close(fd);
 		return err;
+	}
 
-	if ((err = listen(fd, 32)) < 0)
+	if ((err = listen(fd, 32)) < 0) {
+		close(fd);
 		return err;
+	}
 
 	return fd;
 }
@@ -249,7 +253,7 @@ send:
 
 	err = writev(fd, iov, 2 + !!iov[2].iov_len);
 out:
-	if (fd > 0)
+	if (fd >= 0)
 		close(fd);
 	if (rsp_data)
 		free(rsp_data);
