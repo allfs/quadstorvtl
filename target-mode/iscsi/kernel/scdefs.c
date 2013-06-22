@@ -225,12 +225,18 @@ void digest_read_ctio(struct hash_desc *hash, struct iscsi_cmnd *cmnd,
 	crypto_hash_init(hash);
 	if (ctio->pglist_cnt && ctio->dxfer_len)
 	{
-		int i, j = 0, nbytes = 0, min;
+		int i, j = 0, nbytes = 0, min, max;
 		int pg_offset;
 		struct scatterlist sg[8];
 		struct pgdata **pglist = (struct pgdata **)(ctio->data_ptr);
 
-		for (i = cmnd->orig_start_pg_idx; i <= cmnd->read_pg_idx; i++)
+		pg_offset = cmnd->orig_start_pg_offset;
+		if (pg_offset)
+			max = cmnd->read_pg_idx+1;
+		else
+			max = cmnd->read_pg_idx;
+
+		for (i = cmnd->orig_start_pg_idx; i < max; i++)
 		{
 			struct pgdata *pgtmp = pglist[i];
 			if (j == 8)
