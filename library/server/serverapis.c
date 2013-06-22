@@ -766,7 +766,7 @@ load_quadstor_conf(void)
 			DEBUG_WARN_SERVER("Default pool name %s length exceeds maximum %d\n", buf, TDISK_MAX_NAME_LEN - 1);
 			return 0;
 		}
-		strncpy(default_group, buf, TDISK_MAX_NAME_LEN);
+		strcpy(default_group, buf);
 	}
 	return 0;
 }
@@ -2122,6 +2122,7 @@ __tl_server_add_vtl_conf(struct tl_comm *comm, struct tl_msg *msg)
 	vtlconf = add_new_vtl(name, vtltype, slots, DEFAULT_IE_PORTS, errmsg);
 	if (!vtlconf) {
 		DEBUG_ERR("Adding new vtl failed\n");
+		fclose(fp);
 		tl_server_msg_failure2(comm, msg, errmsg);
 		return -1;
 	}

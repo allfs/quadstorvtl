@@ -38,8 +38,10 @@ tl_client_send_msg(struct tl_msg *msg, char *reply)
 	if (msg->msg_len)
 		free(msg->msg_data);
 
-	if (retval != 0)
+	if (retval != 0) {
+		tl_msg_free_connection(tl_comm);
 		return retval;
+	}
 
 	resp = tl_msg_recv_message(tl_comm);
 	if (!resp) {
@@ -79,6 +81,7 @@ tl_client_get_target_data(struct tl_msg *msg, void *ptr, int len)
 	retval = tl_msg_send_message(tl_comm, msg);
 	free(msg->msg_data);
 	if (retval != 0) {
+		tl_msg_free_connection(tl_comm);
 		fprintf(stderr, "message transfer failed\n");
 		return -1;
 	}
