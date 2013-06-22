@@ -410,12 +410,19 @@ int
 ib_sc_fail_ctio(struct se_cmd *se_cmd, uint8_t asc)
 {
 	srpt_cmd_t *cmd;
+	struct qpriv *priv;
 	struct qsio_scsiio *ctio;
 	int retval;
 
 	cmd = container_of(se_cmd, struct srpt_send_ioctx, cmd);
 	ctio = __local_ctio_new(M_WAITOK);
+	if (unlikely(!ctio))
+		return -1;
+
 	se_cmd->local_pool = 1;
+	priv = &ctio->ccb_h.priv.qpriv;
+	priv->qcmd = se_cmd;
+	se_cmd->ccb = (struct qsio_hdr *)ctio;
 
 	switch (asc) {
 	case INVALID_FIELD_IN_CDB_ASC:
