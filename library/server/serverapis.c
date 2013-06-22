@@ -762,7 +762,11 @@ load_quadstor_conf(void)
 			DEBUG_WARN_SERVER("Default pool name %s already in use\n", buf);
 			return 0;
 		}
-		strcpy(default_group, buf);
+		if (strlen(buf) >= TL_MAX_NAME_LEN) {
+			DEBUG_WARN_SERVER("Default pool name %s length exceeds maximum %d\n", buf, TDISK_MAX_NAME_LEN - 1);
+			return 0;
+		}
+		strncpy(default_group, buf, TDISK_MAX_NAME_LEN);
 	}
 	return 0;
 }
