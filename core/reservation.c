@@ -647,6 +647,7 @@ persistent_reservation_handle_clear(struct tdevice *tdevice, struct qsio_scsiio 
 	}
 
 	registrants_unit_attention(tdevice, RESERVATIONS_PREEMPTED_ASC, RESERVATIONS_PREEMPTED_ASCQ, ctio->i_prt, ctio->t_prt, ctio->init_int, 1);
+	persistent_reservation_clear(&reservation->registration_list);
 	persistent_reservation_reset(reservation);
 	reservation->generation++;
 	return 0;
@@ -747,7 +748,7 @@ persistent_reservation_handle_preempt(struct tdevice *tdevice, struct qsio_scsii
 	}
 
 	if ((reservation->is_reserved && !is_ar && (reservation->persistent_key == service_action_key)) || (is_ar && !service_action_key)) {
-		reservation->type = type;
+		reservation->type = RESERVATION_TYPE_PERSISTENT;
 		port_fill(reservation->i_prt, ctio->i_prt);
 		port_fill(reservation->t_prt, ctio->t_prt);
 		reservation->r_prt = ctio->r_prt;

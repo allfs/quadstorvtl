@@ -3822,12 +3822,12 @@ tdrive_reset(struct tdrive *tdrive, uint64_t i_prt[], uint64_t t_prt[], uint8_t 
 	struct tdevice *tdevice = (struct tdevice *)tdrive;
 	struct initiator_state *istate;
 	struct istate_list *istate_list = &tdevice->istate_list;
+	struct reservation *reservation = &tdrive->tdevice.reservation;
 
 	tdrive_lock(tdrive);
-	if (tdrive->tdevice.reservation.is_reserved && tdrive->tdevice.reservation.type == RESERVATION_TYPE_RESERVE)
-	{
-		tdrive->tdevice.reservation.is_reserved = 0;
-		tdrive->tdevice.reservation.type = 0;
+	if (reservation->is_reserved && reservation->type == RESERVATION_TYPE_RESERVE) {
+		reservation->is_reserved = 0;
+		reservation->type = 0;
 	}
 	tdrive_unlock(tdrive);
 
