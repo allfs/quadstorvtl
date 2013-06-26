@@ -69,14 +69,15 @@ static int notify(void *data, int len, gfp_t gfp_mask)
 	struct sk_buff *skb;
 	struct nlmsghdr *nlh;
 	static u32 seq = 0;
+	int payload = NLMSG_SPACE(len);
 
-	if (!(skb = alloc_skb(NLMSG_SPACE(len), gfp_mask)))
+	if (!(skb = alloc_skb(payload, gfp_mask)))
 		return -ENOMEM;
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,14))
-	nlh = __nlmsg_put(skb, ietd_pid, seq++, NLMSG_DONE, len - sizeof(*nlh), 0);
+	nlh = __nlmsg_put(skb, ietd_pid, seq++, NLMSG_DONE, payload - sizeof(*nlh), 0);
 #else
-	nlh = __nlmsg_put(skb, ietd_pid, seq++, NLMSG_DONE, len - sizeof(*nlh));
+	nlh = __nlmsg_put(skb, ietd_pid, seq++, NLMSG_DONE, payload - sizeof(*nlh));
 #endif
 
 	memcpy(NLMSG_DATA(nlh), data, len);
@@ -94,7 +95,7 @@ int event_send(u32 tid, u64 sid, u32 cid, u32 state, int atomic)
 	event.cid = cid;
 	event.state = state;
 
-	err = notify(&event, NLMSG_SPACE(sizeof(struct iet_event)), M_NOWAIT);
+	err = notify(&event, sizeof(struct iet_event), M_NOWAIT);
 
 	return err;
 }
