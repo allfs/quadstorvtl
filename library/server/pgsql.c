@@ -160,10 +160,9 @@ pgsql_exec_query3(PGconn *conn, char *sqlcmd, int isinsert, int *error, char *ta
 
 	if (isinsert)
 	{
-		char cmd[512];
+		char cmd[256];
 
-		sprintf(cmd, "SELECT CURRVAL('%s_%s_seq')", table, seqcol);
-
+		snprintf(cmd, sizeof(cmd), "SELECT CURRVAL('%s_%s_seq')", table, seqcol);
 		res = PQexec(conn, cmd);
 		if (PQresultStatus(res) >= PGRES_BAD_RESPONSE)
 		{
@@ -235,10 +234,9 @@ __pgsql_exec_query2(char *conn_string, char *sqlcmd, int isinsert, int *error, c
 
 	if (isinsert)
 	{
-		char cmd[512];
+		char cmd[256];
 
-		sprintf(cmd, "SELECT CURRVAL('%s_%s_seq')", table, seqcol);
-
+		snprintf(cmd, sizeof(cmd), "SELECT CURRVAL('%s_%s_seq')", table, seqcol);
 		res = PQexec(conn, cmd);
 		if (PQresultStatus(res) >= PGRES_BAD_RESPONSE)
 		{

@@ -459,9 +459,9 @@ static int
 tl_server_disk_check(struct tl_comm *comm, struct tl_msg *msg)
 {
 	int error = 0;
-	char sqlcmd[512];
+	char sqlcmd[64];
 
-	sprintf(sqlcmd, "UPDATE SYSINFO SET DCHECK='1'");
+	snprintf(sqlcmd, sizeof(sqlcmd), "UPDATE SYSINFO SET DCHECK='1'");
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
 	if (error != 0) {
 		tl_server_msg_failure(comm, msg);
@@ -540,22 +540,20 @@ tl_server_delete_vol_conf(struct tl_comm *comm, struct tl_msg *msg)
 	int retval;
 	int tl_id;
 	uint32_t tape_id;
-	char err[256];
+	char errmsg[256];
 	struct vcartridge *vinfo = NULL;
 	struct vdevice *vdevice;
 	struct vcartridge *tmp;
 	PGconn *conn;
 
 	retval = sscanf(msg->msg_data, "tl_id: %d\ntape_id: %u\n", &tl_id, &tape_id);
-	if (retval != 2)
-	{
+	if (retval != 2) {
 		DEBUG_WARN("Invalid data %s\n", msg->msg_data);
 		tl_server_msg_invalid(comm, msg);
 		return -1;
 	}
 
-	if (tl_id < 0 || tl_id >= TL_MAX_DEVICES)
-	{
+	if (tl_id < 0 || tl_id >= TL_MAX_DEVICES) {
 		DEBUG_WARN("Invalid tl_id %d\n", tl_id);
 		tl_server_msg_invalid(comm, msg);
 		return -1;
@@ -570,47 +568,31 @@ tl_server_delete_vol_conf(struct tl_comm *comm, struct tl_msg *msg)
 		break;
 	}
 
-	if (!vinfo)
-	{
-		DEBUG_WARN("Cannot find vinfo\n");
-		sprintf(err, "Unable to find the volume for delete\n");
-		msg->msg_resp = MSG_RESP_ERROR;
-		tl_server_send_message(comm, msg, err);
-		return -1;
+	if (!vinfo) {
+		snprintf(errmsg, sizeof(errmsg), "Unable to find the volume for delete\n");
+		goto senderr;
 	}
 
 	conn = pgsql_begin();
-	if (!conn)
-	{
-		DEBUG_ERR("tl_server_delete_vol: Unable to connect to db\n");
-		sprintf(err, "Unable to connect to db\n");
-		msg->msg_resp = MSG_RESP_ERROR;
-		tl_server_send_message(comm, msg, err);
-		return -1;
+	if (!conn) {
+		snprintf(errmsg, sizeof(errmsg), "Unable to connect to db\n");
+		goto senderr;
 	}
 
 	retval = sql_delete_vcartridge(conn, vinfo->tl_id, vinfo->tape_id);
 	if (retval != 0) {
-		DEBUG_WARN("Cannot delete vcartridge from db\n");
-		sprintf(err, "Unable to delete the volume from db\n");
+		snprintf(errmsg, sizeof(errmsg), "Unable to delete the volume from db\n");
 		pgsql_rollback(conn);
-		msg->msg_resp = MSG_RESP_ERROR;
-		tl_server_send_message(comm, msg, err);
-		return -1;
+		goto senderr;
 	}
 
-	if (!vinfo->loaderror)
-	{
+	if (!vinfo->loaderror) {
 		vinfo->free_alloc = 1;
 		retval = tl_ioctl(TLTARGIOCDELETEVCARTRIDGE, vinfo);
-		if (retval != 0)
-		{
-			DEBUG_WARN("Delete tape ioctl failed\n");
-			sprintf(err, "delete volume failed ioctl\n");
+		if (retval != 0) {
+			snprintf(errmsg, sizeof(errmsg), "delete volume failed ioctl\n");
 			pgsql_rollback(conn);
-			msg->msg_resp = MSG_RESP_ERROR;
-			tl_server_send_message(comm, msg, err);
-			return -1;
+			goto senderr;
 		}
 	}
 
@@ -619,6 +601,9 @@ tl_server_delete_vol_conf(struct tl_comm *comm, struct tl_msg *msg)
 	free(vinfo);
 	tl_server_msg_success(comm, msg);
 	return 0;
+senderr:
+	tl_server_msg_failure2(comm, msg, errmsg);
+	return -1;
 }
 
 void
@@ -848,7 +833,7 @@ char_to_wwpn(char *arr)
 void
 fc_rule_config_fill(struct fc_rule *fc_rule, struct fc_rule_config *fc_rule_config)
 {
-	memset(fc_rule_config, 0, sizeof(fc_rule_config));
+	memset(fc_rule_config, 0, sizeof(*fc_rule_config));
 	fc_rule_config->target_id = fc_rule->target_id;
 	fc_rule_config->wwpn[0] = char_to_wwpn(fc_rule->wwpn);
 	fc_rule_config->wwpn[1] = char_to_wwpn(fc_rule->wwpn1);
@@ -979,7 +964,7 @@ query_disk_check()
 	PGresult *res;
 	int nrows, check, error = 0;
 
-	sprintf(sqlcmd, "SELECT DCHECK FROM SYSINFO");
+	snprintf(sqlcmd, sizeof(sqlcmd), "SELECT DCHECK FROM SYSINFO");
 
 	res = pgsql_exec_query(sqlcmd, &conn);
 	if (!res)
@@ -999,7 +984,7 @@ query_disk_check()
 		return 0;
 
 
-	sprintf(sqlcmd, "UPDATE SYSINFO SET DCHECK='0'");
+	snprintf(sqlcmd, sizeof(sqlcmd), "UPDATE SYSINFO SET DCHECK='0'");
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
 	if (error != 0) {
 		DEBUG_WARN("Failed to reset disk check\n");
@@ -1011,14 +996,14 @@ query_disk_check()
 static int
 sys_rid_init()
 {
-	char sqlcmd[256];
+	char sqlcmd[128];
 	int error = 0, retval;
 
 	retval = gen_rid(sys_rid);
 	if (retval != 0)
 		return retval;
 
-	sprintf(sqlcmd, "INSERT INTO SYSINFO (SYS_RID) VALUES('%s')", sys_rid);
+	snprintf(sqlcmd, sizeof(sqlcmd), "INSERT INTO SYSINFO (SYS_RID) VALUES('%s')", sys_rid);
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
 	if (error != 0)
 	{
@@ -1031,12 +1016,12 @@ sys_rid_init()
 static int
 sys_rid_load()
 {
-	char sqlcmd[256];
+	char sqlcmd[64];
 	int nrows;
 	PGconn *conn;
 	PGresult *res;
 
-	sprintf(sqlcmd, "SELECT SYS_RID FROM SYSINFO");
+	snprintf(sqlcmd, sizeof(sqlcmd), "SELECT SYS_RID FROM SYSINFO");
 	res = pgsql_exec_query(sqlcmd, &conn);
 	if (res == NULL)
 	{
@@ -1088,9 +1073,9 @@ vhba_add_device(int vhba_id)
 		return;
 
 	if (stat("/proc/scsi/scsi", &stbuf) == 0)
-		sprintf(cmd, "echo \"scsi add-single-device %d 0 0 0\" > /proc/scsi/scsi", vhba_id);
+		snprintf(cmd, sizeof(cmd), "echo \"scsi add-single-device %d 0 0 0\" > /proc/scsi/scsi", vhba_id);
 	else
-		sprintf(cmd, "echo \"0 0 0\" > /sys/class/scsi_host/host%d/scan", vhba_id);
+		snprintf(cmd, sizeof(cmd), "echo \"0 0 0\" > /sys/class/scsi_host/host%d/scan", vhba_id);
 	system(cmd);
 #endif
 }
@@ -1108,9 +1093,9 @@ vhba_remove_device(struct vdevice *vdevice)
 
 #ifdef LINUX
 	if (stat("/proc/scsi/scsi", &stbuf) == 0)
-		sprintf(cmd, "echo \"scsi remove-single-device %d 0 0 0\" > /proc/scsi/scsi", vdevice->vhba_id);
+		snprintf(cmd, sizeof(cmd), "echo \"scsi remove-single-device %d 0 0 0\" > /proc/scsi/scsi", vdevice->vhba_id);
 	else
-		sprintf(cmd, "echo 1 > /sys/class/scsi_device/%d:0:0:0/device/delete", vdevice->vhba_id);
+		snprintf(cmd, sizeof(cmd), "echo 1 > /sys/class/scsi_device/%d:0:0:0/device/delete", vdevice->vhba_id);
 	system(cmd);
 #endif
 	vdevice->vhba_id = -1;
@@ -1463,46 +1448,41 @@ __tl_server_add_vol_conf(struct tl_comm *comm, struct tl_msg *msg)
 	int voltype;
 	int retval;
 	struct vdevice *vdevice;
-	char errmsg[512];
+	char errmsg[256];
 	int worm;
 
 	if (sscanf(msg->msg_data, "group_id: %u\nlabel: %s\ntl_id: %d\nvoltype: %d\nnvolumes: %d\nworm: %d\n", &group_id, label, &tl_id, &voltype, &nvolumes, &worm) != 6) {
-		DEBUG_ERR("Add volume conf, Invalid message msg_data %s\n", msg->msg_data);
-		sprintf(errmsg, "Invalid Volume configuration msg_data");
-		tl_server_msg_failure2(comm, msg, errmsg);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "Invalid Volume configuration msg_data");
+		goto senderr;
 	}
 
 	if (tl_id < 0 || tl_id >= TL_MAX_DEVICES) {
-		sprintf(errmsg, "Invalid vtl device specified");
-		tl_server_msg_failure2(comm, msg, errmsg);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "Invalid vtl device specified");
+		goto senderr;
 	}
 
 	group_info = find_group(group_id);
 	if (!group_info) {
-		sprintf(errmsg, "Cannot find pool with id %u\n", group_id);
-		tl_server_msg_failure2(comm, msg, errmsg);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "Cannot find pool with id %u\n", group_id);
+		goto senderr;
 	}
 
 	vdevice = device_list[tl_id];
 	if (!vdevice) {
-		sprintf(errmsg, "Invalid vtl device specified");
-		tl_server_msg_failure2(comm, msg, errmsg);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "Invalid vtl device specified");
+		goto senderr;
 	}
 
 	check_max_vcart_size();
 	retval = vdevice_add_volumes(vdevice, group_info, voltype, nvolumes, worm, errmsg, label);
 	if (retval != 0)
-	{
-		msg->msg_resp = MSG_RESP_ERROR;
-		tl_server_send_message(comm, msg, errmsg);
-		return -1;
-	}
+		goto senderr;
+
 	tl_server_msg_success(comm, msg);
 	return 0;
+senderr:
+	tl_server_msg_failure2(comm, msg, errmsg);
+	return -1;
 }
 
 int
@@ -1780,7 +1760,7 @@ vtl_add_drive(struct vtlconf *vtlconf, int drivetype, int target_id, char *errms
 	char dname[40], serialnumber[40];
 	int retval;
 
-	sprintf(dname, "drive%d", target_id);
+	snprintf(dname, sizeof(dname), "drive%d", target_id);
 	serialnumber[0] = 0;
 	driveconf = tdriveconf_new(vtlconf->vdevice.tl_id, target_id, dname, serialnumber);
 	if (!driveconf)
@@ -2048,9 +2028,7 @@ tl_server_add_drive_conf(struct tl_comm *comm, struct tl_msg *msg)
 	int drivetype;
 	char errmsg[256];
 
-	if (sscanf(msg->msg_data, "name: %s\ndrivetype: %d\n", name, &drivetype) != 2)
-	{
-		DEBUG_ERR("Invalid message msg_data %s passed\n", msg->msg_data);
+	if (sscanf(msg->msg_data, "name: %s\ndrivetype: %d\n", name, &drivetype) != 2) {
 		tl_server_msg_failure(comm, msg);
 		return -1;
 	}
@@ -2062,7 +2040,7 @@ tl_server_add_drive_conf(struct tl_comm *comm, struct tl_msg *msg)
 	}
 
 	msg->msg_resp = MSG_RESP_OK;
-	sprintf(errmsg, "tl_id: %d\n", driveconf->vdevice.tl_id);
+	snprintf(errmsg, sizeof(errmsg), "tl_id: %d\n", driveconf->vdevice.tl_id);
 	tl_server_send_message(comm, msg, errmsg);
 	return 0;
 }
@@ -2082,8 +2060,7 @@ __tl_server_add_vtl_conf(struct tl_comm *comm, struct tl_msg *msg)
 	struct vdevice *vdevice = NULL;
 	int target_id = 1;
 
-	if (sscanf(msg->msg_data, "tempfile: %s\n", tempfile) != 1)
-	{
+	if (sscanf(msg->msg_data, "tempfile: %s\n", tempfile) != 1) {
 		DEBUG_ERR("Invalid message msg_data %s\n", msg->msg_data);
 		tl_server_msg_failure2(comm, msg, "Invalid message msg_data");
 		return -1;
@@ -2161,7 +2138,7 @@ __tl_server_add_vtl_conf(struct tl_comm *comm, struct tl_msg *msg)
 
 	attach_device(vdevice);
 	device_list[vdevice->tl_id] = vdevice;
-	sprintf(errmsg, "tl_id: %d\n", vdevice->tl_id);
+	snprintf(errmsg, sizeof(errmsg), "tl_id: %d\n", vdevice->tl_id);
 	tl_server_send_message(comm, msg, errmsg);
 	return 0;
 err:
@@ -2522,70 +2499,55 @@ tl_server_delete_disk(struct tl_comm *comm, struct tl_msg *msg)
 	char errmsg[256];
 	char dev[512];
 
-	if (sscanf(msg->msg_data, "dev: %[^\n]", dev) != 1)
-	{
+	if (sscanf(msg->msg_data, "dev: %[^\n]", dev) != 1) {
 		DEBUG_ERR("Parsing vtl conf file path failed. Invalid msg_data is %s\n", msg->msg_data);
 		tl_server_msg_failure(comm, msg);
 		return -1;
 	}
 
 	pthread_mutex_lock(&bdev_lock);
-	TAILQ_FOREACH(blkdev, &bdev_list, q_entry)
-	{
+	TAILQ_FOREACH(blkdev, &bdev_list, q_entry) {
 		if (strcmp(blkdev->disk.info.devname, dev))
-		{
 			continue;
-		}
 		break;
 	}
 	pthread_mutex_unlock(&bdev_lock);
 
-	if (!blkdev)
-	{
-		sprintf(errmsg, "Unable to find disk at %s for deletion\n", dev);
-		DEBUG_ERR("Unable to find disk at %s for deletion\n", dev);
-		tl_server_msg_failure2(comm, msg, errmsg);
-		return -1;
+	if (!blkdev) {
+		snprintf(errmsg, sizeof(errmsg), "Unable to find disk at %s for deletion\n", dev);
+		goto senderr;
 	}
 
 	memset(&binfo, 0, sizeof(struct bdev_info));
 	binfo.bid = blkdev->bid;
 	retval = tl_ioctl(TLTARGIOCGETBLKDEV, &binfo);
-	if (retval < 0)
-	{
-		sprintf(errmsg, "Error in removing disk\n");
-		tl_server_msg_failure2(comm, msg, errmsg);
-		return -1;
+	if (retval < 0) {
+		snprintf(errmsg, sizeof(errmsg), "Error in removing disk\n");
+		goto senderr;
 	}
 
 	usize = binfo.usize;
-	if (binfo.free != (usize - BINT_RESERVED_SIZE))
-	{
-		sprintf(errmsg, "Cannot delete disk which has active virtual volumes\n");
-		tl_server_msg_failure2(comm, msg, errmsg);
-		return -1;
+	if (binfo.free != (usize - BINT_RESERVED_SIZE)) {
+		snprintf(errmsg, sizeof(errmsg), "Cannot delete disk which has active virtual volumes\n");
+		goto senderr;
 	}
 
 	memset(&binfo, 0, sizeof(struct bdev_info));
 	binfo.bid = blkdev->bid;
 	retval = tl_ioctl(TLTARGIOCDELBLKDEV, &binfo);
-	if (retval != 0)
-	{
+	if (retval != 0) {
 		if (binfo.errmsg[0])
 			strcpy(errmsg, binfo.errmsg);
 		else
-			sprintf(errmsg, "Unable to delete disk from kernel\n");
-		tl_server_msg_failure2(comm, msg, errmsg);
-		return -1;
+			snprintf(errmsg, sizeof(errmsg), "Unable to delete disk from kernel\n");
+		goto senderr;
 	}
 
 	DEBUG_BUG_ON(!blkdev->bid);
 	retval = sql_delete_blkdev(blkdev);
-	if (retval != 0)
-	{
-		sprintf(errmsg, "Unable to delete disk from database\n");
-		tl_server_msg_failure2(comm, msg, errmsg);
-		return -1;
+	if (retval != 0) {
+		snprintf(errmsg, sizeof(errmsg), "Unable to delete disk from database\n");
+		goto senderr;
 	}
 
 	bdev_remove(blkdev);
@@ -2593,6 +2555,9 @@ tl_server_delete_disk(struct tl_comm *comm, struct tl_msg *msg)
 	msg->msg_resp = MSG_RESP_OK;
 	tl_server_msg_success(comm, msg);
 	return 0;
+senderr:
+	tl_server_msg_failure2(comm, msg, errmsg);
+	return -1;
 }
 
 static int
@@ -2608,60 +2573,49 @@ tl_server_add_disk(struct tl_comm *comm, struct tl_msg *msg)
 	PGconn *conn;
 	char dev[512];
 
-	if (sscanf(msg->msg_data, "group_id: %u\ndev: %[^\n]", &group_id, dev) != 2)
-	{
-		DEBUG_ERR("Invalid msg_data is %s\n", msg->msg_data);
+	if (sscanf(msg->msg_data, "group_id: %u\ndev: %[^\n]", &group_id, dev) != 2) {
 		tl_server_msg_failure2(comm, msg, "Invalid msg msg_data");
 		return -1;
 	}
 
 	group_info = find_group(group_id);
 	if (!group_info) {
-		sprintf(errmsg, "Cannot find pool with id %u\n", group_id);
-		tl_server_msg_failure2(comm, msg, errmsg);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "Cannot find pool with id %u\n", group_id);
+		goto senderr;
 	}
 
 	disk = tl_common_find_disk(dev);
-	if (!disk)
-	{
-		sprintf(errmsg, "Unable to find disk at %s for addition\n", dev);
-		DEBUG_ERR("Unable to find disk at %s for addition\n", dev);
-		tl_server_msg_failure2(comm, msg, errmsg);
-		return -1;
+	if (!disk) {
+		snprintf(errmsg, sizeof(errmsg), "Unable to find disk at %s for addition\n", dev);
+		goto senderr;
 	}
 
 	retval = is_ignore_dev(disk->info.devname);
 	if (retval) {
-		sprintf(errmsg, "Cannot add a disk with mounted partitions dev is %s\n", disk->info.devname);
-		tl_server_msg_failure2(comm, msg, errmsg);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "Cannot add a disk with mounted partitions dev is %s\n", disk->info.devname);
+		goto senderr;
 	}
 
 	retval = check_blkdev_exists(disk->info.devname);
 	if (retval != 0) {
-		sprintf(errmsg, "Disk at devpath %s already added\n", disk->info.devname);
-		tl_server_msg_failure2(comm, msg, errmsg);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "Disk at devpath %s already added\n", disk->info.devname);
+		goto senderr;
 	}
 
 	blkdev = blkdev_new(disk->info.devname);
 	if (!blkdev) {
-		sprintf(errmsg, "Memory Allocation failure\n");
-		tl_server_msg_failure2(comm, msg, errmsg);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "Memory Allocation failure\n");
+		goto senderr;
 	}
 
 	memcpy(&blkdev->disk, disk, offsetof(struct physdisk, q_entry));
 	strcpy(blkdev->devname, disk->info.devname);
 
 	conn = sql_add_blkdev(&blkdev->disk, &blkdev->bid);
-	if (!conn)
-	{
-		sprintf(errmsg, "Adding disk to database failed\n");
-		tl_server_msg_failure2(comm, msg, errmsg);
+	if (!conn) {
+		snprintf(errmsg, sizeof(errmsg), "Adding disk to database failed\n");
 		free(blkdev);
-		return -1;
+		goto senderr;
 	}
 
 	memset(&binfo, 0, sizeof(struct bdev_info));
@@ -2674,9 +2628,8 @@ tl_server_add_disk(struct tl_comm *comm, struct tl_msg *msg)
 	binfo.isnew = 1;
 
 	retval = tl_ioctl(TLTARGIOCNEWBLKDEV, &binfo);
-	if (retval != 0)
-	{
-		DEBUG_ERR("Error adding new disk, ioctl failed\n");
+	if (retval != 0) {
+		snprintf(errmsg, sizeof(errmsg), "Error adding new disk, ioctl failed\n");
 		goto err;
 	}
 
@@ -2686,16 +2639,15 @@ tl_server_add_disk(struct tl_comm *comm, struct tl_msg *msg)
 
 	retval = pgsql_commit(conn);
 	if (retval != 0)
-	{
 		tl_ioctl(TLTARGIOCDELBLKDEV, &binfo);
-	}
 
 	return retval;
 
 err:
 	pgsql_rollback(conn);
 	free(blkdev);
-	tl_server_msg_failure2(comm, msg, "Failed to add disk");
+senderr:
+	tl_server_msg_failure2(comm, msg, errmsg);
 	return -1;
 }
 
@@ -2753,16 +2705,13 @@ diag_dump_file(char *dirpath, char *src, char *dname)
 {
 	int srcfd;
 	int destfd;
-
 	char filepath[256];
 
 	srcfd = open(src, O_RDONLY);
 	if (srcfd < 0)
-	{
 		return;
-	}
 
-	sprintf(filepath, "%s/%s", dirpath, dname);
+	snprintf(filepath, sizeof(filepath), "%s/%s", dirpath, dname);
 	destfd = creat(filepath, S_IRWXU|S_IRWXG|S_IRWXO);
 	if (destfd < 0)
 	{
@@ -2790,7 +2739,7 @@ tl_server_run_diagnostics(struct tl_comm *comm, struct tl_msg *msg)
 		return -1;
 	}
 
-	sprintf(filepath, "%s/scdiag.xml", diagdir);
+	snprintf(filepath, sizeof(filepath), "%s/scdiag.xml", diagdir);
 	fd = creat(filepath, S_IRWXU|S_IRWXG|S_IRWXO);
 	if (fd < 0)
 	{ 
@@ -2811,7 +2760,7 @@ tl_server_run_diagnostics(struct tl_comm *comm, struct tl_msg *msg)
 	fclose(fp);
 	diag_dump_file(diagdir, "/proc/scsi/scsi", "procscsi");
 	diag_dump_file(diagdir, "/var/log/messages", "varlog.log");
-	sprintf(cmd, "/quadstor/bin/diaghelper %s", diagdir);
+	snprintf(cmd, sizeof(cmd), "/quadstor/bin/diaghelper %s", diagdir);
 	system(cmd);
 	tl_server_msg_success(comm, msg);
 	return 0;
@@ -2945,32 +2894,28 @@ tl_server_set_iscsiconf(struct tl_comm *comm, struct tl_msg *msg)
 	char errmsg[512];
 
 	if (msg->msg_len != sizeof(newconf)) {
-		sprintf(errmsg, "Invalid msg data");
-		tl_server_msg_failure2(comm, msg, errmsg);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "Invalid msg data");
+		goto senderr;
 	}
 
 	memcpy(&newconf, msg->msg_data, sizeof(newconf));
 	vdevice = find_vdevice(newconf.tl_id, newconf.target_id);
 	if (!vdevice) {
-		DEBUG_WARN_SERVER("Invalid tl_id %u target_id %u passed\n", newconf.tl_id, newconf.target_id);
-		tl_server_msg_failure(comm, msg);
-		return -1;
+		sprintf(errmsg, "Invalid tl_id %u target_id %u passed\n", newconf.tl_id, newconf.target_id);
+		goto senderr;
 	}
 
 	iscsiconf = &vdevice->iscsiconf;
 
 	if (newconf.iqn[0]) {
 		if (!iqn_name_valid(newconf.iqn)) {
-			sprintf(errmsg, "iqn %s is not valid\n", newconf.iqn);
-			tl_server_msg_failure2(comm, msg, errmsg);
-			return -1;
+			snprintf(errmsg, sizeof(errmsg), "iqn %s is not valid\n", newconf.iqn);
+			goto senderr;
 		}
 
 		if (iqn_exists(newconf.iqn)) {
-			sprintf(errmsg, "IQN %s exists for another device\n", newconf.iqn);
-			tl_server_msg_failure2(comm, msg, errmsg);
-			return -1;
+			snprintf(errmsg, sizeof(errmsg), "IQN %s exists for another device\n", newconf.iqn);
+			goto senderr;
 		}
 	}
 	else {
@@ -2979,24 +2924,23 @@ tl_server_set_iscsiconf(struct tl_comm *comm, struct tl_msg *msg)
 
 	retval = ietadm_mod_target(vdevice->iscsi_tid, &newconf, iscsiconf);
 	if (retval != 0) {
-		DEBUG_ERR_SERVER("ietadm_mod_target failed for tid %d\n", newconf.target_id);
-		sprintf(errmsg, "ietadm update of new iSCSI settings failed\n");
-		tl_server_msg_failure2(comm, msg, errmsg);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "ietadm update of new iSCSI settings failed\n");
+		goto senderr;
 	}
 
 	memcpy(iscsiconf, &newconf, sizeof(newconf));
 
 	retval = sql_update_iscsiconf(vdevice->tl_id, vdevice->target_id, iscsiconf);
 	if (retval != 0) {
-		DEBUG_ERR_SERVER("sql update failed for target_id %u\n", iscsiconf->target_id);
-		sprintf(errmsg, "Updating DB with new iSCSI settings failed\n");
-		tl_server_msg_failure2(comm, msg, errmsg);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "Updating DB with new iSCSI settings failed\n");
+		goto senderr;
 	}
 
 	tl_server_msg_success(comm, msg);
 	return 0;
+senderr:
+	tl_server_msg_failure2(comm, msg, errmsg);
+	return -1;
 }
 
 static int
@@ -3250,50 +3194,40 @@ tl_server_add_group(struct tl_comm *comm, struct tl_msg *msg)
 {
 	PGconn *conn;
 	char groupname[256];
-	char err[256];
-	struct group_info *group_info;
+	char errmsg[256];
+	struct group_info *group_info = NULL;
 	struct group_conf group_conf;
 	int retval, worm;
 
 	if (sscanf(msg->msg_data, "groupname: %s\nworm: %d\n", groupname, &worm) != 2) {
-		sprintf(err, "Invalid msg msg_data\n");
-		msg->msg_resp = MSG_RESP_ERROR;
-		tl_server_send_message(comm, msg, err);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "Invalid msg msg_data\n");
+		goto senderr;
 	}
 
 	if (group_name_exists(groupname)) {
-		sprintf(err, "Pool name %s exists\n", groupname);
-		msg->msg_resp = MSG_RESP_ERROR;
-		tl_server_send_message(comm, msg, err);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "Pool name %s exists\n", groupname);
+		goto senderr;
 	}
 
 	if (strlen(groupname) > TDISK_NAME_LEN) {
-		sprintf(err, "Pool name can be upto a maximum of %d characters", TDISK_NAME_LEN);
-		msg->msg_resp = MSG_RESP_ERROR;
-		tl_server_send_message(comm, msg, err);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "Pool name can be upto a maximum of %d characters", TDISK_NAME_LEN);
+		goto senderr;
 	}
 
 	if (!target_name_valid(groupname)) {
-		sprintf(err, "Pool name can only contain alphabets, numbers, underscores and hyphens");
-		msg->msg_resp = MSG_RESP_ERROR;
-		tl_server_send_message(comm, msg, err);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "Pool name can only contain alphabets, numbers, underscores and hyphens");
+		goto senderr;
 	}
 
 	group_info = alloc_buffer(sizeof(*group_info));
 	if (!group_info) {
-		sprintf(err, "Memory allocation error\n");
-		msg->msg_resp = MSG_RESP_ERROR;
-		tl_server_send_message(comm, msg, err);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "Memory allocation error\n");
+		goto senderr;
 	}
 
 	conn = pgsql_begin();
 	if (!conn) {
-		sprintf(err, "Unable to connect to db\n");
+		snprintf(errmsg, sizeof(errmsg), "Unable to connect to db\n");
 		goto senderr;
 	}
 
@@ -3303,7 +3237,7 @@ tl_server_add_group(struct tl_comm *comm, struct tl_msg *msg)
 
 	retval = sql_add_group(conn, group_info);
 	if (retval != 0) {
-		sprintf(err, "Cannot add pool to db\n");
+		snprintf(errmsg, sizeof(errmsg), "Cannot add pool to db\n");
 		goto errrsp;
 	}
 
@@ -3312,13 +3246,13 @@ tl_server_add_group(struct tl_comm *comm, struct tl_msg *msg)
 	group_conf.worm = group_info->worm;
 	retval = tl_ioctl(TLTARGIOCADDGROUP, &group_conf);
 	if (retval != 0) {
-		sprintf(err, "Cannot add pool, ioctl failed\n");
+		snprintf(errmsg, sizeof(errmsg), "Cannot add pool, ioctl failed\n");
 		goto errrsp;
 	}
 
 	retval = pgsql_commit(conn);
 	if (retval != 0) {
-		sprintf(err, "Unable to commit transaction\n");
+		snprintf(errmsg, sizeof(errmsg), "Unable to commit transaction\n");
 		goto senderr;
 	}
 
@@ -3329,9 +3263,9 @@ tl_server_add_group(struct tl_comm *comm, struct tl_msg *msg)
 errrsp:
 	pgsql_rollback(conn);
 senderr:
-	free(group_info);
-	msg->msg_resp = MSG_RESP_ERROR;
-	tl_server_send_message(comm, msg, err);
+	if (group_info)
+		free(group_info);
+	tl_server_msg_failure2(comm, msg, errmsg);
 	return -1;
 }
 
@@ -3389,63 +3323,56 @@ tl_server_list_groups(struct tl_comm *comm, struct tl_msg *msg, int configured)
 static int
 tl_server_delete_group(struct tl_comm *comm, struct tl_msg *msg)
 {
-	char err[256];
+	char errmsg[256];
 	struct group_info *group_info;
 	struct group_conf group_conf;
 	int retval;
 	uint32_t group_id;
 
 	if (sscanf(msg->msg_data, "group_id: %u\n", &group_id) != 1) {
-		sprintf(err, "Invalid msg msg_data\n");
-		msg->msg_resp = MSG_RESP_ERROR;
-		tl_server_send_message(comm, msg, err);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "Invalid msg msg_data\n");
+		goto senderr;
 	}
 
 	if (!group_id) {
-		sprintf(err, "Cannot delete default group\n");
-		msg->msg_resp = MSG_RESP_ERROR;
-		tl_server_send_message(comm, msg, err);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "Cannot delete default group\n");
+		goto senderr;
 	}
 
 	group_info = find_group(group_id);
 	if (!group_info) {
-		sprintf(err, "Cannot find pool at group_id %u\n", group_id);
-		msg->msg_resp = MSG_RESP_ERROR;
-		tl_server_send_message(comm, msg, err);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "Cannot find pool at group_id %u\n", group_id);
+		goto senderr;
 	}
 
 	strcpy(group_conf.name, group_info->name);
 	group_conf.group_id = group_info->group_id;
 	retval = tl_ioctl(TLTARGIOCDELETEGROUP, &group_conf);
 	if (retval != 0) {
-		sprintf(err, "Cannot add pool, ioctl failed\n");
-		msg->msg_resp = MSG_RESP_ERROR;
-		tl_server_send_message(comm, msg, err);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "Cannot add pool, ioctl failed\n");
+		goto senderr;
 	}
 
 	retval = sql_delete_group(group_id);
 	if (retval != 0) {
-		sprintf(err, "Cannot delete pool information from DB\n");
-		msg->msg_resp = MSG_RESP_ERROR;
-		tl_server_send_message(comm, msg, err);
-		return -1;
+		snprintf(errmsg, sizeof(errmsg), "Cannot delete pool information from DB\n");
+		goto senderr;
 	}
 
 	TAILQ_REMOVE(&group_list, group_info, q_entry); 
 	free(group_info);
 	tl_server_msg_success(comm, msg);
 	return 0;
+senderr:
+	tl_server_msg_failure2(comm, msg, errmsg);
+	return -1;
 }
 
 static int
 tl_server_rename_pool(struct tl_comm *comm, struct tl_msg *msg)
 {
 	PGconn *conn;
-	char err[256];
+	char errmsg[256];
 	struct group_info *group_info;
 	struct group_conf group_conf;
 	char name[TDISK_MAX_NAME_LEN], newname[TDISK_MAX_NAME_LEN];
@@ -3453,13 +3380,13 @@ tl_server_rename_pool(struct tl_comm *comm, struct tl_msg *msg)
 	int retval;
 
 	if (sscanf(msg->msg_data, "group_id:%u\ngroupname: %s\n", &group_id, newname) != 2) {
-		sprintf(err, "Invalid msg msg_data\n");
+		snprintf(errmsg, sizeof(errmsg), "Invalid msg msg_data\n");
 		goto senderr;
 	}
 
 	group_info = find_group(group_id);
 	if (!group_info) {
-		sprintf(err, "Cannot find pool with id %u\n", group_id);
+		snprintf(errmsg, sizeof(errmsg), "Cannot find pool with id %u\n", group_id);
 		goto senderr;
 	}
 
@@ -3469,12 +3396,12 @@ tl_server_rename_pool(struct tl_comm *comm, struct tl_msg *msg)
 	}
 
 	if (strlen(newname) > TDISK_NAME_LEN) {
-		sprintf(err, "Pool name can be upto a maximum of %d characters", TDISK_NAME_LEN);
+		snprintf(errmsg, sizeof(errmsg), "Pool name can be upto a maximum of %d characters", TDISK_NAME_LEN);
 		goto senderr;
 	}
 
 	if (!target_name_valid(newname)) {
-		sprintf(err, "Pool name can only contain alphabets, numbers, underscores and hyphens");
+		snprintf(errmsg, sizeof(errmsg), "Pool name can only contain alphabets, numbers, underscores and hyphens");
 		goto senderr;
 	}
 
@@ -3485,7 +3412,7 @@ tl_server_rename_pool(struct tl_comm *comm, struct tl_msg *msg)
 
 	conn = pgsql_begin();
 	if (!conn) {
-		sprintf(err, "Unable to connect to db\n");
+		snprintf(errmsg, sizeof(errmsg), "Unable to connect to db\n");
 		goto senderr;
 	}
 
@@ -3495,19 +3422,19 @@ tl_server_rename_pool(struct tl_comm *comm, struct tl_msg *msg)
 
 	retval = sql_rename_pool(group_info->group_id, newname);
 	if (retval != 0) {
-		sprintf(err, "Update db with new pool name failed\n");
+		snprintf(errmsg, sizeof(errmsg), "Update db with new pool name failed\n");
 		goto rollback;
 	}
 
 	retval = tl_ioctl(TLTARGIOCRENAMEGROUP, &group_conf);
 	if (retval != 0) {
-		sprintf(err, "Changing pool name failed\n");
+		snprintf(errmsg, sizeof(errmsg), "Changing pool name failed\n");
 		goto rollback;
 	}
 
 	retval = pgsql_commit(conn);
 	if (retval != 0) {
-		sprintf(err, "Unable to commit transaction\n");
+		snprintf(errmsg, sizeof(errmsg), "Unable to commit transaction\n");
 		goto senderr;
 	}
 	strcpy(group_info->name, newname);
@@ -3518,8 +3445,7 @@ rollback:
 	strcpy(group_conf.name, name);
 	pgsql_rollback(conn);
 senderr:
-	msg->msg_resp = MSG_RESP_ERROR;
-	tl_server_send_message(comm, msg, err);
+	tl_server_msg_failure2(comm, msg, errmsg);
 	return -1;
 }
 

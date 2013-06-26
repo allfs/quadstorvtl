@@ -29,12 +29,12 @@ vdevice_construct_iqn(struct vdevice *vdevice, struct vdevice *parent)
 		return;
 
 	if (vdevice->type == T_CHANGER)
-		sprintf(device_str, "iqn.2006-06.com.quadstor.vtl.%s.autoloader", vdevice->name);
+		snprintf(device_str, sizeof(device_str), "iqn.2006-06.com.quadstor.vtl.%s.autoloader", vdevice->name);
 	else if (vdevice->target_id)
-		sprintf(device_str, "iqn.2006-06.com.quadstor.vtl.%s.drive%d", parent->name, vdevice->target_id);
+		snprintf(device_str, sizeof(device_str), "iqn.2006-06.com.quadstor.vtl.%s.drive%d", parent->name, vdevice->target_id);
 	else
-		sprintf(device_str, "iqn.2006-06.com.quadstor.vdrive.%s", vdevice->name);
-	sprintf(iscsiconf->iqn, device_str);
+		snprintf(device_str, sizeof(device_str), "iqn.2006-06.com.quadstor.vdrive.%s", vdevice->name);
+	strcpy(iscsiconf->iqn, device_str);
 }
 
 int 
@@ -72,7 +72,7 @@ ietadm_mod_target(int tid, struct iscsiconf *iscsiconf, struct iscsiconf *oldcon
 		return 0;
 
 	if (oldconf && strcmp(iscsiconf->iqn, oldconf->iqn)) {
-		sprintf(cmd, "%s --op rename --tid=%d --params Name=%s", IETADM_PATH, tid, iscsiconf->iqn);
+		snprintf(cmd, sizeof(cmd), "%s --op rename --tid=%d --params Name=%s", IETADM_PATH, tid, iscsiconf->iqn);
 		DEBUG_INFO("iqn change cmd is %s\n", iscsiconf->iqn);
 		retval  = system(cmd);
 		if (retval != 0) {
@@ -84,7 +84,7 @@ ietadm_mod_target(int tid, struct iscsiconf *iscsiconf, struct iscsiconf *oldcon
 	if (strlen(iscsiconf->IncomingUser) > 0) {
 		strcpy(user, iscsiconf->IncomingUser);
 		strcpy(passwd, iscsiconf->IncomingPasswd);
-		sprintf(cmd, "%s --op new --tid=%d --user --params=IncomingUser=%s,Password=%s\n", IETADM_PATH, tid, user, passwd);
+		snprintf(cmd, sizeof(cmd), "%s --op new --tid=%d --user --params=IncomingUser=%s,Password=%s\n", IETADM_PATH, tid, user, passwd);
 		retval  = system(cmd);
 		if (retval != 0) {
 			DEBUG_WARN_SERVER("Changing target user configuration failed: cmd is %s %d %s\n", cmd, errno, strerror(errno));
@@ -95,7 +95,7 @@ ietadm_mod_target(int tid, struct iscsiconf *iscsiconf, struct iscsiconf *oldcon
 	if (oldconf && strlen(oldconf->IncomingUser) > 0) {
 		strcpy(user, oldconf->IncomingUser);
 		strcpy(passwd, oldconf->IncomingPasswd);
-		sprintf(cmd, "%s --op delete --tid=%d --user --params=IncomingUser=%s,Password=%s\n", IETADM_PATH, tid, user, passwd);
+		snprintf(cmd, sizeof(cmd),"%s --op delete --tid=%d --user --params=IncomingUser=%s,Password=%s\n", IETADM_PATH, tid, user, passwd);
 		retval  = system(cmd);
 		if (retval != 0) {
 			DEBUG_WARN_SERVER("Changing target user configuration failed: cmd is %s %d %s\n", cmd, errno, strerror(errno));
@@ -106,7 +106,7 @@ ietadm_mod_target(int tid, struct iscsiconf *iscsiconf, struct iscsiconf *oldcon
 	if (oldconf && strlen(oldconf->OutgoingUser) > 0) {
 		strcpy(user, oldconf->OutgoingUser);
 		strcpy(passwd, oldconf->OutgoingPasswd);
-		sprintf(cmd, "%s --op delete --tid=%d --user --params=OutgoingUser=%s,Password=%s\n", IETADM_PATH, tid, user, passwd);
+		snprintf(cmd, sizeof(cmd), "%s --op delete --tid=%d --user --params=OutgoingUser=%s,Password=%s\n", IETADM_PATH, tid, user, passwd);
 		retval  = system(cmd);
 		if (retval != 0) {
 			DEBUG_WARN_SERVER("Changing target user configuration failed: cmd is %s %d %s\n", cmd, errno, strerror(errno));
@@ -117,7 +117,7 @@ ietadm_mod_target(int tid, struct iscsiconf *iscsiconf, struct iscsiconf *oldcon
 	if (strlen(iscsiconf->OutgoingUser) > 0) {
 		strcpy(user, iscsiconf->OutgoingUser);
 		strcpy(passwd, iscsiconf->OutgoingPasswd);
-		sprintf(cmd, "%s --op new --tid=%d --user --params=OutgoingUser=%s,Password=%s\n", IETADM_PATH, tid, user, passwd);
+		snprintf(cmd, sizeof(cmd), "%s --op new --tid=%d --user --params=OutgoingUser=%s,Password=%s\n", IETADM_PATH, tid, user, passwd);
 		retval  = system(cmd);
 		if (retval != 0) {
 			DEBUG_WARN_SERVER("Changing target user configuration failed: cmd is %s %d %s\n", cmd, errno, strerror(errno));
@@ -137,7 +137,7 @@ ietadm_add_target(struct vdevice *vdevice)
 	if (vdevice->iscsi_tid < 0)
 		return -1;
 
-	sprintf(cmd, "%s --op new --tid=%d --params Name=%s\n", IETADM_PATH, vdevice->iscsi_tid, vdevice->iscsiconf.iqn);
+	snprintf(cmd, sizeof(cmd), "%s --op new --tid=%d --params Name=%s\n", IETADM_PATH, vdevice->iscsi_tid, vdevice->iscsiconf.iqn);
 	retval  = system(cmd);
 
 	if (retval != 0) {
@@ -160,7 +160,7 @@ ietadm_delete_target(int tid)
 	if (tid < 0)
 		return 0;
 
-	sprintf(cmd, "/quadstor/bin/ietadm --op delete --tid=%d > /dev/null 2>&1", tid);
+	snprintf(cmd, sizeof(cmd), "%s --op delete --tid=%d > /dev/null 2>&1", IETADM_PATH, tid);
 	retval = system(cmd);
 	if (retval != 0)
 	{
@@ -174,10 +174,10 @@ ietadm_delete_target(int tid)
 int
 ietadm_qload_done(void)
 {
-	char cmd[512];
+	char cmd[128];
 	int retval;
 
-	sprintf(cmd, "%s -q\n", IETADM_PATH);
+	snprintf(cmd, sizeof(cmd), "%s -q\n", IETADM_PATH);
 	retval = system(cmd);
 	if (retval != 0) {
 		DEBUG_ERR_SERVER("ietadm returned not zero status %d cmd is %s %d %s\n", retval, cmd, errno, strerror(errno));

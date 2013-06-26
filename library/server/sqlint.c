@@ -29,11 +29,11 @@ sql_add_group(PGconn *conn, struct group_info *group_info)
 	int error = -1;
 
 	if (!group_info->group_id) {
-		sprintf(sqlcmd, "INSERT INTO STORAGEGROUP (NAME, WORM) VALUES('%s', '%d')", group_info->name, group_info->worm);
+		snprintf(sqlcmd, sizeof(sqlcmd), "INSERT INTO STORAGEGROUP (NAME, WORM) VALUES('%s', '%d')", group_info->name, group_info->worm);
 		group_info->group_id = pgsql_exec_query3(conn, sqlcmd, 1, &error, "STORAGEGROUP", "GROUPID");
 	}
 	else {
-		sprintf(sqlcmd, "INSERT INTO STORAGEGROUP (GROUPID, NAME, WOMR) VALUES('%u', '%s', '%d')", group_info->group_id, group_info->name, group_info->worm);
+		snprintf(sqlcmd, sizeof(sqlcmd), "INSERT INTO STORAGEGROUP (GROUPID, NAME, WOMR) VALUES('%u', '%s', '%d')", group_info->group_id, group_info->name, group_info->worm);
 		pgsql_exec_query3(conn, sqlcmd, 0, &error, NULL, NULL);
 	}
 
@@ -46,10 +46,10 @@ sql_add_group(PGconn *conn, struct group_info *group_info)
 int
 sql_delete_group(uint32_t group_id)
 {
-	char sqlcmd[512];
+	char sqlcmd[128];
 	int error = -1;
 
-	sprintf(sqlcmd, "DELETE FROM STORAGEGROUP WHERE GROUPID='%u'", group_id);
+	snprintf(sqlcmd, sizeof(sqlcmd), "DELETE FROM STORAGEGROUP WHERE GROUPID='%u'", group_id);
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
 	if (error < 0)
 	{
@@ -63,10 +63,10 @@ sql_delete_group(uint32_t group_id)
 int
 sql_rename_pool(uint32_t group_id, char *name)
 {
-	char sqlcmd[512];
+	char sqlcmd[128];
 	int error = -1;
 
-	sprintf(sqlcmd, "UPDATE STORAGEGROUP SET NAME='%s' WHERE GROUPID='%u'", name, group_id);
+	snprintf(sqlcmd, sizeof(sqlcmd), "UPDATE STORAGEGROUP SET NAME='%s' WHERE GROUPID='%u'", name, group_id);
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
 	if (error < 0)
 	{
@@ -81,7 +81,7 @@ int sql_delete_all_tl_drives(int tl_id)
 	char sqlcmd[100];
 	int error;
 
-	sprintf(sqlcmd, "DELETE FROM VDRIVES WHERE TLID='%d'", tl_id);
+	snprintf(sqlcmd, sizeof(sqlcmd), "DELETE FROM VDRIVES WHERE TLID='%d'", tl_id);
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
 	if (error < 0)
 	{
@@ -176,11 +176,11 @@ sql_add_blkdev(struct physdisk *disk, uint32_t *ret_bid)
 	}
 
 	if (!bid) {
-		sprintf(sqlcmd, "INSERT INTO PHYSSTOR (VENDOR, PRODUCT, IDFLAGS, T10ID, NAAID, EUI64ID, UNKNOWNID, ISRAID, RAIDDEV, PID) VALUES ('%.8s', '%.16s', '%u', '%s', '%s', '%s', '%s', '%d', '%s', '%d')", device->vendor, device->product, device->idflags, t10esc, naaesc, euiesc, unesc, disk->raiddisk, disk->raiddisk ? device->devname : "", disk->partid);
+		snprintf(sqlcmd, cmdlen, "INSERT INTO PHYSSTOR (VENDOR, PRODUCT, IDFLAGS, T10ID, NAAID, EUI64ID, UNKNOWNID, ISRAID, RAIDDEV, PID) VALUES ('%.8s', '%.16s', '%u', '%s', '%s', '%s', '%s', '%d', '%s', '%d')", device->vendor, device->product, device->idflags, t10esc, naaesc, euiesc, unesc, disk->raiddisk, disk->raiddisk ? device->devname : "", disk->partid);
 		bid = pgsql_exec_query3(conn, sqlcmd, 1, &error, "PHYSSTOR", "BID");
 	}
 	else {
-		sprintf(sqlcmd, "INSERT INTO PHYSSTOR (BID, VENDOR, PRODUCT, IDFLAGS, T10ID, NAAID, EUI64ID, UNKNOWNID, ISRAID, RAIDDEV, PID) VALUES ('%u', '%.8s', '%.16s', '%u', '%s', '%s', '%s', '%s', '%d', '%s', '%d')", bid, device->vendor, device->product, device->idflags, t10esc, naaesc, euiesc, unesc, disk->raiddisk, disk->raiddisk ? device->devname : "", disk->partid);
+		snprintf(sqlcmd, cmdlen, "INSERT INTO PHYSSTOR (BID, VENDOR, PRODUCT, IDFLAGS, T10ID, NAAID, EUI64ID, UNKNOWNID, ISRAID, RAIDDEV, PID) VALUES ('%u', '%.8s', '%.16s', '%u', '%s', '%s', '%s', '%s', '%d', '%s', '%d')", bid, device->vendor, device->product, device->idflags, t10esc, naaesc, euiesc, unesc, disk->raiddisk, disk->raiddisk ? device->devname : "", disk->partid);
 		pgsql_exec_query3(conn, sqlcmd, 0, &error, NULL, NULL);
 	}
 
@@ -231,7 +231,7 @@ sql_delete_blkdev(struct tl_blkdevinfo *binfo)
 	char sqlcmd[100];
 	int error;
 
-	sprintf(sqlcmd, "DELETE FROM PHYSSTOR WHERE BID='%u'", binfo->bid);
+	snprintf(sqlcmd, sizeof(sqlcmd), "DELETE FROM PHYSSTOR WHERE BID='%u'", binfo->bid);
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
 	if (error != 0)
 	{
@@ -247,7 +247,7 @@ sql_delete_vcartridge(PGconn *conn, int tl_id, int tape_id)
 	char sqlcmd[256];
 	int error;
 
-	sprintf(sqlcmd, "DELETE FROM VCARTRIDGE WHERE TAPEID='%d' AND TLID='%d'", tape_id, tl_id);
+	snprintf(sqlcmd, sizeof(sqlcmd), "DELETE FROM VCARTRIDGE WHERE TAPEID='%d' AND TLID='%d'", tape_id, tl_id);
 	pgsql_exec_query3(conn, sqlcmd, 0, &error, NULL, NULL);
 	return error;
 }
@@ -259,7 +259,7 @@ sql_add_vtl_drive(int tl_id, struct tdriveconf *tdriveconf)
 	char sqlcmd[512];
 	int error;
 
-	sprintf(sqlcmd, "INSERT INTO VDRIVES (TLID, TARGETID, DRIVETYPE, NAME, SERIALNUMBER) VALUES ('%d', '%u', '%d', '%s', '%s')", tl_id, vdevice->target_id, tdriveconf->type, vdevice->name, vdevice->serialnumber);
+	snprintf(sqlcmd, sizeof(sqlcmd), "INSERT INTO VDRIVES (TLID, TARGETID, DRIVETYPE, NAME, SERIALNUMBER) VALUES ('%d', '%u', '%d', '%s', '%s')", tl_id, vdevice->target_id, tdriveconf->type, vdevice->name, vdevice->serialnumber);
 
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
 	return error;
@@ -272,7 +272,7 @@ sql_add_drive(struct tdriveconf *driveconf)
 	char sqlcmd[512];
 	int error;
 
-	sprintf(sqlcmd, "INSERT INTO VTLS (VTLID, DEVTYPE, VTLNAME, VTLTYPE, SLOTS, IMPEXP, DRIVES, SERIALNUMBER) VALUES ('%d', '%d', '%s', '%d', '0', '0', '0', '%s')", vdevice->tl_id, T_SEQUENTIAL, vdevice->name, driveconf->type, vdevice->serialnumber);
+	snprintf(sqlcmd, sizeof(sqlcmd), "INSERT INTO VTLS (VTLID, DEVTYPE, VTLNAME, VTLTYPE, SLOTS, IMPEXP, DRIVES, SERIALNUMBER) VALUES ('%d', '%d', '%s', '%d', '0', '0', '0', '%s')", vdevice->tl_id, T_SEQUENTIAL, vdevice->name, driveconf->type, vdevice->serialnumber);
 
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
 	if (error != 0)
@@ -288,7 +288,7 @@ sql_add_drive(struct tdriveconf *driveconf)
 	}
 	return 0;
 err:
-	sprintf(sqlcmd, "DELETE FROM VTLS WHERE VTLID='%d'", vdevice->tl_id);
+	snprintf(sqlcmd, sizeof(sqlcmd), "DELETE FROM VTLS WHERE VTLID='%d'", vdevice->tl_id);
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
 	return -1;
 }
@@ -296,10 +296,10 @@ err:
 int
 sql_delete_vtl(int tl_id)
 {
-	char sqlcmd[512];
+	char sqlcmd[128];
 	int error;
 
-	sprintf(sqlcmd, "DELETE FROM VTLS WHERE VTLID='%d'", tl_id);
+	snprintf(sqlcmd, sizeof(sqlcmd), "DELETE FROM VTLS WHERE VTLID='%d'", tl_id);
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
 	return error;
 }
@@ -310,7 +310,7 @@ sql_update_iscsiconf(int tl_id, uint32_t target_id, struct iscsiconf *iscsiconf)
 	char sqlcmd[512];
 	int error;
 
-	sprintf(sqlcmd, "UPDATE ISCSICONF SET INCOMINGUSER='%s', INCOMINGPASSWD='%s', OUTGOINGUSER='%s', OUTGOINGPASSWD='%s', IQN='%s' WHERE TLID='%d' AND TARGETID='%u'", iscsiconf->IncomingUser, iscsiconf->IncomingPasswd, iscsiconf->OutgoingUser, iscsiconf->OutgoingPasswd, iscsiconf->iqn, tl_id, target_id);
+	snprintf(sqlcmd, sizeof(sqlcmd), "UPDATE ISCSICONF SET INCOMINGUSER='%s', INCOMINGPASSWD='%s', OUTGOINGUSER='%s', OUTGOINGPASSWD='%s', IQN='%s' WHERE TLID='%d' AND TARGETID='%u'", iscsiconf->IncomingUser, iscsiconf->IncomingPasswd, iscsiconf->OutgoingUser, iscsiconf->OutgoingPasswd, iscsiconf->iqn, tl_id, target_id);
 	DEBUG_INFO("cmd %s\n", sqlcmd);
 
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
@@ -323,7 +323,7 @@ sql_add_iscsiconf(int tl_id, uint32_t target_id, struct iscsiconf *iscsiconf)
 	char sqlcmd[512];
 	int error;
 
-	sprintf(sqlcmd, "INSERT INTO ISCSICONF (TLID, TARGETID, INCOMINGUSER, INCOMINGPASSWD, OUTGOINGUSER, OUTGOINGPASSWD, IQN) VALUES ('%d', '%u', '%s', '%s', '%s', '%s', '%s')", tl_id, target_id, iscsiconf->IncomingUser, iscsiconf->IncomingPasswd, iscsiconf->OutgoingUser, iscsiconf->OutgoingPasswd, iscsiconf->iqn);
+	snprintf(sqlcmd, sizeof(sqlcmd), "INSERT INTO ISCSICONF (TLID, TARGETID, INCOMINGUSER, INCOMINGPASSWD, OUTGOINGUSER, OUTGOINGPASSWD, IQN) VALUES ('%d', '%u', '%s', '%s', '%s', '%s', '%s')", tl_id, target_id, iscsiconf->IncomingUser, iscsiconf->IncomingPasswd, iscsiconf->OutgoingUser, iscsiconf->OutgoingPasswd, iscsiconf->iqn);
 
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
 	return error;
@@ -336,7 +336,7 @@ sql_add_vtl(struct vtlconf *vtlconf)
 	char sqlcmd[512];
 	int error;
 
-	sprintf(sqlcmd, "INSERT INTO VTLS (VTLID, DEVTYPE, VTLNAME, VTLTYPE, SLOTS, IMPEXP, DRIVES, SERIALNUMBER) VALUES ('%d', '%d', '%s', '%d', '%d', '%d', '%d', '%s')", vdevice->tl_id, T_CHANGER, vdevice->name, vtlconf->type, vtlconf->slots, vtlconf->ieports, vtlconf->drives, vdevice->serialnumber);
+	snprintf(sqlcmd, sizeof(sqlcmd), "INSERT INTO VTLS (VTLID, DEVTYPE, VTLNAME, VTLTYPE, SLOTS, IMPEXP, DRIVES, SERIALNUMBER) VALUES ('%d', '%d', '%s', '%d', '%d', '%d', '%d', '%s')", vdevice->tl_id, T_CHANGER, vdevice->name, vtlconf->type, vtlconf->slots, vtlconf->ieports, vtlconf->drives, vdevice->serialnumber);
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
 	return error;
 }
@@ -349,7 +349,7 @@ sql_query_iscsiconf(int tl_id, uint32_t target_id, struct iscsiconf *iscsiconf)
 	PGresult *res;
 	int nrows;
 
-	sprintf(sqlcmd, "SELECT INCOMINGUSER, INCOMINGPASSWD, OUTGOINGUSER, OUTGOINGPASSWD, IQN FROM ISCSICONF WHERE TLID='%d' AND TARGETID='%u'", tl_id, target_id);
+	snprintf(sqlcmd, sizeof(sqlcmd), "SELECT INCOMINGUSER, INCOMINGPASSWD, OUTGOINGUSER, OUTGOINGPASSWD, IQN FROM ISCSICONF WHERE TLID='%d' AND TARGETID='%u'", tl_id, target_id);
 	res = pgsql_exec_query(sqlcmd, &conn);
 	if (res == NULL) {
 		return -1;
@@ -383,12 +383,12 @@ int
 sql_query_driveprop(struct tdriveconf *driveconf)
 {
 	struct vdevice *vdevice = (struct vdevice *)driveconf;
-	char sqlcmd[512];
+	char sqlcmd[128];
 	PGconn *conn;
 	PGresult *res;
 	int nrows;
 
-	sprintf(sqlcmd, "SELECT DRIVETYPE FROM VDRIVES WHERE TLID='%d'", vdevice->tl_id);
+	snprintf(sqlcmd, sizeof(sqlcmd), "SELECT DRIVETYPE FROM VDRIVES WHERE TLID='%d'", vdevice->tl_id);
 	res = pgsql_exec_query(sqlcmd, &conn);
 	if (res == NULL)
 	{
@@ -415,13 +415,13 @@ int
 sql_query_drives(struct vtlconf *vtlconf)
 {
 	struct vdevice *vdevice = (struct vdevice *)vtlconf;
-	char sqlcmd[512];
+	char sqlcmd[128];
 	PGconn *conn;
 	PGresult *res;
 	int nrows;
 	int i;
 
-	sprintf(sqlcmd, "SELECT TARGETID,NAME,DRIVETYPE,SERIALNUMBER FROM VDRIVES WHERE TLID='%d' ORDER BY TLID,TARGETID ASC", vdevice->tl_id);
+	snprintf(sqlcmd, sizeof(sqlcmd), "SELECT TARGETID,NAME,DRIVETYPE,SERIALNUMBER FROM VDRIVES WHERE TLID='%d' ORDER BY TLID,TARGETID ASC", vdevice->tl_id);
 
 	res = pgsql_exec_query(sqlcmd, &conn);
 	if (res == NULL)
@@ -462,33 +462,16 @@ err:
 }
 
 int
-sql_update_vtl_rid(int tl_id, uint8_t *rid, uint32_t rtl_id)
-{
-	char sqlcmd[512];
-	int error;
-
-	sprintf(sqlcmd, "UPDATE VTLS set RID='%s',RVTLID='%d' WHERE VTLID='%d'", rid, rtl_id, tl_id);
-	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
-	if (error != 0)
-	{
-		DEBUG_WARN("Unable to set rid to %s rtlid %d for tl_id %d\n", rid, rtl_id, tl_id);
-		return -1;
-	}
-	return 0;
-
-}
-
-int
 sql_query_vdevice(struct vdevice *device_list[])
 {
-	char sqlcmd[512];
+	char sqlcmd[128];
 	int retval;
 	PGconn *conn;
 	PGresult *res;
 	int nrows;
 	int i;
 
-	sprintf(sqlcmd, "SELECT VTLID,DEVTYPE,VTLNAME,VTLTYPE,SLOTS,IMPEXP,DRIVES,SERIALNUMBER FROM VTLS");
+	snprintf(sqlcmd, sizeof(sqlcmd), "SELECT VTLID,DEVTYPE,VTLNAME,VTLTYPE,SLOTS,IMPEXP,DRIVES,SERIALNUMBER FROM VTLS");
 
 	res = pgsql_exec_query(sqlcmd, &conn);
 	if (res == NULL)
@@ -585,10 +568,10 @@ err:
 int
 sql_set_volume_exported(struct vcartridge *vinfo)
 {
-	char sqlcmd[512];
+	char sqlcmd[128];
 	int error;
 
-	sprintf(sqlcmd, "UPDATE VCARTRIDGE SET VSTATUS='%d' WHERE TLID='%d' AND TAPEID='%u'", MEDIA_STATUS_EXPORTED, vinfo->tl_id, vinfo->tape_id);
+	snprintf(sqlcmd, sizeof(sqlcmd), "UPDATE VCARTRIDGE SET VSTATUS='%d' WHERE TLID='%d' AND TAPEID='%u'", MEDIA_STATUS_EXPORTED, vinfo->tl_id, vinfo->tape_id);
 
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
 	if (error != 0)
@@ -606,11 +589,11 @@ sql_add_vcartridge(PGconn *conn, struct vcartridge *vinfo)
 	int error = -1;
 
 	if (!vinfo->tape_id) {
-		sprintf(sqlcmd, "INSERT INTO VCARTRIDGE (GROUPID, TLID, VTYPE, LABEL, VSIZE, VSTATUS, WORM) VALUES ('%u', '%d', '%d', '%s', '%llu', '%u', '%d')", vinfo->group_id, vinfo->tl_id, vinfo->type, vinfo->label, (unsigned long long)vinfo->size, vinfo->vstatus, vinfo->worm);
+		snprintf(sqlcmd, sizeof(sqlcmd), "INSERT INTO VCARTRIDGE (GROUPID, TLID, VTYPE, LABEL, VSIZE, VSTATUS, WORM) VALUES ('%u', '%d', '%d', '%s', '%llu', '%u', '%d')", vinfo->group_id, vinfo->tl_id, vinfo->type, vinfo->label, (unsigned long long)vinfo->size, vinfo->vstatus, vinfo->worm);
 		vinfo->tape_id = pgsql_exec_query3(conn, sqlcmd, 1, &error, "VCARTRIDGE" , "TAPEID");
 	}
 	else {
-		sprintf(sqlcmd, "INSERT INTO VCARTRIDGE (TAPEID, GROUPID, TLID, VTYPE, LABEL, VSIZE, VSTATUS, WORM) VALUES ('%u', '%u', '%d', '%d', '%s', '%llu', '%u', '%d')", vinfo->tape_id, vinfo->group_id, vinfo->tl_id, vinfo->type, vinfo->label, (unsigned long long)vinfo->size, vinfo->vstatus, vinfo->worm);
+		snprintf(sqlcmd, sizeof(sqlcmd), "INSERT INTO VCARTRIDGE (TAPEID, GROUPID, TLID, VTYPE, LABEL, VSIZE, VSTATUS, WORM) VALUES ('%u', '%u', '%d', '%d', '%s', '%llu', '%u', '%d')", vinfo->tape_id, vinfo->group_id, vinfo->tl_id, vinfo->type, vinfo->label, (unsigned long long)vinfo->size, vinfo->vstatus, vinfo->worm);
 		pgsql_exec_query3(conn, sqlcmd, 0, &error, NULL, NULL);
 	}
 
@@ -630,7 +613,7 @@ sql_query_volumes(struct tl_blkdevinfo *binfo)
 	int i;
 	struct vcartridge *vinfo;
 
-	sprintf(sqlcmd, "SELECT TAPEID,TLID,VTYPE,LABEL,VSIZE,VSTATUS,WORM,EADDRESS FROM VCARTRIDGE WHERE GROUPID='%u' ORDER BY TAPEID", binfo->group->group_id);
+	snprintf(sqlcmd, sizeof(sqlcmd), "SELECT TAPEID,TLID,VTYPE,LABEL,VSIZE,VSTATUS,WORM,EADDRESS FROM VCARTRIDGE WHERE GROUPID='%u' ORDER BY TAPEID", binfo->group->group_id);
 
 	res = pgsql_exec_query(sqlcmd, &conn);
 	if (res == NULL)
@@ -676,14 +659,14 @@ err:
 int
 sql_query_groups(struct group_list *group_list)
 {
-	char sqlcmd[512];
+	char sqlcmd[128];
 	PGconn *conn;
 	PGresult *res;
 	int nrows;
 	int i, error = 0;
 	struct group_info *group_info;
 
-	sprintf(sqlcmd, "SELECT GROUPID,NAME,WORM FROM STORAGEGROUP ORDER BY GROUPID");
+	snprintf(sqlcmd, sizeof(sqlcmd), "SELECT GROUPID,NAME,WORM FROM STORAGEGROUP ORDER BY GROUPID");
 
 	res = pgsql_exec_query(sqlcmd, &conn);
 	if (res == NULL) {
@@ -716,14 +699,14 @@ sql_query_groups(struct group_list *group_list)
 int
 sql_query_blkdevs(struct blist *bdev_list)
 {
-	char sqlcmd[512];
+	char sqlcmd[128];
 	PGconn *conn;
 	PGresult *res;
 	int nrows;
 	int i;
 	struct tl_blkdevinfo *binfo;
 
-	sprintf(sqlcmd, "SELECT BID,VENDOR,PRODUCT,IDFLAGS,T10ID::bytea,NAAID::bytea,EUI64ID::bytea,UNKNOWNID::bytea,PID,ISRAID,RAIDDEV FROM PHYSSTOR");
+	snprintf(sqlcmd, sizeof(sqlcmd), "SELECT BID,VENDOR,PRODUCT,IDFLAGS,T10ID::bytea,NAAID::bytea,EUI64ID::bytea,UNKNOWNID::bytea,PID,ISRAID,RAIDDEV FROM PHYSSTOR");
 
 	res = pgsql_exec_query(sqlcmd, &conn);
 	if (res == NULL)
@@ -882,12 +865,12 @@ err:
 int
 sql_virtvol_label_unique(char *label)
 {
-	char sqlcmd[512];
+	char sqlcmd[128];
 	PGconn *conn;
 	PGresult *res;
 	int nrows;
 
-	sprintf(sqlcmd, "SELECT LABEL FROM VCARTRIDGE WHERE LOWER(LABEL) = LOWER('%s')", label);
+	snprintf(sqlcmd, sizeof(sqlcmd), "SELECT LABEL FROM VCARTRIDGE WHERE LOWER(LABEL) = LOWER('%s')", label);
 
 	res = pgsql_exec_query(sqlcmd, &conn);
 	if (res == NULL)
@@ -909,14 +892,14 @@ sql_virtvol_label_unique(char *label)
 int
 sql_query_fc_rules(struct fc_rule_list *fc_rule_list)
 {
-	char sqlcmd[512];
+	char sqlcmd[128];
 	PGconn *conn;
 	PGresult *res;
 	int nrows;
 	int i;
 	struct fc_rule *fc_rule;
 
-	sprintf(sqlcmd, "SELECT WWPN,WWPN1,TARGETID,RULE FROM FCCONFIG ORDER BY TARGETID");
+	snprintf(sqlcmd, sizeof(sqlcmd), "SELECT WWPN,WWPN1,TARGETID,RULE FROM FCCONFIG ORDER BY TARGETID");
 	res = pgsql_exec_query(sqlcmd, &conn);
 	if (res == NULL) {
 		DEBUG_ERR_SERVER("Error occurred in executing sqlcmd %s\n", sqlcmd); 
@@ -951,7 +934,7 @@ sql_add_fc_rule(struct fc_rule *fc_rule)
 	char sqlcmd[512];
 	int error = -1;
 
-	sprintf(sqlcmd, "INSERT INTO FCCONFIG (WWPN, WWPN1, TARGETID, RULE) VALUES ('%s', '%s', '%d', '%d')", fc_rule->wwpn, fc_rule->wwpn1, fc_rule->target_id, fc_rule->rule);
+	snprintf(sqlcmd, sizeof(sqlcmd), "INSERT INTO FCCONFIG (WWPN, WWPN1, TARGETID, RULE) VALUES ('%s', '%s', '%d', '%d')", fc_rule->wwpn, fc_rule->wwpn1, fc_rule->target_id, fc_rule->rule);
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
 	return error;
 }
@@ -962,7 +945,7 @@ sql_delete_fc_rule(struct fc_rule *fc_rule)
 	char sqlcmd[512];
 	int error = -1;
 
-	sprintf(sqlcmd, "DELETE FROM FCCONFIG WHERE WWPN='%s' AND WWPN1='%s' AND TARGETID='%d'", fc_rule->wwpn, fc_rule->wwpn1, fc_rule->target_id);
+	snprintf(sqlcmd, sizeof(sqlcmd), "DELETE FROM FCCONFIG WHERE WWPN='%s' AND WWPN1='%s' AND TARGETID='%d'", fc_rule->wwpn, fc_rule->wwpn1, fc_rule->target_id);
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
 	return error;
 }
@@ -970,10 +953,10 @@ sql_delete_fc_rule(struct fc_rule *fc_rule)
 int
 sql_delete_vtl_fc_rules(int tl_id)
 {
-	char sqlcmd[512];
+	char sqlcmd[128];
 	int error = -1;
 
-	sprintf(sqlcmd, "DELETE FROM FCCONFIG WHERE TARGETID='%d'", tl_id);
+	snprintf(sqlcmd, sizeof(sqlcmd), "DELETE FROM FCCONFIG WHERE TARGETID='%d'", tl_id);
 	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
 	return error;
 }
@@ -981,10 +964,10 @@ sql_delete_vtl_fc_rules(int tl_id)
 int
 sql_clear_slot_configuration(PGconn *conn, int tl_id)
 {
-	char sqlcmd[512];
+	char sqlcmd[128];
 	int error = 0;
 
-	sprintf(sqlcmd, "UPDATE VCARTRIDGE set EADDRESS='0' WHERE TLID='%d'", tl_id);
+	snprintf(sqlcmd, sizeof(sqlcmd), "UPDATE VCARTRIDGE set EADDRESS='0' WHERE TLID='%d'", tl_id);
 	pgsql_exec_query3(conn, sqlcmd, 0, &error, NULL, NULL);
 	return error;
 }
@@ -992,10 +975,10 @@ sql_clear_slot_configuration(PGconn *conn, int tl_id)
 int
 sql_update_element_address(PGconn *conn, int tl_id, int tid, int eaddress)
 {
-	char sqlcmd[512];
+	char sqlcmd[128];
 	int error = 0;
 
-	sprintf(sqlcmd, "UPDATE VCARTRIDGE set EADDRESS='%d' WHERE TLID='%d' AND TAPEID='%d'", eaddress, tl_id, tid);
+	snprintf(sqlcmd, sizeof(sqlcmd), "UPDATE VCARTRIDGE set EADDRESS='%d' WHERE TLID='%d' AND TAPEID='%d'", eaddress, tl_id, tid);
 	pgsql_exec_query3(conn, sqlcmd, 0, &error, NULL, NULL);
 	return error;
 }

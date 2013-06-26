@@ -307,7 +307,7 @@ build_zdev_list(void)
 		retval = sscanf(ptr, "%s", tmp);
 		if (retval != 1)
 			continue;
-		sprintf(devname, "/dev/%s", tmp);
+		snprintf(devname, sizeof(devname), "/dev/%s", tmp);
 		if (stat(devname, &stbuf) < 0)
 			continue;
 		ignore_dev_add(devname);
@@ -398,7 +398,7 @@ build_mddev(char *name)
 	if (tmp)
 		*tmp = 0;
 
-	sprintf(devname, "/dev/%s", name);
+	snprintf(devname, sizeof(devname), "/dev/%s", name);
 	ignore_dev_add(devname);
 	return 0;
 }
@@ -555,11 +555,11 @@ scan_partitions(char *start, char type, struct d_list *tmp_disk_list, char *vend
 	int partid;
 
 	if (frompart)
-		sprintf(cmd, "ls -1 %s* | grep \"%s[a-z]\"", start, start);
+		snprintf(cmd, sizeof(cmd), "ls -1 %s* | grep \"%s[a-z]\"", start, start);
 	else if (type)
-		sprintf(cmd, "ls -1 %s%c* | grep \"%s%c[0-9]\"", start, type, start, type);
+		snprintf(cmd, sizeof(cmd), "ls -1 %s%c* | grep \"%s%c[0-9]\"", start, type, start, type);
 	else
-		sprintf(cmd, "ls -1 %s* | grep \"%s[0-9]\"", start, start);
+		snprintf(cmd, sizeof(cmd), "ls -1 %s* | grep \"%s[0-9]\"", start, start);
 
 	DEBUG_INFO("scan_partitions: cmd %s start %s type %c\n", cmd, start, type);
 
@@ -652,29 +652,6 @@ add_disk(char *devname, char *vendor, char *product, char *serial, int serial_le
 	alloc_disk(devname, vendor, product, serial, serial_len, size, fake_ident, controller_disk, raid_disk, tmp_disk_list, 0, device);
 }
  
-void
-print_cmd_response(uint8_t *buffer, int buffer_len)
-{
-#ifdef ENABLE_DEBUG
-	char *str;
-	int i;
-
-	DEBUG_INFO("print_cmd_response: \n");
-	str = malloc((buffer_len * 3 + 1));
-	if (!str)
-	{
-		return;
-	}
-
-	for (i = 0; i < buffer_len; i++)
-	{
-		sprintf(str+(i * 3), "%02x ", buffer[i]);
-	}
-	DEBUG_INFO("%s\n", str);
-	free(str);
-#endif
-}
-
 
 void
 parse_sense_buffer(uint8_t *sense, struct sense_info *sense_info)
@@ -780,8 +757,6 @@ do_inquiry_page_code(struct physdevice *device, uint8_t page_code)
 		data_len -= resid;
 	}
 
-	DEBUG_INFO("do_inquiry_all_pages: print inquiry response: page_code %x datta_len %d\n", page_code, data_len);
-	print_cmd_response(buffer, data_len);
 	retval = 0;
 err:
 	if (buffer)
@@ -837,8 +812,6 @@ do_inquiry(struct physdevice *device)
 		data_len -= resid;
 	}
 
-	DEBUG_INFO("print inquiry response: datta_len %d\n", data_len);
-	print_cmd_response(buffer, data_len);
 	retval = 0;
 err:
 	if (buffer)
@@ -956,9 +929,6 @@ do_device_identification(char *devname, struct physdevice *device)
 		retval = -1;
 		goto err;
 	}
-
-	DEBUG_INFO("do_device_identification: print_cmd_response\n");
-	print_cmd_response(buffer, data_len);
 
 	page_length = buffer[3];
 	DEBUG_INFO("page info: pd type 0x%hhx\n", buffer[0]);
@@ -1183,7 +1153,7 @@ get_dev_numbers(struct physdevice *device, char *devnumber, int israid)
 
 	device_get_alias(device->devname, alias);
 
-	sprintf(cmd, "/bin/cat /sys/block/%s/dev", alias);
+	snprintf(cmd, sizeof(cmd), "/bin/cat /sys/block/%s/dev", alias);
 	fp = popen(cmd, "r");
 	if (!fp)
 	{
@@ -1213,7 +1183,7 @@ is_valid_mddev(char *mddev, char *raidtype)
 	int mdraid_disk = 0;
 	char *tmp;
 
-	sprintf(cmd, "%s --detail /dev/%s", MDADM_PROG, mddev);
+	snprintf(cmd, sizeof(cmd), "%s --detail /dev/%s", MDADM_PROG, mddev);
 	fp = popen(cmd, "r");
 	if (!fp)
 	{
@@ -1311,6 +1281,8 @@ tl_common_scan_zvol(struct d_list *tmp_disk_list)
 	char *tmp;
 
 	fp = popen("ls -1R /dev/zvol/", "r");
+	if (!fp)
+		return -1;
 
 	strcpy(dirname, "/dev/zvol");
 	while (fgets(buf, sizeof(buf), fp) != NULL) {
@@ -1334,7 +1306,7 @@ tl_common_scan_zvol(struct d_list *tmp_disk_list)
 		if (strcmp(dirname, "/dev/zvol") == 0)
 			continue;
 
-		sprintf(devname, "%s/%s", dirname, buf);
+		snprintf(devname, sizeof(devname), "%s/%s", dirname, buf);
 		add_disk(devname, "ZVOL", "ZVOL", NULL, 0, tmp_disk_list, 1, 1, 0, NULL, 0);
 	}
 	pclose(fp);
@@ -1350,8 +1322,8 @@ tl_common_scan_controller(char *start, char *vendor, char *product, struct d_lis
 	char buf[512];
 	char devname[256];
 
-//	sprintf(cmd, "ls -1 /dev/%s[0-9]{,[0-9]}", start);
-	sprintf(cmd, "ls -1 /dev/%s* 2> /dev/null | grep -v \"%s[0-9].*[a-z]\"", start, start);
+//	snprintf(cmd, sizeof(cmd), "ls -1 /dev/%s[0-9]{,[0-9]}", start);
+	snprintf(cmd, sizeof(cmd), "ls -1 /dev/%s* 2> /dev/null | grep -v \"%s[0-9].*[a-z]\"", start, start);
 
 	fp = popen(cmd, "r");
 
@@ -1397,7 +1369,7 @@ tl_common_scan_raiddisk(struct d_list *tmp_disk_list)
 		if (tmp)
 			*tmp = 0;
 
-		sprintf(devname, "/dev/gvinum/%s", buf);
+		snprintf(devname, sizeof(devname), "/dev/gvinum/%s", buf);
 
 		if (is_ignore_dev(devname))
 			continue;
@@ -1429,7 +1401,7 @@ tl_common_scan_lvs(struct d_list *tmp_disk_list)
 			continue;
 		if (strcmp(lv, "LV") == 0)
 			continue;
-		sprintf(devname, "/dev/mapper/%s-%s", vg, lv);
+		snprintf(devname, sizeof(devname), "/dev/mapper/%s-%s", vg, lv);
 		add_disk(devname, "LVM", "LV", NULL, 0, tmp_disk_list, 1, 1, 0, NULL, 0);
 	}
 	pclose(fp);
@@ -1444,7 +1416,7 @@ tl_common_scan_controller(char *start, char *vendor, char *product, char *grep, 
 	char buf[512];
 	char devname[256];
 
-	sprintf(cmd, "ls -1 %s/* 2> /dev/null | grep %s | grep -v p", start, grep);
+	snprintf(cmd, sizeof(cmd), "ls -1 %s/* 2> /dev/null | grep %s | grep -v p", start, grep);
 
 	fp = popen(cmd, "r");
 
@@ -1505,7 +1477,7 @@ tl_common_scan_raiddisk(struct d_list *tmp_disk_list)
 			continue;
 		}
 
-		sprintf(devname, "/dev/%s", dev);
+		snprintf(devname, sizeof(devname), "/dev/%s", dev);
 
 		if (is_ignore_dev(devname))
 			continue;
@@ -1578,14 +1550,14 @@ get_channel_param(struct d_list *tmp_disk_list, int fd, int channel)
 	}
 
 	if (*devices.name[0] && (strncmp(devices.name[0], "ad", 2) == 0)) {
-		sprintf(devname, "/dev/%s", devices.name[0]);
+		snprintf(devname, sizeof(devname), "/dev/%s", devices.name[0]);
 		retval = get_disk_param(tmp_disk_list, devname, &devices.params[0], channel, 0);
 		if (retval != 0)
 			return -1;
 	}
 
 	if (*devices.name[1] && (strncmp(devices.name[1], "ad", 2) == 0)) {
-		sprintf(devname, "/dev/%s", devices.name[1]);
+		snprintf(devname, sizeof(devname), "/dev/%s", devices.name[1]);
 		retval = get_disk_param(tmp_disk_list, devname, &devices.params[1], channel, 1);
 		if (retval != 0)
 			return -1;
@@ -1652,27 +1624,6 @@ tl_common_find_vmdisk(char *name)
 	return NULL;
 }
 
-#if 0
-int
-get_real_devname(char *devname)
-{
-	char cmd[512];
-	FILE *cmdfp;
-	int retval;
-
-	sprintf(cmd, "%s | grep %s", SG_MAP_PROG, devname);
-
-	cmdfp = popen(cmd, "r");
-	if (!cmdfp)
-		return -1;
-
-	retval = fscanf(cmdfp, "%*s %s\n", devname);
-	pclose(cmdfp);
-	if (retval != 1)
-		return -1;
-	return 0;
-}
-#endif
 int
 tl_common_scan_physdisk(void)
 {
