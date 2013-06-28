@@ -158,7 +158,10 @@ persistent_reservation_read_reservations(struct qsio_scsiio *ctio, uint16_t allo
 		{
 			pin_data = (struct pin_data *)(buffer+8);
 			bzero(pin_data, sizeof(struct pin_data));
-			pin_data->key = htobe64(reservation->persistent_key);
+			if (in_persistent_ar_type(reservation))
+				pin_data->key = htobe64(0);
+			else
+				pin_data->key = htobe64(reservation->persistent_key);
 			pin_data->type = reservation->persistent_type;
 		}
 		done += sizeof(struct pin_data);
@@ -605,14 +608,13 @@ persistent_reservation_handle_release(struct tdevice *tdevice, struct qsio_scsii
 		return 0;
 	}
 
-	if (!iid_equal(reservation->i_prt, reservation->t_prt, reservation->init_int, ctio->i_prt, ctio->t_prt, ctio->init_int)) {
-		ctio->scsi_status = SCSI_STATUS_RESERV_CONFLICT;
-		return 0;
-	}
-
-	if (reservation->persistent_key != key) {
-		ctio->scsi_status = SCSI_STATUS_RESERV_CONFLICT;
-		return 0;
+	if (!in_persistent_ar_type(reservation)) {
+		if (!iid_equal(reservation->i_prt, reservation->t_prt, reservation->init_int, ctio->i_prt, ctio->t_prt, ctio->init_int))
+			return 0;
+		if (reservation->persistent_key != key) {
+			ctio->scsi_status = SCSI_STATUS_RESERV_CONFLICT;
+			return 0;
+		}
 	}
 
 	if (scope || (reservation->persistent_type != type))
