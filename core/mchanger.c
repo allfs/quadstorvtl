@@ -347,6 +347,24 @@ get_free_ie_element(struct mchanger *mchanger)
 	return NULL;
 }
 
+static int
+storage_element_in_use(struct mchanger *mchanger, struct mchanger_element *storage_element)
+{
+	struct mchanger_element *element;
+	struct element_descriptor *edesc;
+	uint16_t source_address;
+
+	STAILQ_FOREACH(element, &mchanger->delem_list, me_list) {
+		if (!element_vcartridge(element))
+			continue;
+ 		edesc = &element->edesc;
+		source_address = be16toh(edesc->common.source_storage_element_address);
+		if (source_address == storage_element->address)
+			return 1;
+	}
+	return 0;
+}
+
 static struct mchanger_element *
 get_free_storage_element(struct mchanger *mchanger)
 {
@@ -354,8 +372,11 @@ get_free_storage_element(struct mchanger *mchanger)
 
 	STAILQ_FOREACH(element, &mchanger->selem_list, me_list) {
 		debug_check(element->type != STORAGE_ELEMENT);
-		if (!element->element_data)
-			return element;
+		if (element->element_data)
+			continue;
+		if (storage_element_in_use(mchanger, element))
+			continue;
+		return element;
 	}
 
 	return NULL;
