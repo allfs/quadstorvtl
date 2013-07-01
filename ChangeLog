@@ -1,3 +1,10 @@
+Release 2.2.7
+	* Increase virtual adapter sg_tablesize. This allows for variable size
+	  blocks upto the tape drive max block size of 4MB
+	* SCSI Persistent Reservation fixes for All Initators type reservation
+	* Fixes reported by scan related to array index overflow, memory leaks
+	  etc.
+
 Release 2.2.6
 	* Fix for invalid positioning during SPACE operation when count is
 	  greater than one
