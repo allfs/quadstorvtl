@@ -11,5 +11,5 @@ if [ ! -f /quadstor/etc/iet/ietd.conf ]; then
 	cp /quadstor/etc/iet/ietd.conf.sample /quadstor/etc/iet/ietd.conf
 fi
 
-echo "2.2.6 for FreeBSD 9.0" > /quadstor/etc/quadstor-vtl-itf-version
+echo "2.2.7 for FreeBSD 9.0" > /quadstor/etc/quadstor-vtl-itf-version
 exit 0

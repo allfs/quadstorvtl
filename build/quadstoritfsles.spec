@@ -2,7 +2,7 @@
 
 Summary: QuadStor Storage Virtualization 
 Name: quadstor-vtl-itf
-Version: 2.2.6
+Version: 2.2.7
 Release: sles11sp1
 Source0: %{name}-%{version}.tar.gz
 License: None 
@@ -80,7 +80,7 @@ install -m 755 /quadstor/quadstor/scripts/qlauninst $RPM_BUILD_ROOT/quadstor/bin
 	if [ ! -f /quadstor/etc/iet/ietd.conf ]; then
 		cp /quadstor/etc/iet/ietd.conf.sample /quadstor/etc/iet/ietd.conf
 	fi
-	echo "2.2.6 for SLES 11 SP1" > /quadstor/etc/quadstor-vtl-itf-version
+	echo "2.2.7 for SLES 11 SP1" > /quadstor/etc/quadstor-vtl-itf-version
 
 	echo "Building required kernel modules"
 	echo "Running /quadstor/bin/builditf"
