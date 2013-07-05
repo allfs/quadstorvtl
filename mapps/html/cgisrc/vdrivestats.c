@@ -112,7 +112,6 @@ int main()
 	cgi_print_column("value", databuf);
 	cgi_print_row_end();
 
-	DEBUG_INFO_NEW("write bytes processed %lu write ticks %lu\n", stats.write_bytes_processed, stats.write_ticks);
 	if (stats.write_ticks)
 		transfer_rate = ((stats.write_bytes_processed * 1000) / stats.write_ticks);
 	else
