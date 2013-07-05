@@ -4,9 +4,13 @@
 *.mod.c
 Module.symvers
 *.o.cmd
+*.cmd
+*.unsigned
 *.cgi
 *.so
 *.ko.cmd
+*.tmp_versions
+modules.order
 pgsql/bin/
 pgsql/include/
 pgsql/lib/
@@ -14,3 +18,11 @@ pgsql/share/
 mapps/html/cgisrc/yui/
 target-mode/fc/qla2xxx
 target-mode/fc/isp
+masterd/mdaemon
+scctl/dbrecover
+scctl/fcconfig
+scctl/scctl
+scctl/vctl
+target-mode/iscsi/usr/ietadm
+target-mode/iscsi/usr/ietd
+
