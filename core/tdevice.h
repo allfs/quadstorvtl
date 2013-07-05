@@ -87,6 +87,7 @@ int tdevice_check_cmd(struct tdevice *tdevice, uint8_t op);
 int vdevice_new(struct vdeviceinfo *deviceinfo);
 int vdevice_delete(struct vdeviceinfo *deviceinfo);
 int vdevice_modify(struct vdeviceinfo *deviceinfo);
+int vdevice_reset_stats(struct vdeviceinfo *deviceinfo);
 int vdevice_info(struct vdeviceinfo *deviceinfo);
 int vdevice_load(struct vdeviceinfo *deviceinfo);
 void tdevice_cbs_disable(struct tdevice *tdevice);

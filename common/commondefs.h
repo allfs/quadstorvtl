@@ -55,6 +55,25 @@ struct vcartridge {
 	TAILQ_ENTRY(vcartridge) q_entry;
 };
 
+struct tdrive_stats {
+	uint8_t  compression_enabled;
+	uint32_t read_errors_corrected;
+	uint32_t write_errors_corrected;
+	uint32_t read_errors;
+	uint32_t write_errors;
+	uint32_t read_errors_since;
+	uint32_t load_count;
+	uint64_t write_ticks;
+	uint64_t read_ticks;
+	uint32_t write_errors_since;
+	uint64_t write_bytes_processed;
+	uint64_t read_bytes_processed;
+	uint64_t bytes_read_from_tape;
+	uint64_t bytes_written_to_tape;
+	uint64_t compressed_bytes_read;
+	uint64_t compressed_bytes_written; 
+};
+
 struct vdeviceinfo {
 	int tl_id;
 	int iscsi_tid;
@@ -74,7 +93,8 @@ struct vdeviceinfo {
 	uint32_t tape_id;
 	uint32_t target_id;
 	char serialnumber[40];
-} __attribute__ ((__packed__));
+	struct tdrive_stats stats;
+};
 
 struct iscsiconf {
 	uint16_t tl_id;

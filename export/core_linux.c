@@ -1440,6 +1440,7 @@ static int coremod_ioctl(vnode_t *i, struct file *f, uint32_t cmd, unsigned long
 	case TLTARGIOCMODDEVICE:
 	case TLTARGIOCGETDEVICEINFO:
 	case TLTARGIOCLOADDRIVE:
+	case TLTARGIOCRESETSTATS:
 		deviceinfo = malloc(sizeof(*deviceinfo), M_QUADSTOR, M_WAITOK);
 		if (!deviceinfo) {
 			retval = -ENOMEM;
@@ -1461,6 +1462,8 @@ static int coremod_ioctl(vnode_t *i, struct file *f, uint32_t cmd, unsigned long
 			retval = (*kcbs.vdevice_info)(deviceinfo);
 		else if (cmd == TLTARGIOCLOADDRIVE)
 			retval = (*kcbs.vdevice_load)(deviceinfo);
+		else if (cmd == TLTARGIOCRESETSTATS)
+			retval = (*kcbs.vdevice_reset_stats)(deviceinfo);
 
 		if (retval == 0)
 			retval = copyout(deviceinfo, userp, sizeof(*deviceinfo));

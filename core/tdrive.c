@@ -497,6 +497,7 @@ __tdrive_load_tape(struct tdrive *tdrive, struct tape *tape)
 	}
 	atomic_set_bit(TDRIVE_FLAGS_TAPE_LOADED, &tdrive->flags);
 	tdrive_init_medium_partition_page(tdrive);
+	TDRIVE_STATS_ADD(tdrive, load_count, 1);
 	return 0;
 }
 
@@ -565,6 +566,13 @@ tdrive_find_tape(struct tdrive *tdrive, uint32_t tape_id)
 }
 
 int
+tdrive_reset_stats(struct tdrive *tdrive, struct vdeviceinfo *deviceinfo)
+{
+	bzero(&tdrive->stats, sizeof(tdrive->stats));
+	return 0;
+}
+
+int
 tdrive_vcartridge_info(struct tdrive *tdrive, struct vcartridge *vcartridge)
 {
 	struct tape *tape;
@@ -582,6 +590,10 @@ tdrive_get_info(struct tdrive *tdrive, struct vdeviceinfo *deviceinfo)
 	tdrive_lock(tdrive);
 	if (tdrive->tape)
 		strcpy(deviceinfo->tape_label, tdrive->tape->label);
+	memcpy(&deviceinfo->stats, &tdrive->stats, sizeof(tdrive->stats));
+	deviceinfo->stats.write_ticks = ticks_to_msecs(tdrive->stats.write_ticks);
+	deviceinfo->stats.read_ticks = ticks_to_msecs(tdrive->stats.read_ticks);
+	deviceinfo->stats.compression_enabled = tdrive_compression_enabled(tdrive);
 	tdrive_unlock(tdrive);
 	return 0;
 }
@@ -1588,6 +1600,7 @@ tdrive_cmd_write6(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	uint32_t done_blocks = 0;
 	uint32_t block_size;
 	uint32_t num_blocks;
+	uint32_t compressed_size;
 
 	fixed = READ_BIT(cdb[1], 0);
 	transfer_length = READ_24(cdb[2], cdb[3], cdb[4]);
@@ -1610,18 +1623,28 @@ tdrive_cmd_write6(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 		num_blocks = 1;
 	}
 
-	retval = tape_cmd_write(tdrive->tape, ctio, block_size, num_blocks, &done_blocks, tdrive_compression_enabled(tdrive));
+	compressed_size = 0;
+	retval = tape_cmd_write(tdrive->tape, ctio, block_size, num_blocks, &done_blocks, tdrive_compression_enabled(tdrive), &compressed_size);
 	if (ctio_buffered(ctio))
 		tdrive_decr_pending_writes(tdrive, block_size, num_blocks);
 
-	if (retval == 0)
+	if (retval == 0) {
+		TDRIVE_STATS_ADD(tdrive, write_bytes_processed, (block_size * num_blocks));
+		if (compressed_size) {
+			TDRIVE_STATS_ADD(tdrive, bytes_written_to_tape, compressed_size);
+			TDRIVE_STATS_ADD(tdrive, compressed_bytes_written, compressed_size);
+		}
+		else
+			TDRIVE_STATS_ADD(tdrive, bytes_written_to_tape, (block_size * num_blocks));
 		return 0;
+	}
 
 	switch (retval) {
 	case MEDIA_ERROR:
 		sense_key = SSD_KEY_MEDIUM_ERROR;
 		asc = WRITE_ERROR_ASC;
 		ascq = WRITE_ERROR_ASCQ;
+		TDRIVE_STATS_ADD(tdrive, write_errors, 1);
 		break;
 	case OVERWRITE_WORM_MEDIA:
 		sense_key = SSD_KEY_DATA_PROTECT;
@@ -1731,6 +1754,8 @@ tdrive_cmd_read6(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	uint32_t block_size;
 	uint32_t num_blocks;
 	uint32_t ili_block_size = 0;
+	uint32_t compressed_size = 0;
+	uint32_t start_ticks;
 
 	fixed = READ_BIT(cdb[1], 0);
 	sili = READ_BIT(cdb[1], 1);
@@ -1759,12 +1784,22 @@ tdrive_cmd_read6(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 		num_blocks = 1;
 	}
 
-	retval = tape_cmd_read(tdrive->tape, ctio, block_size, num_blocks, fixed, &done_blocks, &ili_block_size);
+	start_ticks = ticks;
+	retval = tape_cmd_read(tdrive->tape, ctio, block_size, num_blocks, fixed, &done_blocks, &ili_block_size, &compressed_size);
 	if (unlikely(retval < 0)) {
 		debug_warn("tape_partition_read failed\n");
 		ctio_free_data(ctio);
 		return 0;
 	}
+
+	TDRIVE_STATS_ADD(tdrive, read_bytes_processed, ctio->dxfer_len);
+	if (compressed_size) {
+		TDRIVE_STATS_ADD(tdrive, bytes_read_from_tape, compressed_size);
+		TDRIVE_STATS_ADD(tdrive, compressed_bytes_read, compressed_size);
+	}
+	else
+		TDRIVE_STATS_ADD(tdrive, bytes_read_from_tape, ctio->dxfer_len);
+	TDRIVE_STATS_ADD(tdrive, read_ticks, (ticks - start_ticks));
 
 	if (retval == 0)
 		return 0;
@@ -1798,6 +1833,7 @@ tdrive_cmd_read6(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 			sili, OVERLENGTH_COND_ENCOUNTERED, ili_block_size);
 		break;
 	case MEDIA_ERROR:
+		TDRIVE_STATS_ADD(tdrive, read_errors, 1);
 		ctio_construct_sense(ctio, SSD_CURRENT_ERROR,
 			SSD_KEY_HARDWARE_ERROR, 0,
 			INTERNAL_TARGET_FAILURE_ASC,
@@ -3800,6 +3836,7 @@ tdrive_proc_write_cmd(void *drive, void *iop)
 	struct tdrive *tdrive = drive;
 	struct qsio_scsiio *ctio = iop;
 	uint8_t *cdb = ctio->cdb;
+	uint64_t start_ticks = ticks;;
 
 	switch(cdb[0]) {
 	case WRITE_6:
@@ -3811,6 +3848,7 @@ tdrive_proc_write_cmd(void *drive, void *iop)
 	default:
 		debug_check(1);
 	}
+	TDRIVE_STATS_ADD(tdrive, write_ticks, (ticks - start_ticks));
 
 	if (ctio_buffered(ctio))
 		ctio_free(ctio);

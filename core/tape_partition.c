@@ -846,24 +846,24 @@ tape_partition_lookup_segments(struct tape_partition *partition)
 }
 
 int
-tape_partition_write(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, uint32_t *blocks_written, uint8_t compression_enabled)
+tape_partition_write(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, uint32_t *blocks_written, uint8_t compression_enabled, uint32_t *compressed_size)
 {
 	int retval;
 
 	tape_partition_pre_write(partition);
-	retval = blk_map_write(partition, ctio, block_size, num_blocks, blocks_written, compression_enabled);
+	retval = blk_map_write(partition, ctio, block_size, num_blocks, blocks_written, compression_enabled, compressed_size);
 	if (retval == 0)
 		tape_partition_post_write(partition);
 	return retval;
 }
 
 int
-tape_partition_read(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, uint8_t fixed, uint32_t *blocks_read, uint32_t *ili_block_size)
+tape_partition_read(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, uint8_t fixed, uint32_t *blocks_read, uint32_t *ili_block_size, uint32_t *compressed_size)
 {
 	int retval;
 
 	tape_partition_pre_read(partition);
-	retval = blk_map_read(partition, ctio, block_size, num_blocks, fixed, blocks_read, ili_block_size); 
+	retval = blk_map_read(partition, ctio, block_size, num_blocks, fixed, blocks_read, ili_block_size, compressed_size); 
 	if (retval == 0)
 		tape_partition_post_read(partition);
 	return retval;

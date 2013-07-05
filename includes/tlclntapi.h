@@ -57,5 +57,7 @@ int tl_client_reload_export(int tl_id, uint32_t tape_id);
 int tl_client_disk_check(void);
 int tl_client_modify_vtlconf(int tl_id, int op, int val);
 int tl_client_fc_rule_op(struct fc_rule_spec *fc_rule_spec, char *reply, int msg_id);
+int tl_client_get_vdrive_stats(int tl_id, int target_id, struct tdrive_stats *stats);
+int tl_client_reset_vdrive_stats(int tl_id, int target_id);
 
 #endif /* TLCLNTAPI_H_ */

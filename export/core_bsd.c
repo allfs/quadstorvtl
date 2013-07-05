@@ -80,6 +80,7 @@ coremod_ioctl(struct cdev *dev, unsigned long cmd, caddr_t arg, int fflag, struc
 	case TLTARGIOCMODDEVICE:
 	case TLTARGIOCGETDEVICEINFO:
 	case TLTARGIOCLOADDRIVE:
+	case TLTARGIOCRESETSTATS:
 		deviceinfo = malloc(sizeof(*deviceinfo), M_COREBSD, M_WAITOK);
 		if (!deviceinfo) {
 			retval = -ENOMEM;
@@ -97,6 +98,8 @@ coremod_ioctl(struct cdev *dev, unsigned long cmd, caddr_t arg, int fflag, struc
 			retval = (*kcbs.vdevice_info)(deviceinfo);
 		else if (cmd == TLTARGIOCLOADDRIVE)
 			retval = (*kcbs.vdevice_load)(deviceinfo);
+		else if (cmd == TLTARGIOCRESETSTATS)
+			retval = (*kcbs.vdevice_reset_stats)(deviceinfo);
 
 		memcpy(userp, deviceinfo, sizeof(*deviceinfo));
 		free(deviceinfo, M_COREBSD);

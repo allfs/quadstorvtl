@@ -190,6 +190,7 @@ struct qs_kern_cbs {
 	int (*vdevice_modify)(struct vdeviceinfo *);
 	int (*vdevice_info)(struct vdeviceinfo *);
 	int (*vdevice_load)(struct vdeviceinfo *);
+	int (*vdevice_reset_stats)(struct vdeviceinfo *);
 	int (*vcartridge_new)(struct vcartridge *);
 	int (*vcartridge_load)(struct vcartridge *);
 	int (*vcartridge_delete)(struct vcartridge *);

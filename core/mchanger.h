@@ -230,6 +230,7 @@ int mchanger_delete_vcartridge(struct mchanger *mchanger, struct vcartridge *vca
 int mchanger_vcartridge_info(struct mchanger *mchanger, struct vcartridge *vcartridge);
 int mchanger_reload_export_vcartridge(struct mchanger *mchanger, struct vcartridge *vcartridge);
 int mchanger_copy_vital_product_page_info(struct mchanger *mchanger, uint8_t *buffer, uint16_t allocation_length);
+int mchanger_reset_stats(struct mchanger *mchanger, struct vdeviceinfo *deviceinfo);
 int mchanger_get_info(struct mchanger *mchanger, struct vdeviceinfo *deviceinfo);
 
 /* Tape vcartridge opterations */

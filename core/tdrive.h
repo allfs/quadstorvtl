@@ -257,20 +257,10 @@ struct density_descriptor {
 	SLIST_ENTRY(density_descriptor) d_list;
 } __attribute__ ((__packed__));
 
-struct tdrive_stats {
-	uint32_t read_errors_corrected;
-	uint32_t write_errors_corrected;
-	uint32_t read_errors;
-	uint32_t write_errors;
-	uint32_t read_errors_since;
-	uint32_t write_errors_since;
-	uint64_t write_bytes_processed;
-	uint64_t read_bytes_processed;
-	uint64_t bytes_read_from_tape;
-	uint64_t bytes_written_to_tape;
-	uint64_t compressed_bytes_read;
-	uint64_t compressed_bytes_written; 
-};
+#define TDRIVE_STATS_ADD(tdrv,count,val)				\
+do {									\
+	atomic64_add(val, (atomic64_t *)&tdrv->stats.count);		\
+} while (0)
 
 struct tdrive {
 	struct tdevice tdevice;
@@ -409,6 +399,7 @@ int tdrive_compression_enabled(struct tdrive *tdrive);
 int tdrive_read_position(struct tdrive *tdrive, struct tl_entryinfo *entryinfo);
 int tdrive_delete_vcartridge(struct tdrive *tdrive, struct vcartridge *vcartridge);
 int tdrive_vcartridge_info(struct tdrive *tdrive, struct vcartridge *vcartridge);
+int tdrive_reset_stats(struct tdrive *tdrive, struct vdeviceinfo *deviceinfo);
 int tdrive_get_info(struct tdrive *tdrive, struct vdeviceinfo *deviceinfo);
 
 /* handler routines */

@@ -62,7 +62,7 @@ int main()
 	char tempfile[100];
 	int fd, i;
 	FILE *fp;
-	char *cols[] = {"Name", "{ key: 'DType', label: 'Drive Type'}", "Name", "{ key: 'Serial', label: 'Serial Number'}", "VCartridge", "{ key: 'iSCSI', label: 'iSCSI', allowHTML: true }", NULL};
+	char *cols[] = {"Name", "{ key: 'DType', label: 'Drive Type'}", "Name", "{ key: 'Serial', label: 'Serial Number'}", "VCartridge", "{ key: 'iSCSI', label: 'iSCSI', allowHTML: true }", "{ key: 'Statistics', label: 'Statistics', allowHTML: true }", NULL};
 	char *cols1[] = {"Pool", "Label", "{key: 'Element', sortable: true }", "Address", "{ key: 'VType', label: 'VCart Type', sortable: true }", "WORM", "Size", "Used", "Status", "{key: 'Reload', label: 'Reload', allowHTML: true}", "{ key: 'Delete', label: 'Delete', allowHTML: true }", NULL};
 
 	read_cgi_input(&entries);
@@ -208,7 +208,11 @@ int main()
 		cgi_print_comma();
 		cgi_print_column_format("VCartridge", "%s", dconf->tape_label);
 		cgi_print_comma();
+
 		cgi_print_column_format("iSCSI", "<a href=\"iscsiconf.cgi?tl_id=%d&target_id=%u&vtltype=%d\">View</a>", vdevice->tl_id, dconf->vdevice.target_id, T_CHANGER);
+		cgi_print_comma();
+		cgi_print_column_format("Statistics", "<a href=\"vdrivestats.cgi?tl_id=%d&target_id=%u\">View</a>", vdevice->tl_id, dconf->vdevice.target_id);
+
 		cgi_print_row_end();
 	}
 	cgi_print_table_end("vtl-drives-table");

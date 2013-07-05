@@ -615,6 +615,40 @@ tl_client_reload_export(int tl_id, uint32_t tape_id)
 	return tl_client_send_msg(&msg, NULL);
 }
 
+int
+tl_client_get_vdrive_stats(int tl_id, int target_id, struct tdrive_stats *stats)
+{
+	struct tl_msg msg;
+
+	msg.msg_id = MSG_ID_GET_VDRIVE_STATS;
+
+	msg.msg_data = malloc(64);
+	if (!msg.msg_data)
+		return -1;
+
+	sprintf(msg.msg_data, "tl_id: %d\ntarget_id: %u\n", tl_id, target_id);
+	msg.msg_len = strlen(msg.msg_data)+1;
+
+	return tl_client_get_target_data(&msg, stats, sizeof(*stats));
+}
+
+int
+tl_client_reset_vdrive_stats(int tl_id, int target_id)
+{
+	struct tl_msg msg;
+
+	msg.msg_id = MSG_ID_RESET_VDRIVE_STATS;
+
+	msg.msg_data = malloc(64);
+	if (!msg.msg_data)
+		return -1;
+
+	sprintf(msg.msg_data, "tl_id: %d\ntarget_id: %u\n", tl_id, target_id);
+	msg.msg_len = strlen(msg.msg_data)+1;
+
+	return tl_client_send_msg(&msg, NULL);
+}
+
 int tl_client_disk_check()
 {
 	struct tl_msg msg;

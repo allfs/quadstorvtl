@@ -1,6 +1,6 @@
 include ../../../build/rules.mk
 
-CGILIST = system.cgi listvtl.cgi addvtl.cgi addvtlpost.cgi adddisk.cgi adddiskcomp.cgi adddiskpost.cgi indvvtl.cgi liststoragepool.cgi modifystoragepool.cgi addstoragepool.cgi addstoragepoolpost.cgi deletestoragepool.cgi viewstoragepool.cgi iscsiconfpost.cgi iscsiconf.cgi addvcartridge.cgi addvcartridgepost.cgi deletevcartridge.cgi deletevtl.cgi rescandisk.cgi addlvdrive.cgi listvdrive.cgi addvdrive.cgi addvdrivepost.cgi indvvdrive.cgi loadvdrive.cgi addvtlseldrive.cgi reloadexp.cgi
+CGILIST = system.cgi listvtl.cgi addvtl.cgi addvtlpost.cgi adddisk.cgi adddiskcomp.cgi adddiskpost.cgi indvvtl.cgi liststoragepool.cgi modifystoragepool.cgi addstoragepool.cgi addstoragepoolpost.cgi deletestoragepool.cgi viewstoragepool.cgi iscsiconfpost.cgi iscsiconf.cgi addvcartridge.cgi addvcartridgepost.cgi deletevcartridge.cgi deletevtl.cgi rescandisk.cgi addlvdrive.cgi listvdrive.cgi addvdrive.cgi addvdrivepost.cgi indvvdrive.cgi loadvdrive.cgi addvtlseldrive.cgi reloadexp.cgi vdrivestats.cgi resetvdrivestats.cgi
 
 all: $(CGILIST) strip install
 
@@ -105,6 +105,12 @@ addvtlseldrive.cgi: addvtlseldrive.o cgimain.o
 
 reloadexp.cgi: reloadexp.o cgimain.o
 	$(CC) $(CFLAGS) -o reloadexp.cgi reloadexp.o cgimain.o $(CGIHTML) $(LDFLAGS)
+
+vdrivestats.cgi: vdrivestats.o cgimain.o
+	$(CC) $(CFLAGS) -o vdrivestats.cgi vdrivestats.o cgimain.o $(CGIHTML) $(LDFLAGS)
+
+resetvdrivestats.cgi: resetvdrivestats.o cgimain.o
+	$(CC) $(CFLAGS) -o resetvdrivestats.cgi resetvdrivestats.o cgimain.o $(CGIHTML) $(LDFLAGS)
 
 clean:
 	rm -f *.o *.cgi

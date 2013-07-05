@@ -569,9 +569,9 @@ tape_cmd_locate(struct tape *tape, uint64_t block_address, uint8_t cp, uint8_t p
 }
 
 int
-tape_cmd_read(struct tape *tape, struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, uint8_t fixed, uint32_t *blocks_read, uint32_t *ili_block_size)
+tape_cmd_read(struct tape *tape, struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, uint8_t fixed, uint32_t *blocks_read, uint32_t *ili_block_size, uint32_t *compressed_size)
 {
-	return tape_partition_read(tape->cur_partition, ctio, block_size, num_blocks, fixed, blocks_read, ili_block_size);
+	return tape_partition_read(tape->cur_partition, ctio, block_size, num_blocks, fixed, blocks_read, ili_block_size, compressed_size);
 }
 
 int
@@ -581,9 +581,9 @@ tape_cmd_write_filemarks(struct tape *tape, uint8_t wmsk, uint32_t transfer_leng
 }
 
 int
-tape_cmd_write(struct tape *tape, struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, uint32_t *blocks_written, uint8_t compression_enabled)
+tape_cmd_write(struct tape *tape, struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, uint32_t *blocks_written, uint8_t compression_enabled, uint32_t *compressed_size)
 {
-	return tape_partition_write(tape->cur_partition, ctio, block_size, num_blocks, blocks_written, compression_enabled);
+	return tape_partition_write(tape->cur_partition, ctio, block_size, num_blocks, blocks_written, compression_enabled, compressed_size);
 }
 
 int

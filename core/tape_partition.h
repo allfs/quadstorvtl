@@ -236,8 +236,8 @@ int tape_partition_position_bop(struct tape_partition *partition);
 void tape_partition_read_position(struct tape_partition *partition, struct qsio_scsiio *ctio, uint8_t service_action);
 int tape_partition_locate(struct tape_partition *partition, uint64_t block_address, uint8_t locate_type);
 int tape_partition_write_filemarks(struct tape_partition *partition, uint8_t wmsk, uint32_t transfer_length);
-int tape_partition_read(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, uint8_t fixed,  uint32_t *blocks_read, uint32_t *ili_block_size);
-int tape_partition_write(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, uint32_t *blocks_written, uint8_t compression_enabled);
+int tape_partition_read(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, uint8_t fixed,  uint32_t *blocks_read, uint32_t *ili_block_size, uint32_t *compressed_size);
+int tape_partition_write(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, uint32_t *blocks_written, uint8_t compression_enabled, uint32_t *compressed_size);
 int tape_partition_validate_write(struct tape_partition *partition, uint32_t block_size, uint32_t num_blocks);
 int tape_partition_at_bop(struct tape_partition *partition);
 

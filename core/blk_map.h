@@ -57,8 +57,8 @@ int blk_map_locate(struct blk_map *map, uint64_t block_address);
 int blk_map_locate_file(struct blk_map *map, uint64_t block_address);
 void blk_map_read_position(struct tape_partition *partition, struct tape_position_info *info);
 int blk_map_write_filemarks(struct tape_partition *partition, uint8_t wmsk);
-int blk_map_read(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, uint8_t fixed, uint32_t *bytes_read, uint32_t *ili_block_size);
-int blk_map_write(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, uint32_t *blocks_written, uint8_t compression_enabled);
+int blk_map_read(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, uint8_t fixed, uint32_t *bytes_read, uint32_t *ili_block_size, uint32_t *compressed_size);
+int blk_map_write(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, uint32_t *blocks_written, uint8_t compression_enabled, uint32_t *compressed_size);
 
 /* Spacing support functions */
 int blk_map_space_forward(struct blk_map *map, uint8_t code, int *count);

@@ -286,6 +286,27 @@ vdevice_load(struct vdeviceinfo *deviceinfo)
 }
 
 int
+vdevice_reset_stats(struct vdeviceinfo *deviceinfo)
+{
+	struct tdevice *tdevice;
+	uint32_t tl_id = deviceinfo->tl_id;
+
+	if (tl_id >= TL_MAX_DEVICES)
+		return -1;
+
+	tdevice = tdevices[tl_id];
+	if (!tdevice)
+		return -1;
+
+	if (tdevice->type == T_SEQUENTIAL)
+		tdrive_reset_stats((struct tdrive *)tdevice, deviceinfo);
+	else
+		mchanger_reset_stats((struct mchanger *)tdevice, deviceinfo);
+
+	return 0;
+}
+
+int
 vdevice_info(struct vdeviceinfo *deviceinfo)
 {
 	struct tdevice *tdevice;

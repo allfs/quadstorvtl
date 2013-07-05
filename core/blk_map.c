@@ -1058,7 +1058,7 @@ err:
 }
 
 int
-blk_map_read(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, uint8_t fixed, uint32_t *done_blocks, uint32_t *ili_block_size)
+blk_map_read(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, uint8_t fixed, uint32_t *done_blocks, uint32_t *ili_block_size, uint32_t *ret_compressed_size)
 {
 	int pglist_cnt = 0;
 	int retval;
@@ -1071,6 +1071,7 @@ blk_map_read(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_
 	int pg_idx, entry_idx;
 	struct blk_entry *read_entry;
 	struct blk_map *read_map;
+	uint32_t compressed_size = 0;
 
 	*done_blocks = 0;
 	orig_map = map = partition->cur_map;
@@ -1131,6 +1132,7 @@ blk_map_read(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_
 				debug_warn("Uncompress failed for lid_start %llu b_start %llu bid %u comp size %u\n", (unsigned long long)read_entry->lid_start, (unsigned long long)read_entry->b_start, read_entry->bint->bid, read_entry->comp_size); 
 				goto reset_and_return;
 			}
+			compressed_size += read_entry->comp_size;
 		}
 			
 		entry_idx = 0;
@@ -1155,6 +1157,7 @@ skip:
 	ctio->dxfer_len = read_size;
 	ctio->pglist_cnt = pglist_cnt;
 	*done_blocks = data_blocks;
+	*ret_compressed_size = compressed_size;
 	return error;
 
 reset_and_return:
@@ -1345,7 +1348,7 @@ err:
 }
 
 static int
-blk_entries_write_insert(struct tape_partition *partition, struct blk_map *start, struct blkentry_list *entry_list, int tmark, int new, uint64_t f_ids_start, uint64_t s_ids_start)
+blk_entries_write_insert(struct tape_partition *partition, struct blk_map *start, struct blkentry_list *entry_list, int tmark, int new, uint64_t f_ids_start, uint64_t s_ids_start, uint32_t *ret_compressed_size)
 {
 	struct blkmap_list map_list;
 	struct maplookup_list mlookup_list;
@@ -1354,6 +1357,7 @@ blk_entries_write_insert(struct tape_partition *partition, struct blk_map *start
 	struct tsegment saved_meta_segment;
 	struct tsegment saved_data_segment;
 	struct blk_entry *entry;
+	uint32_t compressed_size = 0;
 	int retval;
 	int entry_id;
 
@@ -1400,6 +1404,7 @@ blk_entries_write_insert(struct tape_partition *partition, struct blk_map *start
 			pglist_free(entry->pglist, entry->pglist_cnt);
 			entry->pglist = NULL;
 			entry->pglist_cnt = 0;
+			compressed_size += align_size(entry->comp_size, 512);
 		}
 		else if (entry->block_size) {
 			cache_data_incr(map, entry->block_size);
@@ -1436,6 +1441,8 @@ blk_entries_write_insert(struct tape_partition *partition, struct blk_map *start
 		TAILQ_INSERT_TAIL(&partition->mlookup_list, mlookup, l_list);
 	}
 
+	if (ret_compressed_size)
+		*ret_compressed_size = compressed_size;
 	return 0;
 reset:
 	memcpy(&partition->msegment, &saved_meta_segment, sizeof(saved_meta_segment));
@@ -1491,7 +1498,7 @@ blk_map_write_filemarks(struct tape_partition *partition, uint8_t wsmk)
 		f_ids_start = 0;
 		s_ids_start = 0;
 	}
-	retval = blk_entries_write_insert(partition, map, &entry_list, 1, new, f_ids_start, s_ids_start);
+	retval = blk_entries_write_insert(partition, map, &entry_list, 1, new, f_ids_start, s_ids_start, NULL);
 	if (unlikely(retval != 0))
 		goto err;
 
@@ -1789,7 +1796,7 @@ tape_partition_start_writes(struct tape_partition *partition, int wait)
 }
 
 int
-blk_map_write(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, uint32_t *blocks_written, uint8_t compression_enabled)
+blk_map_write(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, uint32_t *blocks_written, uint8_t compression_enabled, uint32_t *compressed_size)
 {
 	int retval;
 	struct blk_map *map;
@@ -1839,7 +1846,7 @@ blk_map_write(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32
 		s_ids_start = 0;
 	}
 
-	retval = blk_entries_write_insert(partition, map, &entry_list, 0, 0, f_ids_start, s_ids_start);
+	retval = blk_entries_write_insert(partition, map, &entry_list, 0, 0, f_ids_start, s_ids_start, compressed_size);
 	if (unlikely(retval != 0)) {
 		debug_warn("Insert entries failed\n");
 		goto err;

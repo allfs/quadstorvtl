@@ -131,6 +131,11 @@ int main()
 	printf("<td><a href=\"iscsiconf.cgi?tl_id=%d&target_id=0&vtltype=%d\">View</a></td>\n", tl_id, T_SEQUENTIAL);
 	printf("</tr>\n");
 
+	printf("<tr>\n");
+	printf("<td>Statistics</td>\n");
+	printf("<td><a href=\"vdrivestats.cgi?tl_id=%d&target_id=0\">View</a></td>\n", tl_id);
+	printf("</tr>\n");
+
 	printf("</table>\n");
 
 	printf("<form action=\"deletevtl.cgi\" method=\"post\" onSubmit=\"return confirm('Delete VDrive %s ?');\">\n", vdevice->name);

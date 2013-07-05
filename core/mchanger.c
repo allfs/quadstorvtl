@@ -2419,6 +2419,21 @@ mchanger_reload_export_vcartridge(struct mchanger *mchanger, struct vcartridge *
 }
 
 int
+mchanger_reset_stats(struct mchanger *mchanger, struct vdeviceinfo *deviceinfo)
+{
+	struct tdrive *tdrive;
+
+	if (!deviceinfo->target_id)
+		return 0;
+
+	tdrive = mchanger_locate_tdrive(mchanger, deviceinfo->target_id);
+	if (!tdrive)
+		return -1;
+
+	return tdrive_reset_stats(tdrive, deviceinfo);
+}
+
+int
 mchanger_get_info(struct mchanger *mchanger, struct vdeviceinfo *deviceinfo)
 {
 	struct tdrive *tdrive;

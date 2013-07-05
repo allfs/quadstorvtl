@@ -2811,6 +2811,87 @@ find_vdevice(uint32_t tl_id, uint32_t target_id)
 }
 
 static int
+tl_server_reset_vdrive_stats(struct tl_comm *comm, struct tl_msg *msg)
+{
+	struct vdevice *vdevice;
+	struct vdeviceinfo dinfo;
+	uint32_t target_id, tl_id;
+	int retval;
+
+	if (sscanf(msg->msg_data, "tl_id: %u\ntarget_id: %u\n", &tl_id, &target_id) != 2) {
+		DEBUG_WARN_SERVER("Invalid msg data");
+		tl_server_msg_failure(comm, msg);
+		return -1;
+	}
+
+	vdevice = find_vdevice(tl_id, target_id);
+	if (!vdevice) {
+		DEBUG_WARN_SERVER("Invalid tl_id %u target_id %u passed\n", tl_id, target_id);
+		tl_server_msg_failure(comm, msg);
+		return -1;
+	}
+
+	memset(&dinfo, 0, sizeof(struct vdeviceinfo));
+	dinfo.tl_id = tl_id;
+	dinfo.target_id = target_id;
+
+	retval = tl_ioctl(TLTARGIOCRESETSTATS, &dinfo);
+	if (retval != 0) {
+		tl_server_msg_failure(comm, msg);
+		return -1;
+	}
+
+	tl_server_msg_success(comm, msg);
+	return 0;
+}
+
+static int
+tl_server_get_vdrive_stats(struct tl_comm *comm, struct tl_msg *msg)
+{
+	struct vdevice *vdevice;
+	struct vdeviceinfo dinfo;
+	uint32_t target_id, tl_id;
+	int retval;
+
+	if (sscanf(msg->msg_data, "tl_id: %u\ntarget_id: %u\n", &tl_id, &target_id) != 2) {
+		DEBUG_WARN_SERVER("Invalid msg data");
+		tl_server_msg_failure(comm, msg);
+		return -1;
+	}
+
+	vdevice = find_vdevice(tl_id, target_id);
+	if (!vdevice) {
+		DEBUG_WARN_SERVER("Invalid tl_id %u target_id %u passed\n", tl_id, target_id);
+		tl_server_msg_failure(comm, msg);
+		return -1;
+	}
+
+	memset(&dinfo, 0, sizeof(struct vdeviceinfo));
+	dinfo.tl_id = tl_id;
+	dinfo.target_id = target_id;
+
+	retval = tl_ioctl(TLTARGIOCGETDEVICEINFO, &dinfo);
+	if (retval != 0) {
+		tl_server_msg_failure(comm, msg);
+		return -1;
+	}
+
+	free(msg->msg_data);
+	msg->msg_data = malloc(sizeof(dinfo.stats));
+	if (!msg->msg_data) {
+		tl_server_msg_failure(comm, msg);
+		return -1;
+	}
+	memcpy(msg->msg_data, &dinfo.stats, sizeof(dinfo.stats));
+	msg->msg_len = sizeof(dinfo.stats);
+	msg->msg_resp = MSG_RESP_OK;
+	tl_msg_send_message(comm, msg);
+	tl_msg_free_message(msg);
+	tl_msg_close_connection(comm);
+	return 0;
+}
+
+static int
 tl_server_get_iscsiconf(struct tl_comm *comm, struct tl_msg *msg)
 {
 	uint32_t target_id, tl_id;
@@ -3566,6 +3647,12 @@ tl_server_handle_msg(struct tl_comm *comm, struct tl_msg *msg)
 			break;
 		case MSG_ID_VTL_DRIVE_INFO:
 			tl_server_vtl_drive_info(comm, msg);
+			break;
+		case MSG_ID_GET_VDRIVE_STATS:
+			tl_server_get_vdrive_stats(comm, msg);
+			break;
+		case MSG_ID_RESET_VDRIVE_STATS:
+			tl_server_reset_vdrive_stats(comm, msg);
 			break;
 		case MSG_ID_VTL_VOL_INFO:
 			tl_server_vtl_vol_info(comm, msg);
