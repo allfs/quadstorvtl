@@ -130,6 +130,39 @@ tl_client_list_target_generic(uint32_t target_id, char *tempfile, int msg_id)
 }
 
 int
+tl_client_list_disks(struct d_list *dlist, int msg_id)
+{
+	char tempfile[100];
+	FILE *fp;
+	int fd;
+	int retval;
+
+	TAILQ_INIT(dlist);
+	strcpy(tempfile, "/tmp/.quadstoraddsk.XXXXXX");
+	fd = mkstemp(tempfile);
+	if (fd == -1)
+		return -1;
+	close(fd);
+
+	retval = tl_client_list_generic(tempfile, msg_id);
+	if (retval != 0) {
+		remove(tempfile);
+		return -1;
+	}
+
+	fp = fopen(tempfile, "r");
+	if (!fp) {
+		remove(tempfile);
+		return -1;
+	}
+
+	retval = tl_common_parse_physdisk(fp, dlist);
+	fclose(fp);
+	remove(tempfile);
+	return retval;
+}
+
+int
 tl_client_list_groups(struct group_list *group_list, int msg_id)
 {
 	char tempfile[100];
@@ -321,22 +354,6 @@ tl_client_get_configured_disks(char *tempfile)
 
 	msg.msg_id = MSG_ID_GET_CONFIGURED_DISKS;
 
-	msg.msg_data = malloc(512);
-	if (!msg.msg_data)
-		return -1;
-
-	sprintf(msg.msg_data, "tempfile: %s\n", tempfile);
-	msg.msg_len = strlen(msg.msg_data)+1;
-
-	return tl_client_send_msg(&msg, NULL);
-}
-
-int
-tl_client_list_disks(char *tempfile)
-{
-	struct tl_msg msg;
-
-	msg.msg_id = MSG_ID_LIST_DISKS;
 	msg.msg_data = malloc(512);
 	if (!msg.msg_data)
 		return -1;

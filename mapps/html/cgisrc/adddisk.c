@@ -20,10 +20,7 @@
 
 int main()
 {
-	char tempfile[40];
-	int fd;
 	int retval;
-	FILE *fp;
 	struct d_list dlist;
 	struct d_list configured_dlist;
 	struct physdisk *disk;
@@ -32,53 +29,15 @@ int main()
 	char *cols[] = {"ID", "Vendor", "Model", "{ key: 'Serial', label: 'Serial Number'}", "Name", "{key: 'Pool', label: 'Pool', sortable: true}", "Size", "Used", "{ key: 'Add', label: ' ', allowHTML: true }", NULL};
 
 
-	strcpy(tempfile, "/tmp/.quadstoraddsk.XXXXXX");
-	fd = mkstemp(tempfile);
-	if (fd == -1) {
-		cgi_print_header_error_page("Internal processing error\n");
-	}
-
-	retval = tl_client_list_generic(tempfile, MSG_ID_GET_CONFIGURED_DISKS);
-	if (retval != 0) {
-		remove(tempfile);
-		cgi_print_header_error_page("Getting configured storage list failed\n");
-	}
-
-	fp = fopen(tempfile, "r");
-	if (!fp) {
-		remove(tempfile);
-		cgi_print_header_error_page("Internal processing error\n");
-	}
-
 	TAILQ_INIT(&dlist);
 	TAILQ_INIT(&configured_dlist);
-	retval = tl_common_parse_physdisk(fp, &configured_dlist);
-	fclose(fp);
-	if (retval != 0) {
-		remove(tempfile);
+	retval = tl_client_list_disks(&configured_dlist, MSG_ID_GET_CONFIGURED_DISKS);
+	if (retval != 0)
 		cgi_print_header_error_page("Unable to get configured disk list\n");
-	}
 
-	retval = tl_client_list_generic(tempfile, MSG_ID_LIST_DISKS);
-	if (retval != 0) {
-		remove(tempfile);
+	retval = tl_client_list_disks(&dlist, MSG_ID_LIST_DISKS);
+	if (retval != 0)
 		cgi_print_header_error_page("Unable to get disk list\n");
-	}
-
-	fp = fopen(tempfile, "r");
-	if (!fp) {
-		remove(tempfile);
-		cgi_print_header_error_page("Internal processing error\n");
-	}
-
-	retval = tl_common_parse_physdisk(fp, &dlist);
-	fclose(fp);
-	close(fd);
-	remove(tempfile);
-
-	if (retval != 0) {
-		cgi_print_header_error_page("Unable to get disk list\n");
-	}
 
 	__cgi_print_header("Physical Storage", NULL, 1, NULL, 0, NULL);
 
