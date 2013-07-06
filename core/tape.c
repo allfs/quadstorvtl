@@ -129,6 +129,7 @@ tape_validate_metadata(struct tdevice *tdevice, struct tape *tape, struct vcartr
 	}
 
 	tape->set_size = raw_tape->set_size;
+	tape->flags = raw_tape->flags;
 	debug_info("size %llu set size %llu\n", (unsigned long long)tape->size, (unsigned long long)tape->set_size);
 	return 0;
 }
@@ -146,6 +147,7 @@ tape_init_metadata(struct tdevice *tdevice, struct tape *tape)
 	raw_tape->size = tape->size; 
 	raw_tape->set_size = tape->set_size; 
 	raw_tape->worm = tape->worm;
+	raw_tape->flags = tape->flags;
 
 	if (tdevice->type == T_SEQUENTIAL)
 		tdrive_init_tape_metadata(tdevice, tape);
@@ -260,6 +262,7 @@ tape_new(struct tdevice *tdevice, struct vcartridge *vinfo)
 	if (unlikely(!tape))
 		return NULL;
 
+	tape->flags = TAPE_FLAGS_V2;
 	tape_init_metadata(tdevice, tape);
 	partition = tape_partition_new(tape, tape->size, 0);
 	if (!partition) {
@@ -299,7 +302,12 @@ tape_load(struct tdevice *tdevice, struct vcartridge *vinfo)
 		return NULL;
 	}
 
-	tape_validate_metadata(tdevice, tape, vinfo);
+	retval = tape_validate_metadata(tdevice, tape, vinfo);
+	if (unlikely(retval != 0)) {
+		debug_warn("Validation of tape metadata failed\n");
+		tape_free(tape, 0);
+		return NULL;
+	}
 
 	for (i = 0; i < MAX_TAPE_PARTITIONS; i++) {
 		raw_partition = tape_get_raw_partition_info(tape, i);

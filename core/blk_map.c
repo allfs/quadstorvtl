@@ -88,7 +88,6 @@ blk_entry_free_data(struct blk_entry *entry)
 static void
 blk_entry_free(struct blk_entry *entry)
 {
-	debug_check(atomic_test_bit(BLK_ENTRY_NEW, &entry->flags));
 	blk_entry_free_data(entry);
 	uma_zfree(bentry_cache, entry);
 }

@@ -78,7 +78,7 @@ check_block(struct bdevint *bint, uint64_t block, uint32_t bid)
 }
 
 static int
-tmap_check_block(struct tsegment_map *tmap, struct bdevint *bint)
+tmap_check_block(struct tape_partition *partition, struct tsegment_map *tmap, struct bdevint *bint, int type)
 {
 	struct tsegment_entry *entry;
 	int i;
@@ -88,6 +88,8 @@ tmap_check_block(struct tsegment_map *tmap, struct bdevint *bint)
 		if (!entry->block)
 			return 1;
 
+		if (tmap_skip_segment(partition, tmap->tmap_id, i, type))
+			continue;
 		if (check_block(bint, BLOCK_BLOCKNR(entry->block), BLOCK_BID(entry->block)) != 0)
 			return -1;
 	}
@@ -106,7 +108,7 @@ tape_partition_check_tmap_blocks(struct tape_partition *partition, struct bdevin
 		if (unlikely(!tmap))
 			return -1;
 
-		retval = tmap_check_block(tmap, bint);
+		retval = tmap_check_block(partition, tmap, bint, type);
 		if (retval < 0)
 			return retval;
 		else if (retval > 0)

@@ -234,7 +234,7 @@ tmap_head(struct tape_partition *partition, int type)
 #define META_TSEGMENT_MAPS_OFFSET	PARTITION_HEADER_SIZE
 
 static uint64_t
-tmap_bstart(struct tape_partition *partition, int type, uint16_t tmap_id)
+__tmap_bstart(struct tape_partition *partition, int type, uint16_t tmap_id)
 {
 	uint32_t offset;
 	uint64_t b_start;
@@ -243,6 +243,43 @@ tmap_bstart(struct tape_partition *partition, int type, uint16_t tmap_id)
 	offset += (tmap_id * LBA_SIZE);
 
 	b_start = partition->tmaps_b_start + (offset >> partition->tmaps_bint->sector_shift);
+	return b_start;
+}
+
+#define MAX_TSEGMENT_MAPS_V2	1024
+#define DATA_TSEGMENT_MAPS_OFFSET_V2	(MAX_TSEGMENT_MAPS_V2 * LBA_SIZE)
+static uint64_t
+__tmap_bstart_v2(struct tape_partition *partition, int type, uint16_t tmap_id)
+{
+	uint32_t offset;
+	uint64_t b_start;
+
+	offset = (type == SEGMENT_TYPE_DATA) ? DATA_TSEGMENT_MAPS_OFFSET_V2 : META_TSEGMENT_MAPS_OFFSET;
+	offset += (tmap_id * LBA_SIZE);
+
+	b_start = partition->tmaps_b_start + (offset >> partition->tmaps_bint->sector_shift);
+	return b_start;
+}
+
+static uint64_t
+tmap_bstart(struct tape_partition *partition, int type, uint16_t tmap_id)
+{
+	if (is_v2_tape(partition->tape))
+		return __tmap_bstart_v2(partition, type, tmap_id);
+	else
+		return __tmap_bstart(partition, type, tmap_id);
+}
+
+static uint64_t
+first_meta_block(struct tape_partition *partition, struct bdevint **bint, uint64_t *b_end)
+{
+	uint32_t offset = ((DATA_TSEGMENT_MAPS_OFFSET_V2) * 2);
+	uint64_t b_start;
+
+	debug_check(!is_v2_tape(partition->tape));
+	b_start = partition->tmaps_b_start + (offset >> partition->tmaps_bint->sector_shift);
+	*bint = partition->tmaps_bint;
+	*b_end = partition->tmaps_b_start + (BINT_UNIT_SIZE >> partition->tmaps_bint->sector_shift);
 	return b_start;
 }
 
@@ -383,6 +420,7 @@ tape_partition_alloc_segment(struct tape_partition *partition, int type)
 	int tmap_id;
 	int tmap_entry_id;
 	int retval;
+	int skip_alloc = 0;
 
 	tsegment = (type == SEGMENT_TYPE_DATA) ? &partition->dsegment : &partition->msegment;
 
@@ -398,9 +436,16 @@ tape_partition_alloc_segment(struct tape_partition *partition, int type)
 		return -1;
 	}
 
+	if (tmap_skip_segment(partition, tmap_id, tmap_entry_id, type))
+		skip_alloc = 1;
+
 	entry = tmap_segment_entry(tmap, tmap_entry_id);
 	if (!entry->block) {
-		b_start = bdev_get_block(partition->tmaps_bint, &bint, &b_end);
+		if (!skip_alloc)
+			b_start = bdev_get_block(partition->tmaps_bint, &bint, &b_end);
+		else
+			b_start = first_meta_block(partition, &bint, &b_end);
+
 		if (unlikely(!b_start)) {
 			debug_warn("Getting new block segment failed, partition used %llu\n", (unsigned long long)partition->used);
 			return -1;
@@ -409,7 +454,8 @@ tape_partition_alloc_segment(struct tape_partition *partition, int type)
 		if (!tmap_id && !tmap_entry_id && type == SEGMENT_TYPE_META) {
 			retval = tcache_zero_range(bint, b_start, 4); /* first mlookup, first map */
 			if (unlikely(retval != 0)) {
-				bdev_release_block(bint, b_start);
+				if (!skip_alloc)
+					bdev_release_block(bint, b_start);
 				return -1;
 			}
 		}
@@ -418,7 +464,8 @@ tape_partition_alloc_segment(struct tape_partition *partition, int type)
 		retval = tmap_write(partition, tmap);
 		if (unlikely(retval != 0)) {
 			entry->block = 0;
-			bdev_release_block(bint, b_start);
+			if (!skip_alloc)
+				bdev_release_block(bint, b_start);
 			return -1;
 		}
 		partition->used += BINT_UNIT_SIZE;
@@ -431,7 +478,7 @@ tape_partition_alloc_segment(struct tape_partition *partition, int type)
 			debug_warn("Cannot locate bint at %u\n", BLOCK_BID(entry->block));
 			return -1;
 		}
-		b_end = BINT_UNIT_SIZE >> bint->sector_shift;
+		b_end = b_start + (BINT_UNIT_SIZE >> bint->sector_shift);
 		debug_info("Old segment type %d tmap id %u tmap entry id %u segment id %u b_start %llu\n", type, tmap_id, tmap_entry_id, tmap_get_segment_id(tmap_id, tmap_entry_id), (unsigned long long)b_start);
 	}
 
@@ -744,7 +791,10 @@ tape_partition_lookup_segment(struct tape_partition *partition, int type, uint32
 	tsegment->segment_id = segment_id;
 	tsegment->b_start = b_start;
 	tsegment->b_cur = b_start;
-	tsegment->b_end = b_start + (BINT_UNIT_SIZE >> bint->sector_shift);
+	if (tmap_skip_segment(partition, tmap_id, tmap_entry_id, type))
+		tsegment->b_end = partition->tmaps_b_start + (BINT_UNIT_SIZE >> partition->tmaps_bint->sector_shift);
+	else
+		tsegment->b_end = b_start + (BINT_UNIT_SIZE >> bint->sector_shift);
 	tsegment->bint = bint;
 
 	return 0;
@@ -1154,7 +1204,7 @@ tape_partition_get_max_tmaps(struct tape_partition *partition, int type)
 }
 
 static int
-tmap_eod_segments(struct tape_partition *partition, struct tsegment_map *tmap, int tmap_entry_id)
+tmap_eod_segments(struct tape_partition *partition, struct tsegment_map *tmap, int tmap_entry_id, int type)
 {
 	int i, done = 0, retval;
 	struct tsegment_entry *entry;
@@ -1171,6 +1221,8 @@ tmap_eod_segments(struct tape_partition *partition, struct tsegment_map *tmap, i
 		entry = __tmap_segment_entry(page, i);
 		if (!entry->block)
 			break;
+		if (tmap_skip_segment(partition, tmap->tmap_id, i, type))
+			continue;
 		debug_info("eod tmap id %u entry id %d block %llu\n", tmap->tmap_id, i, (unsigned long long)entry->block);
 		entry->block = 0;
 	}
@@ -1185,6 +1237,8 @@ tmap_eod_segments(struct tape_partition *partition, struct tsegment_map *tmap, i
 		entry = tmap_segment_entry(tmap, i);
 		if (!entry->block)
 			break;
+		if (tmap_skip_segment(partition, tmap->tmap_id, i, type))
+			continue;
 		done++;
 		bint = bdev_find(BLOCK_BID(entry->block));
 		if (unlikely(!bint)) {
@@ -1222,7 +1276,7 @@ eod_segments(struct tape_partition *partition, int type, int segment_id, int inc
 			debug_warn("Cannot locate tmap for type %d tmap_id %d\n", type, tmap_id);
 			return -1;
 		}
-		retval = tmap_eod_segments(partition, tmap, tmap_entry_id);
+		retval = tmap_eod_segments(partition, tmap, tmap_entry_id, type);
 		if (retval < 0) {
 			debug_warn("tmap eod segments failed for type %d tmap_id %d\n", type, tmap_id);
 			return -1;

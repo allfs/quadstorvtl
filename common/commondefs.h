@@ -473,10 +473,12 @@ struct raw_partition {
 
 #define MAX_TAPE_PARTITIONS	4
 
+#define TAPE_FLAGS_V2		0x1
+
 struct raw_tape {
 	uint16_t csum;
 	uint32_t  vstatus;
-	uint8_t  pad[2];
+	uint16_t  flags;
 	uint64_t size;
 	uint64_t set_size; /* SET CAPACITY */
 	char label[40];

@@ -44,12 +44,12 @@ struct tape {
 	uint32_t tape_id;
 	uint16_t locked; /* Locked for export */
 	uint16_t locked_op;
+	uint16_t flags;
 
 	int ddenabled;
 	int make; /* Make for this tape */
 	int worm; /* Worm enabled */
 	char label[40];
-	unsigned long flags;
 	struct tape_partition *cur_partition;
 	SLIST_HEAD(, tape_partition) partition_list;
 	pagestruct_t *metadata;
@@ -87,5 +87,11 @@ int tape_set_partition(struct tape *tape, uint8_t pnum);
 int tape_partition_set_size(struct tape_partition *partition, uint64_t set_size, int set_tape_size);
 int tape_validate_format(struct tape *tape);
 void tape_get_info(struct tape *tape, struct vcartridge *vcartridge);
+
+static inline int
+is_v2_tape(struct tape *tape)
+{
+	return (tape->flags & TAPE_FLAGS_V2);
+}
 
 #endif
