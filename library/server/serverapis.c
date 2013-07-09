@@ -30,7 +30,7 @@
 #include "ietadm.h"
 #include "md5.h"
 
-struct group_list group_list = TAILQ_HEAD_INITIALIZER(group_list);
+struct group_info *group_list[TL_MAX_POOLS];
 struct fc_rule_list fc_rule_list = TAILQ_HEAD_INITIALIZER(fc_rule_list);  
 pthread_mutex_t pmap_lock = PTHREAD_MUTEX_INITIALIZER;
 char default_group[TDISK_MAX_NAME_LEN];
@@ -107,8 +107,12 @@ static int
 group_name_exists(char *groupname)
 {
 	struct group_info *group_info;
+	int i;
 
-	TAILQ_FOREACH(group_info, &group_list, q_entry) {
+	for (i = 0; i < TL_MAX_POOLS; i++) {
+		group_info = group_list[i];
+		if (!group_info)
+			continue;
 		if (strcasecmp(group_info->name, groupname) == 0) 
 			return 1;
 	}
@@ -130,10 +134,13 @@ group_get_disk_count(struct group_info *group_info)
 struct group_info * 
 find_group(uint32_t group_id)
 {
-
 	struct group_info *group_info;
+	int i;
 
-	TAILQ_FOREACH(group_info, &group_list, q_entry) {
+	for (i = 0; i < TL_MAX_POOLS; i++) {
+		group_info = group_list[i];
+		if (!group_info)
+			continue;
 		if (group_info->group_id == group_id)
 			return group_info;
 	}
@@ -422,7 +429,21 @@ update_blkdev_info(struct tl_blkdevinfo *blkdev)
 }
 
 static int
-get_next_bid()
+get_next_group_id(void)
+{
+	int i;
+
+	for (i = 1; i < TL_MAX_POOLS; i++) {
+		if (group_list[i])
+			continue;
+		return i;
+	}
+	return 0;
+
+}
+
+static int
+get_next_bid(void)
 {
 	int i;
 
@@ -789,11 +810,9 @@ load_configured_groups(void)
 {
 	struct group_info *group_info, *group_none;
 	struct group_conf group_conf;
-	int error = 0, retval;
+	int error = 0, retval, i;
 
-	TAILQ_INIT(&group_list);
-
-	error = sql_query_groups(&group_list);
+	error = sql_query_groups(group_list);
 	if (error != 0) {
 		DEBUG_ERR_SERVER("sql_query_groups failed\n");
 		return -1;
@@ -816,7 +835,10 @@ load_configured_groups(void)
 	if (retval != 0)
 		error = -1;
 
-	TAILQ_FOREACH(group_info, &group_list, q_entry) {
+	for (i = 1; i < TL_MAX_POOLS; i++) {
+		group_info = group_list[i];
+		if (!group_info)
+			continue;
 		DEBUG_BUG_ON(!group_info->group_id);
 		strcpy(group_conf.name, group_info->name);
 		group_conf.group_id = group_info->group_id;
@@ -826,7 +848,8 @@ load_configured_groups(void)
 			error = -1;
 	}
 
-	TAILQ_INSERT_HEAD(&group_list, group_none, q_entry); 
+	DEBUG_BUG_ON(group_list[0]);
+	group_list[0] = group_none; 
 	return error;
 }
 
@@ -3348,6 +3371,12 @@ tl_server_add_group(struct tl_comm *comm, struct tl_msg *msg)
 		goto senderr;
 	}
 
+	group_info->group_id  = get_next_group_id();
+	if (!group_info->group_id) {
+		snprintf(errmsg, sizeof(errmsg), "Cannot get group id\n");
+		goto senderr;
+	}
+
 	conn = pgsql_begin();
 	if (!conn) {
 		snprintf(errmsg, sizeof(errmsg), "Unable to connect to db\n");
@@ -3379,7 +3408,7 @@ tl_server_add_group(struct tl_comm *comm, struct tl_msg *msg)
 		goto senderr;
 	}
 
-	TAILQ_INSERT_TAIL(&group_list, group_info, q_entry); 
+	group_list[group_info->group_id] = group_info;
 
 	tl_server_msg_success(comm, msg);
 	return 0;
@@ -3397,6 +3426,7 @@ __list_groups(char *filepath, int configured)
 {
 	struct group_info *group_info;
 	FILE *fp;
+	int i;
 
 	fp = fopen(filepath, "w");
 	if (!fp) {
@@ -3404,7 +3434,10 @@ __list_groups(char *filepath, int configured)
 		return -1;
 	}
 
-	TAILQ_FOREACH(group_info, &group_list, q_entry) {
+	for (i = 0; i < TL_MAX_POOLS; i++) {
+		group_info = group_list[i];
+		if (!group_info)
+			continue;
 		if (configured && TAILQ_EMPTY(&group_info->bdev_list))
 			continue;
 
@@ -3482,7 +3515,7 @@ tl_server_delete_group(struct tl_comm *comm, struct tl_msg *msg)
 		goto senderr;
 	}
 
-	TAILQ_REMOVE(&group_list, group_info, q_entry); 
+	group_list[group_info->group_id] = NULL;
 	free(group_info);
 	tl_server_msg_success(comm, msg);
 	return 0;

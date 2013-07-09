@@ -45,7 +45,7 @@ int sql_set_volume_exported(struct vcartridge *vinfo);
 uint32_t sql_get_libid(struct physdevice *device, int devtype, int *enabled);
 uint32_t sql_get_driveid(struct physdevice *device, uint32_t libid);
 int sql_query_iscsiconf(int tl_id, uint32_t target_id, struct iscsiconf *iscsiconf);
-int sql_query_groups(struct group_list *group_list);
+int sql_query_groups(struct group_info *group_list[]);
 int sql_add_group(PGconn *conn, struct group_info *group_info);
 int sql_delete_group(uint32_t group_id);
 int sql_query_fc_rules(struct fc_rule_list *fc_rule_list);

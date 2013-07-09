@@ -33,7 +33,7 @@ sql_add_group(PGconn *conn, struct group_info *group_info)
 		group_info->group_id = pgsql_exec_query3(conn, sqlcmd, 1, &error, "STORAGEGROUP", "GROUPID");
 	}
 	else {
-		snprintf(sqlcmd, sizeof(sqlcmd), "INSERT INTO STORAGEGROUP (GROUPID, NAME, WOMR) VALUES('%u', '%s', '%d')", group_info->group_id, group_info->name, group_info->worm);
+		snprintf(sqlcmd, sizeof(sqlcmd), "INSERT INTO STORAGEGROUP (GROUPID, NAME, WORM) VALUES('%u', '%s', '%d')", group_info->group_id, group_info->name, group_info->worm);
 		pgsql_exec_query3(conn, sqlcmd, 0, &error, NULL, NULL);
 	}
 
@@ -634,7 +634,7 @@ err:
 }
 
 int
-sql_query_groups(struct group_list *group_list)
+sql_query_groups(struct group_info *group_list[])
 {
 	char sqlcmd[128];
 	PGconn *conn;
@@ -665,7 +665,7 @@ sql_query_groups(struct group_list *group_list)
 		memcpy(group_info->name, PQgetvalue(res, i, 1), PQgetlength(res, i, 1));
 		group_info->worm = atoi(PQgetvalue(res, i, 2));
 		TAILQ_INIT(&group_info->bdev_list);
-		TAILQ_INSERT_TAIL(group_list, group_info, q_entry);
+		group_list[group_info->group_id] = group_info;
 	}
 
 	PQclear(res);

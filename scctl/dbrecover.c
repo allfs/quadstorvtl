@@ -36,7 +36,7 @@
 
 extern struct tl_blkdevinfo *bdev_list[];
 extern struct d_list disk_list;
-extern struct group_list group_list;
+extern struct group_info *group_list[];
 extern struct vdevice *device_list[];
 int testmode = 0;
 
@@ -269,7 +269,6 @@ scan_vcartridges()
 		if (!blkdev)
 			continue;
 		disk = &blkdev->disk;
-		printf("dename %s\n", disk->info.devname);
 		if (!atomic_test_bit(GROUP_FLAGS_MASTER, &disk->group_flags)) {
 			printf("not group master\n");
 			continue;
@@ -360,7 +359,7 @@ add_group(struct raw_bdevint *raw_bint, int testmode)
 
 	fprintf(stdout, "Adding pool %s pool id %u\n", group_info->name, group_info->group_id);
 	if (testmode) {
-		TAILQ_INSERT_TAIL(&group_list, group_info, q_entry); 
+		group_list[group_info->group_id] = group_info;
 		return group_info;
 	}
 
@@ -377,7 +376,7 @@ add_group(struct raw_bdevint *raw_bint, int testmode)
 		return NULL;
 	}
 
-	TAILQ_INSERT_TAIL(&group_list, group_info, q_entry); 
+	group_list[group_info->group_id] = group_info;
 	return group_info;
 }
 
@@ -546,9 +545,7 @@ main(int argc, char *argv[])
 	if (fd >= 0)
 		dup2(fd, 2);
 
-	TAILQ_INIT(&group_list);
-
-	retval = sql_query_groups(&group_list);
+	retval = sql_query_groups(group_list);
 	if (retval != 0) {
 		fprintf(stdout, "Error in getting configured pools\n");
 		exit(1);
@@ -563,7 +560,7 @@ main(int argc, char *argv[])
 	group_info->group_id = 0;
 	strcpy(group_info->name, DEFAULT_GROUP_NAME);
 	TAILQ_INIT(&group_info->bdev_list);
-	TAILQ_INSERT_HEAD(&group_list, group_info, q_entry); 
+	group_list[0] = group_info;
 
 	tl_common_scan_physdisk();
 	retval = sql_query_blkdevs(bdev_list);
