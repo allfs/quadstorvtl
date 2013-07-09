@@ -1,3 +1,8 @@
+Release 2.2.8
+	* Add support for VDrive statistics
+	* Reduce the amount of disk space used by metadata
+	* Fix for segmentation faults when running dbrecover
+
 Release 2.2.7
 	* Increase virtual adapter sg_tablesize. This allows for variable size
 	  blocks upto the tape drive max block size of 4MB
