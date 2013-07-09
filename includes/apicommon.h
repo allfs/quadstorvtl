@@ -160,7 +160,6 @@ struct tl_blkdevinfo {
 	char devname[256];
 	dev_t b_dev;
 	int offline;
-	TAILQ_ENTRY(tl_blkdevinfo) q_entry;
 	TAILQ_ENTRY(tl_blkdevinfo) g_entry;
 	struct group_info *group;
 	struct vlist vol_list;

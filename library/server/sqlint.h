@@ -21,7 +21,7 @@
 
 #include "pgsql.h"
 
-PGconn *sql_add_blkdev(struct physdisk *disk, uint32_t *ret_bid);
+PGconn *sql_add_blkdev(struct physdisk *disk, uint32_t bid);
 int sql_delete_blkdev(struct tl_blkdevinfo *binfo);
 int sql_add_vcartridge(PGconn *conn, struct vcartridge *vinfo);
 int sql_delete_vcartridge(PGconn *conn, int tl_id, uint32_t tape_id);
@@ -37,7 +37,7 @@ struct vdevice;
 int sql_query_vdevice(struct vdevice *device_list[]);
 int sql_query_volumes(struct tl_blkdevinfo *binfo);
 struct blist;
-int sql_query_blkdevs(struct blist *bdev_list);
+int sql_query_blkdevs(struct tl_blkdevinfo *bdev_list[]);
 int sql_virtvol_label_exists(char *label);
 int sql_get_last_range(char *prefix, char *suffix);
 int sql_virtvol_label_unique(char *label);

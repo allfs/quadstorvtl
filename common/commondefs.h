@@ -19,6 +19,8 @@
 #ifndef QS_COMMONDEFS_H_
 #define QS_COMMONDEFS_H_ 1
 
+#define TL_MAX_DISKS	512
+#define TL_MAX_POOLS	512	
 #define TL_DEV_NAME	"iodev"
 #define TL_DEV		"/dev/iodev"
 #define MIN_PHYSDISK_SIZE	(1ULL << 32)

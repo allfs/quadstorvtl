@@ -34,7 +34,7 @@
 #include <rawdefs.h>
 #include <ietadm.h>
 
-extern struct blist bdev_list;
+extern struct tl_blkdevinfo *bdev_list[];
 extern struct d_list disk_list;
 extern struct group_list group_list;
 extern struct vdevice *device_list[];
@@ -253,7 +253,7 @@ check_vtl_info(struct raw_tape *raw_tape, int testmode)
 void
 scan_vcartridges()
 {
-	int i;
+	int i, j;
 	int retval, offset;
 	char buf[4096];
 	struct raw_tape *raw_tape;
@@ -264,7 +264,10 @@ scan_vcartridges()
 	struct vdevice *vdevice;
 	struct vcartridge *vcartridge, vinfo;
 
-	TAILQ_FOREACH(blkdev, &bdev_list, g_entry) {
+	for (j = 1; j < TL_MAX_DISKS; j++) {
+		blkdev = bdev_list[j];
+		if (!blkdev)
+			continue;
 		disk = &blkdev->disk;
 		printf("dename %s\n", disk->info.devname);
 		if (!atomic_test_bit(GROUP_FLAGS_MASTER, &disk->group_flags)) {
@@ -351,6 +354,7 @@ add_group(struct raw_bdevint *raw_bint, int testmode)
 	}
 	strcpy(group_info->name, raw_bint->group_name);
 	group_info->group_id = raw_bint->group_id;
+	TAILQ_INIT(&group_info->bdev_list);
 	if (atomic_test_bit(GROUP_FLAGS_WORM, &raw_bint->flags))
 		group_info->worm = 1;
 
@@ -382,8 +386,12 @@ __srv_disk_configured(struct physdisk *disk, struct group_info *group_info)
 {
 	struct physdisk *cur_disk;
 	struct tl_blkdevinfo *blkdev;
+	int j;
 
-	TAILQ_FOREACH(blkdev, &bdev_list, q_entry) { 
+	for (j = 1; j < TL_MAX_DISKS; j++) {
+		blkdev = bdev_list[j];
+		if (!blkdev)
+			continue;
 		cur_disk = &blkdev->disk;
 
 		if (device_equal(&cur_disk->info, &disk->info) == 0) {
@@ -490,13 +498,13 @@ check_disk(struct physdisk *disk, int formaster)
 	blkdev->bid = raw_bint.bid;
 	blkdev->group = group_info;
 	blkdev->group_id = group_info->group_id;
-	TAILQ_INSERT_TAIL(&bdev_list, blkdev, q_entry);
+	bdev_list[blkdev->bid] = blkdev;
 	TAILQ_INSERT_TAIL(&group_info->bdev_list, blkdev, g_entry);
 	if (testmode) {
 		return 0;
 	}
 
-	conn = sql_add_blkdev(disk, &raw_bint.bid);
+	conn = sql_add_blkdev(disk, raw_bint.bid);
 	if (!conn) {
 		fprintf(stdout, "Failed to update disk information for %s", disk->info.devname);
 		exit(1);
@@ -538,13 +546,13 @@ main(int argc, char *argv[])
 	if (fd >= 0)
 		dup2(fd, 2);
 
+	TAILQ_INIT(&group_list);
+
 	retval = sql_query_groups(&group_list);
 	if (retval != 0) {
 		fprintf(stdout, "Error in getting configured pools\n");
 		exit(1);
 	}
-
-	TAILQ_INIT(&group_list);
 
 	group_info = alloc_buffer(sizeof(*group_info));
 	if (!group_info) {
@@ -558,8 +566,7 @@ main(int argc, char *argv[])
 	TAILQ_INSERT_HEAD(&group_list, group_info, q_entry); 
 
 	tl_common_scan_physdisk();
-	TAILQ_INIT(&bdev_list);
-	retval = sql_query_blkdevs(&bdev_list);
+	retval = sql_query_blkdevs(bdev_list);
 	if (retval != 0) {
 		fprintf(stdout, "Error in getting configured disks\n");
 		exit(1);

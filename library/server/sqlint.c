@@ -93,12 +93,11 @@ int sql_delete_all_tl_drives(int tl_id)
 }
 
 PGconn *
-sql_add_blkdev(struct physdisk *disk, uint32_t *ret_bid)
+sql_add_blkdev(struct physdisk *disk, uint32_t bid)
 {
 	char *sqlcmd = NULL;
 	int cmdlen;
 	struct physdevice *device = (struct physdevice *)disk;
-	int retval;
 	int error;
 	PGconn *conn;
 	unsigned char *t10id = NULL;
@@ -110,7 +109,6 @@ sql_add_blkdev(struct physdisk *disk, uint32_t *ret_bid)
 	unsigned char *naaesc = (unsigned char *)"NULL";
 	unsigned char *euiesc = (unsigned char *)"NULL";
 	unsigned char *unesc = (unsigned char *)"NULL";
-	uint32_t bid = *ret_bid;
 
 	conn = pgsql_begin();
 	if (!conn)
@@ -118,7 +116,6 @@ sql_add_blkdev(struct physdisk *disk, uint32_t *ret_bid)
 		return NULL;
 	}
 
-	retval = -1;
 	cmdlen = 512;
 	if (device->idflags & ID_FLAGS_T10)
 	{
@@ -186,43 +183,23 @@ sql_add_blkdev(struct physdisk *disk, uint32_t *ret_bid)
 
 	free(sqlcmd);
 
-	if (error != 0 || !bid)
-	{
+	if (error != 0)
 		DEBUG_ERR_SERVER("sqlcmd execution failed with error %d bid %u\n", error, bid);
-		goto err;
-	}
-	else
-	{
-		retval = 0;
-		*ret_bid = bid;
-	}
-
 err:
 	if (t10id)
-	{
 		PQfreemem(t10id);
-	}
 	if (naaid)
-	{
 		PQfreemem(naaid);
-	}
 	if (euiid)
-	{
 		PQfreemem(euiid);
-	}
 	if (unknownid)
-	{
 		PQfreemem(unknownid);
-	}
-	if (retval != 0)
-	{
+
+	if (error != 0) {
 		pgsql_rollback(conn);
 		return NULL;
-	}
-	else
-	{
+	} else
 		return conn;
-	}
 }
 
 int
@@ -697,7 +674,7 @@ sql_query_groups(struct group_list *group_list)
 }
 
 int
-sql_query_blkdevs(struct blist *bdev_list)
+sql_query_blkdevs(struct tl_blkdevinfo *bdev_list[])
 {
 	char sqlcmd[128];
 	PGconn *conn;
@@ -844,7 +821,8 @@ sql_query_blkdevs(struct blist *bdev_list)
 
 		TAILQ_INIT(&binfo->vol_list);
 
-		TAILQ_INSERT_TAIL(bdev_list, binfo, q_entry); 
+		DEBUG_BUG_ON(bdev_list[binfo->bid]);
+		bdev_list[binfo->bid] = binfo;
 	}
 
 	PQclear(res);
