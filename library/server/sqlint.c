@@ -98,7 +98,7 @@ sql_add_blkdev(struct physdisk *disk, uint32_t bid)
 	char *sqlcmd = NULL;
 	int cmdlen;
 	struct physdevice *device = (struct physdevice *)disk;
-	int error;
+	int error = -1;
 	PGconn *conn;
 	unsigned char *t10id = NULL;
 	unsigned char *naaid = NULL;

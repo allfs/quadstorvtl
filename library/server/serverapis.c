@@ -2552,7 +2552,7 @@ static int
 tl_server_delete_disk(struct tl_comm *comm, struct tl_msg *msg)
 {
 	uint64_t usize;
-	struct tl_blkdevinfo *blkdev;
+	struct tl_blkdevinfo *blkdev = NULL, *tmp;
 	struct bdev_info binfo;
 	int retval, i;
 	char errmsg[256];
@@ -2566,11 +2566,12 @@ tl_server_delete_disk(struct tl_comm *comm, struct tl_msg *msg)
 
 	pthread_mutex_lock(&bdev_lock);
 	for (i = 1; i < TL_MAX_DISKS; i++) {
-		blkdev = bdev_list[i];
-		if (!blkdev)
+		tmp = bdev_list[i];
+		if (!tmp)
 			continue;
-		if (strcmp(blkdev->disk.info.devname, dev))
+		if (strcmp(tmp->disk.info.devname, dev))
 			continue;
+		blkdev = tmp;
 		break;
 	}
 	pthread_mutex_unlock(&bdev_lock);
