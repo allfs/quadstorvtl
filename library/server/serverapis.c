@@ -442,15 +442,23 @@ get_next_group_id(void)
 
 }
 
+uint32_t next_bid = 1;
+
 static int
 get_next_bid(void)
 {
 	int i;
 
-	for (i = 1; i < TL_MAX_DISKS; i++) {
+again:
+	for (i = next_bid; i < TL_MAX_DISKS; i++) {
 		if (bdev_list[i])
 			continue;
+		next_bid = i+1;
 		return i;
+	}
+	if (next_bid != 1) {
+		next_bid = 1;
+		goto again;
 	}
 	return 0;
 }
