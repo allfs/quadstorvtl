@@ -44,6 +44,8 @@ case $1 in
 #	echo 'postgresql server started'
 	rm -f /quadstorvtl/pgsql/data/postmaster.pid
 	rm -f /quadstorvtl/pgsql/pg.log
+	touch /quadstorvtl/pgsql/pg.log
+	chown scdbuser:scdbuser /quadstorvtl/pgsql/pg.log
 	su -l $PGUSER -c "$PGCTL start -w -D '$PGDATA' -l /quadstorvtl/pgsql/pg.log > /dev/null 2>&1"
 	;;
     stop)

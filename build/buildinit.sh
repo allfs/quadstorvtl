@@ -1,10 +1,10 @@
 #!/bin/bash
 set -x
 
-tarfile="pgsql$1.tgz"
-if [ "$1" = "sles11sp2" ]; then
-	tarfile="pgsqlsles11.tgz"
-fi
+tarfile="vtpgsql$1.tgz"
+#if [ "$1" = "sles11sp2" ]; then
+#	tarfile="pgsqlsles11.tgz"
+#fi
 
 oldpwd=`pwd`
 cd /tmp
@@ -13,22 +13,23 @@ if [ "$?" != "0" ]; then
    echo "ERROR: unable to remove /tmp/pqsql. Check directory permissions"
    exit 1
 fi
-tar xvzf /quadstorvtl/quadstorvtl/pgsql/tars/$tarfile
-rm -rf /quadstorvtl/quadstorvtl/pgsql/bin
-rm -rf /quadstorvtl/quadstorvtl/pgsql/lib
-rm -rf /quadstorvtl/quadstorvtl/pgsql/share
-rm -rf /quadstorvtl/quadstorvtl/pgsql/include
-mv /tmp/pgsql/bin /quadstorvtl/quadstorvtl/pgsql/
-mv /tmp/pgsql/share /quadstorvtl/quadstorvtl/pgsql/
-mv /tmp/pgsql/include /quadstorvtl/quadstorvtl/pgsql/
-mv /tmp/pgsql/lib /quadstorvtl/quadstorvtl/pgsql/
+tar xvzf /quadstorvtl/quadstor/pgsql/tars/$tarfile
+rm -rf /quadstorvtl/quadstor/pgsql/bin
+rm -rf /quadstorvtl/quadstor/pgsql/lib
+rm -rf /quadstorvtl/quadstor/pgsql/share
+rm -rf /quadstorvtl/quadstor/pgsql/include
+mv /tmp/pgsql/bin /quadstorvtl/quadstor/pgsql/
+mv /tmp/pgsql/share /quadstorvtl/quadstor/pgsql/
+mv /tmp/pgsql/include /quadstorvtl/quadstor/pgsql/
+mv /tmp/pgsql/lib /quadstorvtl/quadstor/pgsql/
 rm -rf /tmp/pgsql/
-sed -i -e "s/#unix_socket_permissions = 0777/unix_socket_permissions = 0700/" /quadstorvtl/quadstorvtl/pgsql/share/postgresql.conf.sample
-sed -i -e "s/^host/#host/g" /quadstorvtl/quadstorvtl/pgsql/share/pg_hba.conf.sample
-rm -f /quadstorvtl/quadstorvtl/pgsql/share/postgresql.conf.sample-e
-rm -f /quadstorvtl/quadstorvtl/pgsql/share/pg_hba.conf.sample-e
+sed -i -e "s/#port =.*/port = 9989/" /quadstorvtl/quadstor/pgsql/share/postgresql.conf.sample
+sed -i -e "s/#unix_socket_permissions = 0777/unix_socket_permissions = 0700/" /quadstorvtl/quadstor/pgsql/share/postgresql.conf.sample
+sed -i -e "s/^host/#host/g" /quadstorvtl/quadstor/pgsql/share/pg_hba.conf.sample
+rm -f /quadstorvtl/quadstor/pgsql/share/postgresql.conf.sample-e
+rm -f /quadstorvtl/quadstor/pgsql/share/pg_hba.conf.sample-e
 
-cd /quadstorvtl/quadstorvtl/pgsql && gmake install
+cd /quadstorvtl/quadstor/pgsql && gmake install
 
 mkdir -p /quadstorvtl/sbin
 mkdir -p /quadstorvtl/bin

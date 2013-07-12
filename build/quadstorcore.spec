@@ -33,13 +33,13 @@ mkdir -p $RPM_BUILD_ROOT/var/www/html
 mkdir -p $RPM_BUILD_ROOT/var/www/html/quadstorvtl
 mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
 
-cd /quadstorvtl/quadstorvtl/pgsql
+cd /quadstorvtl/quadstor/pgsql
 make install DESTDIR=$RPM_BUILD_ROOT
 
 install -m 755 /quadstorvtl/quadstor/masterd/mdaemon $RPM_BUILD_ROOT/quadstorvtl/sbin/mdaemon
-install -m 755  /quadstorvtl/quadstorvtl/library/client/libtlclnt.so $RPM_BUILD_ROOT/quadstorvtl/lib/libtlclnt.so.%{libvers}
-install -m 755 /quadstorvtl/quadstorvtl/library/server/libtlsrv.so $RPM_BUILD_ROOT/quadstorvtl/lib/libtlsrv.so.%{libvers}
-install -m 755 /quadstorvtl/quadstorvtl/library/common/libtlmsg.so $RPM_BUILD_ROOT/quadstorvtl/lib/libtlmsg.so.%{libvers}
+install -m 755  /quadstorvtl/quadstor/library/client/libtlclnt.so $RPM_BUILD_ROOT/quadstorvtl/lib/libtlclnt.so.%{libvers}
+install -m 755 /quadstorvtl/quadstor/library/server/libtlsrv.so $RPM_BUILD_ROOT/quadstorvtl/lib/libtlsrv.so.%{libvers}
+install -m 755 /quadstorvtl/quadstor/library/common/libtlmsg.so $RPM_BUILD_ROOT/quadstorvtl/lib/libtlmsg.so.%{libvers}
 install -m 644 /quadstorvtl/lib/modules/corelib.o $RPM_BUILD_ROOT/quadstorvtl/lib/modules/
 install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/*.cgi $RPM_BUILD_ROOT/var/www/cgi-bin/
 install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/*.css $RPM_BUILD_ROOT/var/www/html/quadstorvtl/
@@ -50,13 +50,13 @@ install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/index.html $RPM_BUILD_ROO
 install -m 755 /quadstorvtl/quadstor/scctl/scctl $RPM_BUILD_ROOT/quadstorvtl/bin/scctl
 install -m 755 /quadstorvtl/quadstor/scctl/fcconfig $RPM_BUILD_ROOT/quadstorvtl/bin/fcconfig
 install -m 755 /quadstorvtl/quadstor/scctl/dbrecover $RPM_BUILD_ROOT/quadstorvtl/bin/dbrecover
-install -m 744 /quadstorvtl/quadstorvtl/etc/quadstor.linux $RPM_BUILD_ROOT/etc/rc.d/init.d/quadstor
+install -m 744 /quadstorvtl/quadstor/etc/quadstor.linux $RPM_BUILD_ROOT/etc/rc.d/init.d/quadstor
 install -m 444 /quadstorvtl/quadstor/build/LICENSE $RPM_BUILD_ROOT/quadstorvtl/
 install -m 444 /quadstorvtl/quadstor/build/GPLv2 $RPM_BUILD_ROOT/quadstorvtl/
 
 #Install src
 mkdir -p $RPM_BUILD_ROOT/quadstorvtl/src/others
-cp /quadstorvtl/quadstorvtl/library/server/md5*.[ch] $RPM_BUILD_ROOT/quadstorvtl/src/others/
+cp /quadstorvtl/quadstor/library/server/md5*.[ch] $RPM_BUILD_ROOT/quadstorvtl/src/others/
 cp /quadstorvtl/quadstor/core/lz4*.[ch] $RPM_BUILD_ROOT/quadstorvtl/src/others/
 cp /quadstorvtl/quadstor/core/lzf*.[ch] $RPM_BUILD_ROOT/quadstorvtl/src/others/
 cp /quadstorvtl/quadstor/core/sysdefs/*.h $RPM_BUILD_ROOT/quadstorvtl/src/others/
@@ -77,6 +77,15 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 %post
 	echo "Performing post install. Please wait..."
 	sleep 2
+
+	if [ -d /quadstor/pgsql/data ]; then
+		vtl=`grep -r vtl /quadstor/pgsql/data/base/*`
+		if [ "$vtl" != "" ]; then
+			echo "WARNING: Moving /quadstor/pgsql/data to new /quadstorvtl/pgsql/ path"
+			mv -f /quadstor/pgsql/data /quadstorvtl/pgsql/data
+		fi
+	fi
+
 	if [ ! -d /quadstorvtl/pgsql/data ]; then
 		/quadstorvtl/pgsql/scripts/pgpost.sh
 	fi

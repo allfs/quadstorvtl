@@ -21,9 +21,9 @@ mkdir -p /quadstorvtl/etc
 rm -f /quadstorvtl/lib/modules/corelib.o
 install -m 755  /quadstorvtl/quadstor/export/vtlcore.ko /quadstorvtl/lib/modules
 install -m 755  /quadstorvtl/quadstor/export/ldev.ko /quadstorvtl/lib/modules
-install -m 755  /quadstorvtl/quadstorvtl/library/client/libtlclnt.so /quadstorvtl/lib/libtlclnt.so.$libvers
-install -m 755 /quadstorvtl/quadstorvtl/library/server/libtlsrv.so /quadstorvtl/lib/libtlsrv.so.$libvers
-install -m 755 /quadstorvtl/quadstorvtl/library/common/libtlmsg.so /quadstorvtl/lib/libtlmsg.so.$libvers
+install -m 755  /quadstorvtl/quadstor/library/client/libtlclnt.so /quadstorvtl/lib/libtlclnt.so.$libvers
+install -m 755 /quadstorvtl/quadstor/library/server/libtlsrv.so /quadstorvtl/lib/libtlsrv.so.$libvers
+install -m 755 /quadstorvtl/quadstor/library/common/libtlmsg.so /quadstorvtl/lib/libtlmsg.so.$libvers
 install -m 755 /quadstorvtl/quadstor/scripts/free /quadstorvtl/bin/free
 
 cp /quadstorvtl/quadstor/build/LICENSE /quadstorvtl/
@@ -47,7 +47,7 @@ cp /quadstorvtl/quadstor/export/qsio_ccb.h /quadstorvtl/src/export/
 mkdir -p /quadstorvtl/src/others
 cp /quadstorvtl/quadstor/core/lzf*.[ch] /quadstorvtl/src/others/
 cp /quadstorvtl/quadstor/core/lz4*.[ch] /quadstorvtl/src/others/
-cp /quadstorvtl/quadstorvtl/library/server/md5*.[ch] /quadstorvtl/src/others/
+cp /quadstorvtl/quadstor/library/server/md5*.[ch] /quadstorvtl/src/others/
 
 cd /quadstorvtl/quadstor/build/
 rm /quadstorvtl/quadstor/build/pkg-plist

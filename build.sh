@@ -40,7 +40,7 @@ checkerror
 
 cd /quadstorvtl/quadstor/others/ && $GMAKE $clean
 checkerror
-cd /quadstorvtl/quadstorvtl/library && $GMAKE $clean
+cd /quadstorvtl/quadstor/library && $GMAKE $clean
 checkerror
 cd /quadstorvtl/quadstor/target-mode/iscsi/usr && $GMAKE $clean
 checkerror
@@ -51,7 +51,7 @@ checkerror
 cd /quadstorvtl/quadstor/scctl && $GMAKE $clean
 checkerror
 
-cd /quadstorvtl/quadstorvtl/etc && $GMAKE $clean
+cd /quadstorvtl/quadstor/etc && $GMAKE $clean
 checkerror
 
 if [ "$clean" = "" ]; then

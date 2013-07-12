@@ -69,10 +69,10 @@ quadstor_start() {
         echo -n $"Starting $prog: "
 
 	touch /quadstorvtl/quadstor.lock
-	if [ -f /tmp/.s.PGSQL.9988 -o -f /tmp/.s.PGSQL.9988.lock ]; then
+	if [ -f /tmp/.s.PGSQL.9989 -o -f /tmp/.s.PGSQL.9989.lock ]; then
 		/quadstorvtl/pgsql/etc/pgsql stop > /dev/null 2>&1
 		sleep 1
-		rm -f /tmp/.s.PGSQL.9988*
+		rm -f /tmp/.s.PGSQL.9989*
 		sleep 1
 	fi
 

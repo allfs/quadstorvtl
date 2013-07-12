@@ -29,14 +29,14 @@ install -m 755 -d $DEBIAN_ROOT/var/www/
 install -m 755 -d $DEBIAN_ROOT/var/www/quadstorvtl
 install -m 755 -d $DEBIAN_ROOT/etc/init.d
 
-cd /quadstorvtl/quadstorvtl/pgsql
+cd /quadstorvtl/quadstor/pgsql
 make install DESTDIR=$DEBIAN_ROOT
 rm -rf $DEBIAN_ROOT/quadstorvtl/pgsql/data/
 
 install -m 755 /quadstorvtl/quadstor/masterd/mdaemon $DEBIAN_ROOT/quadstorvtl/sbin/mdaemon
-install -m 644  /quadstorvtl/quadstorvtl/library/client/libtlclnt.so $DEBIAN_ROOT/quadstorvtl/lib/libtlclnt.so.$libvers
-install -m 644 /quadstorvtl/quadstorvtl/library/server/libtlsrv.so $DEBIAN_ROOT/quadstorvtl/lib/libtlsrv.so.$libvers
-install -m 644 /quadstorvtl/quadstorvtl/library/common/libtlmsg.so $DEBIAN_ROOT/quadstorvtl/lib/libtlmsg.so.$libvers
+install -m 644  /quadstorvtl/quadstor/library/client/libtlclnt.so $DEBIAN_ROOT/quadstorvtl/lib/libtlclnt.so.$libvers
+install -m 644 /quadstorvtl/quadstor/library/server/libtlsrv.so $DEBIAN_ROOT/quadstorvtl/lib/libtlsrv.so.$libvers
+install -m 644 /quadstorvtl/quadstor/library/common/libtlmsg.so $DEBIAN_ROOT/quadstorvtl/lib/libtlmsg.so.$libvers
 install -m 644 /quadstorvtl/lib/modules/corelib.o $DEBIAN_ROOT/quadstorvtl/lib/modules/
 install -m 644 /quadstorvtl/quadstor/mapps/html/cgisrc/index.html $DEBIAN_ROOT/var/www/
 install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/*.cgi $DEBIAN_ROOT/usr/lib/cgi-bin/
@@ -47,7 +47,7 @@ cp -pr /quadstorvtl/quadstor/mapps/html/cgisrc/yui/ $DEBIAN_ROOT/var/www/quadsto
 install -m 744 /quadstorvtl/quadstor/scctl/scctl $DEBIAN_ROOT/quadstorvtl/bin/scctl
 install -m 744 /quadstorvtl/quadstor/scctl/fcconfig $DEBIAN_ROOT/quadstorvtl/bin/fcconfig
 install -m 744 /quadstorvtl/quadstor/scctl/dbrecover $DEBIAN_ROOT/quadstorvtl/bin/dbrecover
-install -m 744 /quadstorvtl/quadstorvtl/etc/quadstor.linux $DEBIAN_ROOT/etc/init.d/quadstor
+install -m 744 /quadstorvtl/quadstor/etc/quadstor.linux $DEBIAN_ROOT/etc/init.d/quadstor
 sed -i -e "s/Default-Start.*/Default-Start:\t\t2 3 4 5/g" $DEBIAN_ROOT/etc/init.d/quadstor
 sed -i -e "s/Default-Stop.*/Default-Stop:\t\t\t0 1 6/g" $DEBIAN_ROOT/etc/init.d/quadstor
 install -m 444 /quadstorvtl/quadstor/build/LICENSE $DEBIAN_ROOT/quadstorvtl/
@@ -58,7 +58,7 @@ objcopy --strip-unneeded $DEBIAN_ROOT/quadstorvtl/bin/dbrecover
 
 #Install src
 install -m 755 -d $DEBIAN_ROOT/quadstorvtl/src/others
-install -m 644 /quadstorvtl/quadstorvtl/library/server/md5*.[ch] $DEBIAN_ROOT/quadstorvtl/src/others/
+install -m 644 /quadstorvtl/quadstor/library/server/md5*.[ch] $DEBIAN_ROOT/quadstorvtl/src/others/
 install -m 644 /quadstorvtl/quadstor/core/lzf*.[ch] $DEBIAN_ROOT/quadstorvtl/src/others/
 install -m 644 /quadstorvtl/quadstor/core/lz4*.[ch] $DEBIAN_ROOT/quadstorvtl/src/others/
 install -m 644 /quadstorvtl/quadstor/core/sysdefs/*.h $DEBIAN_ROOT/quadstorvtl/src/others/

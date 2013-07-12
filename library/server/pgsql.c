@@ -22,7 +22,7 @@
 #include <physlib.h>
 #include <libpq-fe.h>
 
-#define CONN_STRING		"dbname=qsdb user=scdbuser password=scdbuser"
+#define CONN_STRING		"dbname=qsdb user=scdbuser password=scdbuser port=9989"
 
 PGconn *
 pgsql_make_conn(void)

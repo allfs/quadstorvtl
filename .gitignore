@@ -25,4 +25,5 @@ scctl/scctl
 scctl/vctl
 target-mode/iscsi/usr/ietadm
 target-mode/iscsi/usr/ietd
-
+build/quadstorcorerhel6.spec
+build/quadstoritfrhel6.spec

@@ -2,7 +2,7 @@
 set -x
 curdir=`pwd`
 sh buildinit.sh bsd9
-cd /quadstorvtl/quadstorvtl/pgsql && gmake install
+cd /quadstorvtl/quadstor/pgsql && gmake install
 cd $curdir
 rm -f createpkg9.sh createitf9.sh
 cp createpkg.sh createpkg9.sh

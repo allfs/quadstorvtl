@@ -1,4 +1,13 @@
 #!/bin/sh
+
+if [ -d /quadstor/pgsql/data ]; then
+	vtl=`grep -r vtl /quadstor/pgsql/data/base/*`
+	if [ "$vtl" != "" ]; then
+		echo "WARNING: Moving /quadstor/pgsql/data to new /quadstorvtl/pgsql/ path"
+		mv -f /quadstor/pgsql/data /quadstorvtl/pgsql/data
+	fi
+fi
+
 if [ ! -d /quadstorvtl/pgsql/data ]; then
 	/quadstorvtl/pgsql/scripts/pgpost.sh > /dev/null 2>&1
 fi
