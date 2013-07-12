@@ -85,7 +85,7 @@ int main()
 	if (!tmp || !(max_drives = atoi(tmp)))
 		cgi_print_header_error_page("Insufficient CGI parameters passed. Max drives not passed");
 	
-	__cgi_print_header("Additional VDrives", "addlvdrive.js", 1, NULL, 0, "fillvtldrivetypes();");
+	__cgi_print_header("Additional VDrives", "vtaddlvdrive.js", 1, NULL, 0, "fillvtldrivetypes();");
 
 	cgi_print_form_start("addlvdrive", "addvtlseldrive.cgi", "post", 1);
 	printf ("<input type=hidden name=lname value=\"%s\">\n", name);

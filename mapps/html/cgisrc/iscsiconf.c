@@ -51,7 +51,7 @@ int main()
 	retval = tl_client_get_iscsiconf(tl_id, target_id, &iscsiconf);
 	if (retval != 0)
 		cgi_print_header_error_page("Unable to get iSCSI configuration\n");
-	cgi_print_header("iSCSI Configuration", "iscsiconf.js", 0);
+	cgi_print_header("iSCSI Configuration", "vtiscsiconf.js", 0);
 
 	cgi_print_form_start_check("iscsiconf", "iscsiconfpost.cgi", "post", "checkform");
 	printf("<INPUT type=hidden name=tl_id value=%d>\n", tl_id);

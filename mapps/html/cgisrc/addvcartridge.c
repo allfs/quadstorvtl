@@ -61,7 +61,7 @@ int main()
 	if (!tmp || !(vtltype = atoi(tmp)))
 		cgi_print_header_error_page("Invalid CGI parameters\n");
 
-	cgi_print_header("Add VCartridge", "addvcartridge.js", 0);
+	cgi_print_header("Add VCartridge", "vtaddvcartridge.js", 0);
 	cgi_print_thdr("Add VCartridge");
 
 	cgi_print_form_start("addvcartridge", "addvcartridgepost.cgi", "post", 1);

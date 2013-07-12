@@ -74,7 +74,7 @@ int main()
 	close(fd);
 	remove(tempfile);
 
-	__cgi_print_header("Storage Pools", "modifystoragepool.js", 1, NULL, 0, NULL);
+	__cgi_print_header("Storage Pools", "vtmodifystoragepool.js", 1, NULL, 0, NULL);
 
 	if (!group_id)
 		goto skip_rename;

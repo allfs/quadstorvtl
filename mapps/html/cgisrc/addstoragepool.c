@@ -20,7 +20,7 @@
 
 int main()
 {
-	cgi_print_header("Add Storage Pool", "addstoragepool.js", 0);
+	cgi_print_header("Add Storage Pool", "vtaddstoragepool.js", 0);
 
 	cgi_print_thdr("Add Storage Pool");
 
