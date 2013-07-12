@@ -125,9 +125,9 @@ __cgi_print_header(char *title, char *jsfile, int nocache, char *meta, int refre
 	printf("<ul class=\"first-of-type\">\n");
 	printf("\n");
 
-	printf("<li class=\"yui3-menuitem\"><a class=\"yui3-menuitem-content\" href=\"system.cgi?tjid%ld.%ld\">System</a></li>\n", (long)tv.tv_sec, (long)tv.tv_usec);
-	printf("<li class=\"yui3-menuitem\"><a class=\"yui3-menuitem-content\" href=\"adddisk.cgi?tjid%ld.%ld\">Physical Storage</a></li>\n", (long)tv.tv_sec, (long)tv.tv_usec);
-	printf("<li class=\"yui3-menuitem\"><a class=\"yui3-menuitem-content\" href=\"liststoragepool.cgi?tjid%ld.%ld\">Storage Pools</a></li>\n", (long)tv.tv_sec, (long)tv.tv_usec);
+	printf("<li class=\"yui3-menuitem\"><a class=\"yui3-menuitem-content\" href=\"vtsystem.cgi?tjid%ld.%ld\">System</a></li>\n", (long)tv.tv_sec, (long)tv.tv_usec);
+	printf("<li class=\"yui3-menuitem\"><a class=\"yui3-menuitem-content\" href=\"vtadddisk.cgi?tjid%ld.%ld\">Physical Storage</a></li>\n", (long)tv.tv_sec, (long)tv.tv_usec);
+	printf("<li class=\"yui3-menuitem\"><a class=\"yui3-menuitem-content\" href=\"vtliststoragepool.cgi?tjid%ld.%ld\">Storage Pools</a></li>\n", (long)tv.tv_sec, (long)tv.tv_usec);
 	printf("<li class=\"yui3-menuitem\"><a class=\"yui3-menuitem-content\" href=\"listvtl.cgi?tjid%ld.%ld\">Virtual Libraries</a></li>\n", (long)tv.tv_sec, (long)tv.tv_usec);
 	printf("<li class=\"yui3-menuitem\"><a class=\"yui3-menuitem-content\" href=\"listvdrive.cgi?tjid%ld.%ld\">Virtual Drives</a></li>\n", (long)tv.tv_sec, (long)tv.tv_usec);
 

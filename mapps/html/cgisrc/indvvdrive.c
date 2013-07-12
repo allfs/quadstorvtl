@@ -128,7 +128,7 @@ int main()
 
 	printf("<tr>\n");
 	printf("<td>iSCSI</td>\n");
-	printf("<td><a href=\"iscsiconf.cgi?tl_id=%d&target_id=0&vtltype=%d\">View</a></td>\n", tl_id, T_SEQUENTIAL);
+	printf("<td><a href=\"vtiscsiconf.cgi?tl_id=%d&target_id=0&vtltype=%d\">View</a></td>\n", tl_id, T_SEQUENTIAL);
 	printf("</tr>\n");
 
 	printf("<tr>\n");

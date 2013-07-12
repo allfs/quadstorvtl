@@ -73,7 +73,7 @@ int main()
 	if ((!tmp || !(slots = atoi(tmp))))
 		cgi_print_header_error_page("Insufficient CGI parameters passed. VSlots not specified");
 
-	cgi_print_header("Add VTL", "vtaddvtlseldrive.js", 0);
+	cgi_print_header("Add VTL", "addvtlseldrive.js", 0);
 
 	cgi_print_form_start("addvtl", "addvtlpost.cgi", "post", 0);
 	cgi_print_thdr("VTL Configuration");

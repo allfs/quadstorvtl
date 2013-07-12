@@ -24,7 +24,7 @@ int main()
 
 	cgi_print_thdr("Add Storage Pool");
 
-	cgi_print_form_start("addstoragepool", "addstoragepoolpost.cgi", "post", 1);
+	cgi_print_form_start("vtaddstoragepool", "vtaddstoragepoolpost.cgi", "post", 1);
 	cgi_print_div_start("center");
 	printf("<table class=\"ctable\">\n");
 

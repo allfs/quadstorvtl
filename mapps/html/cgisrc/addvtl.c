@@ -26,7 +26,7 @@ int main()
 {
 	int i;
 
-	__cgi_print_header("Add VTL", "vtaddvtl.js", 0, NULL, 0, "fillinit()");
+	__cgi_print_header("Add VTL", "addvtl.js", 0, NULL, 0, "fillinit()");
 
 	cgi_print_thdr("Add VTL");
 

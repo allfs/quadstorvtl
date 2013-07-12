@@ -79,7 +79,7 @@ int main()
 	if (!group_id)
 		goto skip_rename;
 
-	cgi_print_form_start("modifystoragepool", "modifystoragepool.cgi", "post", 1);
+	cgi_print_form_start("vtmodifystoragepool", "vtmodifystoragepool.cgi", "post", 1);
 	printf("<input type=\"hidden\" name=\"group_id\" value=\"%u\">\n", group_id);
 	cgi_print_thdr("Rename Pool");
 	cgi_print_div_start("center");

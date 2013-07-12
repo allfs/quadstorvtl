@@ -22,7 +22,7 @@ function ValidString(str){
 
 function checkform()
 {
-	var frm = document.getElementById('addstoragepool');
+	var frm = document.getElementById('vtaddstoragepool');
 
 	if (!frm.groupname.value) {
 		alert("Pool name cannot be empty");

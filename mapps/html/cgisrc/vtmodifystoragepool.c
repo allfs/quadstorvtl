@@ -45,6 +45,6 @@ int main()
 		cgi_print_header_error_page(errmsg);
 	}
 
-	cgi_redirect("liststoragepool.cgi");
+	cgi_redirect("vtliststoragepool.cgi");
 	return 0;
 }

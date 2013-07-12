@@ -1,6 +1,6 @@
 include ../../../build/rules.mk
 
-CGILIST = system.cgi listvtl.cgi addvtl.cgi addvtlpost.cgi adddisk.cgi adddiskcomp.cgi adddiskpost.cgi indvvtl.cgi liststoragepool.cgi modifystoragepool.cgi addstoragepool.cgi addstoragepoolpost.cgi deletestoragepool.cgi viewstoragepool.cgi iscsiconfpost.cgi iscsiconf.cgi addvcartridge.cgi addvcartridgepost.cgi deletevcartridge.cgi deletevtl.cgi rescandisk.cgi addlvdrive.cgi listvdrive.cgi addvdrive.cgi addvdrivepost.cgi indvvdrive.cgi loadvdrive.cgi addvtlseldrive.cgi reloadexp.cgi vdrivestats.cgi resetvdrivestats.cgi
+CGILIST = vtsystem.cgi listvtl.cgi addvtl.cgi addvtlpost.cgi vtadddisk.cgi vtadddiskcomp.cgi vtadddiskpost.cgi indvvtl.cgi vtliststoragepool.cgi vtmodifystoragepool.cgi vtaddstoragepool.cgi vtaddstoragepoolpost.cgi vtdeletestoragepool.cgi vtviewstoragepool.cgi vtiscsiconfpost.cgi vtiscsiconf.cgi addvcartridge.cgi addvcartridgepost.cgi deletevcartridge.cgi deletevtl.cgi vtrescandisk.cgi addlvdrive.cgi listvdrive.cgi addvdrive.cgi addvdrivepost.cgi indvvdrive.cgi loadvdrive.cgi addvtlseldrive.cgi reloadexp.cgi vdrivestats.cgi resetvdrivestats.cgi
 
 all: $(CGILIST) strip install
 
@@ -18,23 +18,23 @@ LDFLAGS += -Wl,-rpath=/quadstor/lib:$(QUADSTOR_ROOT)/library/common -Wl,-rpath=/
 
 CGIHTML = ../cgihtml/cgihtml.a 
 
-addstoragepool.cgi: addstoragepool.o cgimain.o
-	$(CC) $(CFLAGS) -o addstoragepool.cgi addstoragepool.o cgimain.o $(CGIHTML) $(LDFLAGS)
+vtaddstoragepool.cgi: vtaddstoragepool.o cgimain.o
+	$(CC) $(CFLAGS) -o vtaddstoragepool.cgi vtaddstoragepool.o cgimain.o $(CGIHTML) $(LDFLAGS)
 
-addstoragepoolpost.cgi: addstoragepoolpost.o cgimain.o
-	$(CC) $(CFLAGS) -o addstoragepoolpost.cgi addstoragepoolpost.o cgimain.o $(CGIHTML) $(LDFLAGS)
+vtaddstoragepoolpost.cgi: vtaddstoragepoolpost.o cgimain.o
+	$(CC) $(CFLAGS) -o vtaddstoragepoolpost.cgi vtaddstoragepoolpost.o cgimain.o $(CGIHTML) $(LDFLAGS)
 
-liststoragepool.cgi: liststoragepool.o cgimain.o
-	$(CC) $(CFLAGS) -o liststoragepool.cgi liststoragepool.o cgimain.o $(CGIHTML) $(LDFLAGS)
+vtliststoragepool.cgi: vtliststoragepool.o cgimain.o
+	$(CC) $(CFLAGS) -o vtliststoragepool.cgi vtliststoragepool.o cgimain.o $(CGIHTML) $(LDFLAGS)
 
-modifystoragepool.cgi: modifystoragepool.o cgimain.o
-	$(CC) $(CFLAGS) -o modifystoragepool.cgi modifystoragepool.o cgimain.o $(CGIHTML) $(LDFLAGS)
+vtmodifystoragepool.cgi: vtmodifystoragepool.o cgimain.o
+	$(CC) $(CFLAGS) -o vtmodifystoragepool.cgi vtmodifystoragepool.o cgimain.o $(CGIHTML) $(LDFLAGS)
 
-viewstoragepool.cgi: viewstoragepool.o cgimain.o
-	$(CC) $(CFLAGS) -o viewstoragepool.cgi viewstoragepool.o cgimain.o $(CGIHTML) $(LDFLAGS)
+vtviewstoragepool.cgi: vtviewstoragepool.o cgimain.o
+	$(CC) $(CFLAGS) -o vtviewstoragepool.cgi vtviewstoragepool.o cgimain.o $(CGIHTML) $(LDFLAGS)
 
-deletestoragepool.cgi: deletestoragepool.o cgimain.o
-	$(CC) $(CFLAGS) -o deletestoragepool.cgi deletestoragepool.o cgimain.o $(CGIHTML) $(LDFLAGS)
+vtdeletestoragepool.cgi: vtdeletestoragepool.o cgimain.o
+	$(CC) $(CFLAGS) -o vtdeletestoragepool.cgi vtdeletestoragepool.o cgimain.o $(CGIHTML) $(LDFLAGS)
 
 
 indvvtl.cgi: indvvtl.o cgimain.o
@@ -49,14 +49,14 @@ addvcartridgepost.cgi: addvcartridgepost.o cgimain.o
 listvtl.cgi: listvtl.o cgimain.o
 	$(CC) $(CFLAGS) -o listvtl.cgi listvtl.o cgimain.o $(CGIHTML) $(LDFLAGS)
 
-adddisk.cgi: adddisk.o cgimain.o
-	$(CC) $(CFLAGS) -o adddisk.cgi adddisk.o cgimain.o $(CGIHTML) $(LDFLAGS)
+vtadddisk.cgi: vtadddisk.o cgimain.o
+	$(CC) $(CFLAGS) -o vtadddisk.cgi vtadddisk.o cgimain.o $(CGIHTML) $(LDFLAGS)
 
-adddiskcomp.cgi: adddiskcomp.o cgimain.o
-	$(CC) $(CFLAGS) -o adddiskcomp.cgi adddiskcomp.o cgimain.o $(CGIHTML) $(LDFLAGS)
+vtadddiskcomp.cgi: vtadddiskcomp.o cgimain.o
+	$(CC) $(CFLAGS) -o vtadddiskcomp.cgi vtadddiskcomp.o cgimain.o $(CGIHTML) $(LDFLAGS)
 
-adddiskpost.cgi: adddiskpost.o cgimain.o
-	$(CC) $(CFLAGS) -o adddiskpost.cgi adddiskpost.o cgimain.o $(CGIHTML) $(LDFLAGS)
+vtadddiskpost.cgi: vtadddiskpost.o cgimain.o
+	$(CC) $(CFLAGS) -o vtadddiskpost.cgi vtadddiskpost.o cgimain.o $(CGIHTML) $(LDFLAGS)
 
 addvtl.cgi: addvtl.o cgimain.o
 	$(CC) $(CFLAGS) -o addvtl.cgi addvtl.o cgimain.o $(CGIHTML) $(LDFLAGS)
@@ -70,17 +70,17 @@ deletevtl.cgi: deletevtl.o cgimain.o
 deletevcartridge.cgi: deletevcartridge.o cgimain.o
 	$(CC) $(CFLAGS) -o deletevcartridge.cgi deletevcartridge.o cgimain.o $(CGIHTML) $(LDFLAGS)
 
-system.cgi: system.o cgimain.o
-	$(CC) $(CFLAGS) -o system.cgi system.o cgimain.o $(CGIHTML) $(LDFLAGS)
+vtsystem.cgi: vtsystem.o cgimain.o
+	$(CC) $(CFLAGS) -o vtsystem.cgi vtsystem.o cgimain.o $(CGIHTML) $(LDFLAGS)
 
-iscsiconf.cgi: iscsiconf.o cgimain.o
-	$(CC) $(CFLAGS) -o iscsiconf.cgi iscsiconf.o cgimain.o $(CGIHTML) $(LDFLAGS)
+vtiscsiconf.cgi: vtiscsiconf.o cgimain.o
+	$(CC) $(CFLAGS) -o vtiscsiconf.cgi vtiscsiconf.o cgimain.o $(CGIHTML) $(LDFLAGS)
 
-iscsiconfpost.cgi: iscsiconfpost.o cgimain.o
-	$(CC) $(CFLAGS) -o iscsiconfpost.cgi iscsiconfpost.o cgimain.o $(CGIHTML) $(LDFLAGS)
+vtiscsiconfpost.cgi: vtiscsiconfpost.o cgimain.o
+	$(CC) $(CFLAGS) -o vtiscsiconfpost.cgi vtiscsiconfpost.o cgimain.o $(CGIHTML) $(LDFLAGS)
 
-rescandisk.cgi: rescandisk.o cgimain.o
-	$(CC) $(CFLAGS) -o rescandisk.cgi rescandisk.o cgimain.o $(CGIHTML) $(LDFLAGS)
+vtrescandisk.cgi: vtrescandisk.o cgimain.o
+	$(CC) $(CFLAGS) -o vtrescandisk.cgi vtrescandisk.o cgimain.o $(CGIHTML) $(LDFLAGS)
 
 addlvdrive.cgi: addlvdrive.o cgimain.o
 	$(CC) $(CFLAGS) -o addlvdrive.cgi addlvdrive.o cgimain.o $(CGIHTML) $(LDFLAGS)

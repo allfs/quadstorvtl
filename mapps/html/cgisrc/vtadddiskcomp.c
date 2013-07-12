@@ -47,7 +47,7 @@ int main()
 
 	cgi_print_header("Select Storage Pool", NULL, 0);
 
-	cgi_print_form_start("adddiskcomp", "adddiskpost.cgi", "post", 0);
+	cgi_print_form_start("vtadddiskcomp", "vtadddiskpost.cgi", "post", 0);
 	printf("<input type=\"hidden\" name=\"op\" value=\"%s\">\n", op);
 	printf("<input type=\"hidden\" name=\"dev\" value=\"%s\">\n", dev);
 	

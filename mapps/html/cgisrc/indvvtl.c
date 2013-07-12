@@ -142,7 +142,7 @@ int main()
 
 	printf("<tr>\n");
 	printf("<td>iSCSI</td>\n");
-	printf("<td><a href=\"iscsiconf.cgi?tl_id=%d&target_id=0&vtltype=%d\">View</a></td>\n", tl_id, T_CHANGER);
+	printf("<td><a href=\"vtiscsiconf.cgi?tl_id=%d&target_id=0&vtltype=%d\">View</a></td>\n", tl_id, T_CHANGER);
 	printf("</tr>\n");
 
 	printf("</table>\n");
@@ -209,7 +209,7 @@ int main()
 		cgi_print_column_format("VCartridge", "%s", dconf->tape_label);
 		cgi_print_comma();
 
-		cgi_print_column_format("iSCSI", "<a href=\"iscsiconf.cgi?tl_id=%d&target_id=%u&vtltype=%d\">View</a>", vdevice->tl_id, dconf->vdevice.target_id, T_CHANGER);
+		cgi_print_column_format("iSCSI", "<a href=\"vtiscsiconf.cgi?tl_id=%d&target_id=%u&vtltype=%d\">View</a>", vdevice->tl_id, dconf->vdevice.target_id, T_CHANGER);
 		cgi_print_comma();
 		cgi_print_column_format("Statistics", "<a href=\"vdrivestats.cgi?tl_id=%d&target_id=%u\">View</a>", vdevice->tl_id, dconf->vdevice.target_id);
 

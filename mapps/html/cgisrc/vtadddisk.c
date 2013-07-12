@@ -111,7 +111,7 @@ int main()
 			cgi_print_column("Modify", "N/A");
 			cgi_print_comma();
 
-			cgi_print_column_format("Add", "<a href=\"adddiskcomp.cgi?dev=%s&op=1\">Add</a>", disk->info.devname);
+			cgi_print_column_format("Add", "<a href=\"vtadddiskcomp.cgi?dev=%s&op=1\">Add</a>", disk->info.devname);
 		}
 		else
 		{
@@ -122,7 +122,7 @@ int main()
 			cgi_print_column_format("Modify", "<a href=\"modifydisk.cgi?bid=%u\">Modify</a>", config->bid);
 			cgi_print_comma();
 
-			cgi_print_column_format("Add", "<a href=\"adddiskpost.cgi?dev=%s&op=2\">Remove</a>", disk->info.devname); 
+			cgi_print_column_format("Add", "<a href=\"vtadddiskpost.cgi?dev=%s&op=2\">Remove</a>", disk->info.devname); 
 		}
 		cgi_print_row_end();
 	}

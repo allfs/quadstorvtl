@@ -16,37 +16,57 @@
  * Boston, MA  02110-1301, USA.
  */
 
+#include <html-lib.h>
 #include "cgimain.h"
+#include <tlclntapi.h>
 
 int main()
 {
 	llist entries;
-	char reply[512];
+	char *dev;
 	int retval;
-	int worm = 0;
-	char *groupname;
+	char reply[256];
+	int op;
+	uint32_t group_id;
 	char *tmp;
 
 	read_cgi_input(&entries);
 
-	groupname = cgi_val(entries, "groupname");
-	if (!groupname)
-		cgi_print_header_error_page("Invalid CGI parameters passed\n");
+	tmp = cgi_val(entries, "op");
+	if (!tmp || !(op = atoi(tmp)))
+	{
+		cgi_print_header_error_page("Add/Delete Storage: Invalid operation");
+	}
 
-	tmp = cgi_val(entries, "worm");
-	if (tmp && (strcasecmp(tmp, "on") == 0))
-		worm = 1;
+	tmp = cgi_val(entries, "group_id");
+	if (tmp)
+		group_id = strtoull(tmp, NULL, 10);
+	else
+		group_id = 0;
 
-	reply[0] = 0;
+	dev = cgi_val(entries, "dev");
+	if (!dev)
+	{
+		cgi_print_header_error_page("Insufficient CGI parameters\n");
+	}
 
-	retval = tl_client_add_group(groupname, worm, reply);
-	if (retval != 0) {
-		char errmsg[1024];
+	if (op == 1)
+	{
+		retval = tl_client_add_disk(dev, group_id, reply);
+	}
+	else
+	{
+		retval = tl_client_delete_disk(dev, reply);
+	}
 
-		sprintf(errmsg, "Unable to add pool. Message from server is: \"%s\"\n", reply);
+	if (retval != 0)
+	{
+		char errmsg[512];
+
+		sprintf(errmsg, "Reply from server is \"%s\"", reply);
 		cgi_print_header_error_page(errmsg);
 	}
 
-	cgi_redirect("liststoragepool.cgi");
+	cgi_redirect("vtadddisk.cgi");
 	return 0;
 }

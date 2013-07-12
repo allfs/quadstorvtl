@@ -11,7 +11,7 @@
 
 int main()
 {
-	__cgi_print_header("Add VDrive", "vtaddvdrive.js", 0, NULL, 0, "filldrive()");
+	__cgi_print_header("Add VDrive", "addvdrive.js", 0, NULL, 0, "filldrive()");
 
 	cgi_print_thdr("Add VDrive");
 

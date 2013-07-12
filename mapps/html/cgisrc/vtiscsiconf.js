@@ -25,7 +25,7 @@ function ValidIQNString(str){
 
 function checkform()
 {
-	var frm = document.getElementById('iscsiconf');
+	var frm = document.getElementById('vtiscsiconf');
 
 	if (!ValidIQNString(frm.iqn.value)) {
 		alert("IQN User can only contains alphabets or numbers");

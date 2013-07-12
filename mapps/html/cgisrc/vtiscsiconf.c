@@ -53,7 +53,7 @@ int main()
 		cgi_print_header_error_page("Unable to get iSCSI configuration\n");
 	cgi_print_header("iSCSI Configuration", "vtiscsiconf.js", 0);
 
-	cgi_print_form_start_check("iscsiconf", "iscsiconfpost.cgi", "post", "checkform");
+	cgi_print_form_start_check("vtiscsiconf", "vtiscsiconfpost.cgi", "post", "checkform");
 	printf("<INPUT type=hidden name=tl_id value=%d>\n", tl_id);
 	printf("<INPUT type=hidden name=target_id value=%d>\n", target_id);
 	printf("<INPUT type=hidden name=vtltype value=%d>\n", vtltype);

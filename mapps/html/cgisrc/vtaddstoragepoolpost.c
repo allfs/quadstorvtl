@@ -21,24 +21,32 @@
 int main()
 {
 	llist entries;
-	char *tmp;
-	uint32_t group_id;
+	char reply[512];
 	int retval;
+	int worm = 0;
+	char *groupname;
+	char *tmp;
 
 	read_cgi_input(&entries);
 
-	tmp = cgi_val(entries, "group_id");
-	if (!tmp)
+	groupname = cgi_val(entries, "groupname");
+	if (!groupname)
 		cgi_print_header_error_page("Invalid CGI parameters passed\n");
 
-	group_id = strtoul(tmp, NULL, 10);
-	if (!group_id)
-		cgi_print_header_error_page("Invalid CGI parameters passed\n");
+	tmp = cgi_val(entries, "worm");
+	if (tmp && (strcasecmp(tmp, "on") == 0))
+		worm = 1;
 
-	retval = tl_client_delete_group(group_id);
-	if (retval != 0)
-		cgi_print_header_error_page("Unable to delete the specified pool");
+	reply[0] = 0;
 
-	cgi_redirect("liststoragepool.cgi");
+	retval = tl_client_add_group(groupname, worm, reply);
+	if (retval != 0) {
+		char errmsg[1024];
+
+		sprintf(errmsg, "Unable to add pool. Message from server is: \"%s\"\n", reply);
+		cgi_print_header_error_page(errmsg);
+	}
+
+	cgi_redirect("vtliststoragepool.cgi");
 	return 0;
 }
