@@ -2,8 +2,8 @@ set -e
 os=`uname`
 
 if [ "$1" = "install" ]; then
-	mkdir -p /quadstor/lib/modules
-	cp -f iscsit.ko /quadstor/lib/modules/
+	mkdir -p /quadstorvtl/lib/modules
+	cp -f iscsit.ko /quadstorvtl/lib/modules/
 	exit 0
 fi
 

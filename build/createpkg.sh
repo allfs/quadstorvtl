@@ -1,101 +1,101 @@
 #!/bin/sh
 libvers="2.2.8-FreeBSD8.2-x86_64"
-rm -rf /quadstor/lib
-rm -rf /quadstor/bin
-rm -rf /quadstor/sbin
-rm -rf /quadstor/etc
-rm -rf /quadstor/share
+rm -rf /quadstorvtl/lib
+rm -rf /quadstorvtl/bin
+rm -rf /quadstorvtl/sbin
+rm -rf /quadstorvtl/etc
+rm -rf /quadstorvtl/share
 
-cd /quadstor/quadstor/
+cd /quadstorvtl/quadstor/
 sh build.sh clean
 sh build.sh 
 sh build.sh install
 
-mkdir -p /quadstor/lib
-mkdir -p /quadstor/lib/modules
-mkdir -p /quadstor/bin
-mkdir -p /quadstor/sbin
-mkdir -p /quadstor/lib
-mkdir -p /quadstor/lib/modules
-mkdir -p /quadstor/etc
-rm -f /quadstor/lib/modules/corelib.o
-install -m 755  /quadstor/quadstor/export/vtlcore.ko /quadstor/lib/modules
-install -m 755  /quadstor/quadstor/export/ldev.ko /quadstor/lib/modules
-install -m 755  /quadstor/quadstor/library/client/libtlclnt.so /quadstor/lib/libtlclnt.so.$libvers
-install -m 755 /quadstor/quadstor/library/server/libtlsrv.so /quadstor/lib/libtlsrv.so.$libvers
-install -m 755 /quadstor/quadstor/library/common/libtlmsg.so /quadstor/lib/libtlmsg.so.$libvers
-install -m 755 /quadstor/quadstor/scripts/free /quadstor/bin/free
+mkdir -p /quadstorvtl/lib
+mkdir -p /quadstorvtl/lib/modules
+mkdir -p /quadstorvtl/bin
+mkdir -p /quadstorvtl/sbin
+mkdir -p /quadstorvtl/lib
+mkdir -p /quadstorvtl/lib/modules
+mkdir -p /quadstorvtl/etc
+rm -f /quadstorvtl/lib/modules/corelib.o
+install -m 755  /quadstorvtl/quadstor/export/vtlcore.ko /quadstorvtl/lib/modules
+install -m 755  /quadstorvtl/quadstor/export/ldev.ko /quadstorvtl/lib/modules
+install -m 755  /quadstorvtl/quadstorvtl/library/client/libtlclnt.so /quadstorvtl/lib/libtlclnt.so.$libvers
+install -m 755 /quadstorvtl/quadstorvtl/library/server/libtlsrv.so /quadstorvtl/lib/libtlsrv.so.$libvers
+install -m 755 /quadstorvtl/quadstorvtl/library/common/libtlmsg.so /quadstorvtl/lib/libtlmsg.so.$libvers
+install -m 755 /quadstorvtl/quadstor/scripts/free /quadstorvtl/bin/free
 
-cp /quadstor/quadstor/build/LICENSE /quadstor/
-cp /quadstor/quadstor/build/GPLv2 /quadstor/
-cd /quadstor/lib && ln -fs libtlclnt.so.$libvers libtlclnt.so.1
-cd /quadstor/lib && ln -fs libtlclnt.so.$libvers libtlclnt.so
-cd /quadstor/lib && ln -fs libtlsrv.so.$libvers libtlsrv.so.1
-cd /quadstor/lib && ln -fs libtlsrv.so.$libvers libtlsrv.so
-cd /quadstor/lib && ln -fs libtlmsg.so.$libvers libtlmsg.so.1
-cd /quadstor/lib && ln -fs libtlmsg.so.$libvers libtlmsg.so
+cp /quadstorvtl/quadstor/build/LICENSE /quadstorvtl/
+cp /quadstorvtl/quadstor/build/GPLv2 /quadstorvtl/
+cd /quadstorvtl/lib && ln -fs libtlclnt.so.$libvers libtlclnt.so.1
+cd /quadstorvtl/lib && ln -fs libtlclnt.so.$libvers libtlclnt.so
+cd /quadstorvtl/lib && ln -fs libtlsrv.so.$libvers libtlsrv.so.1
+cd /quadstorvtl/lib && ln -fs libtlsrv.so.$libvers libtlsrv.so
+cd /quadstorvtl/lib && ln -fs libtlmsg.so.$libvers libtlmsg.so.1
+cd /quadstorvtl/lib && ln -fs libtlmsg.so.$libvers libtlmsg.so
 
 #install source
-rm -rf /quadstor/src/
-mkdir -p /quadstor/src/export
+rm -rf /quadstorvtl/src/
+mkdir -p /quadstorvtl/src/export
 
-cp /quadstor/quadstor/export/bsddefs.h /quadstor/src/export/
-cp /quadstor/quadstor/export/exportdefs.h /quadstor/src/export/
-cp /quadstor/quadstor/export/missingdefs.h /quadstor/src/export/
-cp /quadstor/quadstor/export/qsio_ccb.h /quadstor/src/export/
+cp /quadstorvtl/quadstor/export/bsddefs.h /quadstorvtl/src/export/
+cp /quadstorvtl/quadstor/export/exportdefs.h /quadstorvtl/src/export/
+cp /quadstorvtl/quadstor/export/missingdefs.h /quadstorvtl/src/export/
+cp /quadstorvtl/quadstor/export/qsio_ccb.h /quadstorvtl/src/export/
 
-mkdir -p /quadstor/src/others
-cp /quadstor/quadstor/core/lzf*.[ch] /quadstor/src/others/
-cp /quadstor/quadstor/core/lz4*.[ch] /quadstor/src/others/
-cp /quadstor/quadstor/library/server/md5*.[ch] /quadstor/src/others/
+mkdir -p /quadstorvtl/src/others
+cp /quadstorvtl/quadstor/core/lzf*.[ch] /quadstorvtl/src/others/
+cp /quadstorvtl/quadstor/core/lz4*.[ch] /quadstorvtl/src/others/
+cp /quadstorvtl/quadstorvtl/library/server/md5*.[ch] /quadstorvtl/src/others/
 
-cd /quadstor/quadstor/build/
-rm /quadstor/quadstor/build/pkg-plist
+cd /quadstorvtl/quadstor/build/
+rm /quadstorvtl/quadstor/build/pkg-plist
 
 #bin dir
-echo "quadstor/bin/cam" >> /quadstor/quadstor/build/pkg-plist
-echo "quadstor/bin/free" >> /quadstor/quadstor/build/pkg-plist
-echo "quadstor/bin/pidof" >> /quadstor/quadstor/build/pkg-plist
-echo "quadstor/bin/scctl" >> /quadstor/quadstor/build/pkg-plist
-echo "quadstor/bin/fcconfig" >> /quadstor/quadstor/build/pkg-plist
-echo "quadstor/bin/dbrecover" >> /quadstor/quadstor/build/pkg-plist
+echo "quadstorvtl/bin/cam" >> /quadstorvtl/quadstor/build/pkg-plist
+echo "quadstorvtl/bin/free" >> /quadstorvtl/quadstor/build/pkg-plist
+echo "quadstorvtl/bin/pidof" >> /quadstorvtl/quadstor/build/pkg-plist
+echo "quadstorvtl/bin/scctl" >> /quadstorvtl/quadstor/build/pkg-plist
+echo "quadstorvtl/bin/fcconfig" >> /quadstorvtl/quadstor/build/pkg-plist
+echo "quadstorvtl/bin/dbrecover" >> /quadstorvtl/quadstor/build/pkg-plist
 
-echo "quadstor/sbin/mdaemon" >> /quadstor/quadstor/build/pkg-plist
+echo "quadstorvtl/sbin/mdaemon" >> /quadstorvtl/quadstor/build/pkg-plist
 
-echo "quadstor/etc/quadstor" >> /quadstor/quadstor/build/pkg-plist
+echo "quadstorvtl/etc/quadstor" >> /quadstorvtl/quadstor/build/pkg-plist
 
-cd / && find quadstor/lib/lib* >> /quadstor/quadstor/build/pkg-plist
+cd / && find quadstorvtl/lib/lib* >> /quadstorvtl/quadstor/build/pkg-plist
 #modules dir
-echo "quadstor/lib/modules/vtlcore.ko" >> /quadstor/quadstor/build/pkg-plist
-echo "quadstor/lib/modules/ldev.ko" >> /quadstor/quadstor/build/pkg-plist
-echo "quadstor/lib/modules/ispmod.ko" >> /quadstor/quadstor/build/pkg-plist
+echo "quadstorvtl/lib/modules/vtlcore.ko" >> /quadstorvtl/quadstor/build/pkg-plist
+echo "quadstorvtl/lib/modules/ldev.ko" >> /quadstorvtl/quadstor/build/pkg-plist
+echo "quadstorvtl/lib/modules/ispmod.ko" >> /quadstorvtl/quadstor/build/pkg-plist
 
-cd / && find quadstor/httpd/www/*.html >> /quadstor/quadstor/build/pkg-plist
-cd / && find quadstor/httpd/cgi-bin/* >> /quadstor/quadstor/build/pkg-plist
-echo "quadstor/LICENSE" >> /quadstor/quadstor/build/pkg-plist
-echo "quadstor/GPLv2" >> /quadstor/quadstor/build/pkg-plist
+cd / && find quadstorvtl/httpd/www/*.html >> /quadstorvtl/quadstor/build/pkg-plist
+cd / && find quadstorvtl/httpd/cgi-bin/* >> /quadstorvtl/quadstor/build/pkg-plist
+echo "quadstorvtl/LICENSE" >> /quadstorvtl/quadstor/build/pkg-plist
+echo "quadstorvtl/GPLv2" >> /quadstorvtl/quadstor/build/pkg-plist
 
-for i in `cd / && find quadstor/pgsql/`;do
+for i in `cd / && find quadstorvtl/pgsql/`;do
 	if [ -d $i ]; then
 		continue
 	fi
-	echo $i >> /quadstor/quadstor/build/pkg-plist
+	echo $i >> /quadstorvtl/quadstor/build/pkg-plist
 done
 
-for i in `cd / && find quadstor/src/`;do
+for i in `cd / && find quadstorvtl/src/`;do
 	if [ -d $i ]; then
 		continue
 	fi
-	echo $i >> /quadstor/quadstor/build/pkg-plist
+	echo $i >> /quadstorvtl/quadstor/build/pkg-plist
 done
 
-for i in `cd / && find quadstor/httpd/www/quadstor/`;do
+for i in `cd / && find quadstorvtl/httpd/www/quadstorvtl/`;do
 	if [ -d $i ]; then
 		continue
 	fi
-	echo $i >> /quadstor/quadstor/build/pkg-plist
+	echo $i >> /quadstorvtl/quadstor/build/pkg-plist
 done
 
-cd /quadstor/quadstor/build/
+cd /quadstorvtl/quadstor/build/
 rm quadstor-vtl-core-*.tbz
 pkg_create -c pkg-comment -d pkg-info -f pkg-plist -p / -i pkg-pre.sh -I pkg-post.sh -k pkg-preun.sh -K pkg-postun.sh quadstor-vtl-core-$libvers

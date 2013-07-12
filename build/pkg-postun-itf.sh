@@ -1,7 +1,7 @@
 #/bin/sh
-rm -f /quadstor/etc/quadstor-vtl-itf-version
-rmdir /quadstor/lib/modules > /dev/null 2>&1
-rmdir /quadstor/lib > /dev/null 2>&1
-rm -f /quadstor/sbin/ietd
-rm -f /quadstor/bin/ietadm
-rm -rf /quadstor/src/target-mode
+rm -f /quadstorvtl/etc/quadstor-vtl-itf-version
+rmdir /quadstorvtl/lib/modules > /dev/null 2>&1
+rmdir /quadstorvtl/lib > /dev/null 2>&1
+rm -f /quadstorvtl/sbin/ietd
+rm -f /quadstorvtl/bin/ietadm
+rm -rf /quadstorvtl/src/target-mode

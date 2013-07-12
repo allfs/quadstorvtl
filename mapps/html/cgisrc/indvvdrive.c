@@ -206,7 +206,7 @@ int main()
 			cgi_print_column_format("LoadUnload", "<a href=\"loadvdrive.cgi?tid=%d&tl_id=%d&msg_id=%d\">Unload</a>", vcartridge->tape_id, tl_id, MSG_ID_UNLOAD_DRIVE);
 		cgi_print_comma();
 
-		cgi_print_column_format("Delete", "<a href=\"deletevcartridge.cgi?tl_id=%u&tape_id=%u&vtltype=%d\"  onclick=\\'return confirm(\\\"Delete VCartrdige %s?\\\");\\'><img src=\"/quadstor/delete.png\" width=16px height=16px border=0></a>", tl_id, vcartridge->tape_id, T_SEQUENTIAL, vcartridge->label);
+		cgi_print_column_format("Delete", "<a href=\"deletevcartridge.cgi?tl_id=%u&tape_id=%u&vtltype=%d\"  onclick=\\'return confirm(\\\"Delete VCartrdige %s?\\\");\\'><img src=\"/quadstorvtl/delete.png\" width=16px height=16px border=0></a>", tl_id, vcartridge->tape_id, T_SEQUENTIAL, vcartridge->label);
 
 		cgi_print_row_end();
 	}

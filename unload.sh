@@ -20,4 +20,4 @@ cd $root
 /sbin/rmmod ldev 
 /sbin/rmmod vtlcore 
 
-/quadstor/pgsql/etc/pgsql stop
+/quadstorvtl/pgsql/etc/pgsql stop

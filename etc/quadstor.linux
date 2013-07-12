@@ -38,7 +38,7 @@ if [ ! -f /sbin/pidof ]; then
 fi
 start() {
 
-	mdaemonpid=`$PIDOF /quadstor/sbin/mdaemon 2> /dev/null`
+	mdaemonpid=`$PIDOF /quadstorvtl/sbin/mdaemon 2> /dev/null`
 	if [ "$mdaemonpid" != "" ]; then
 		echo "QUADStor Daemon already running..."
 		exit 1
@@ -51,7 +51,7 @@ start() {
 	fi
 
 	if [ -f /usr/bin/chcon ]; then
-		/usr/bin/chcon -t textrel_shlib_t /quadstor/lib/libtl* > /dev/null 2>&1
+		/usr/bin/chcon -t textrel_shlib_t /quadstorvtl/lib/libtl* > /dev/null 2>&1
 		if [ -f /var/www/cgi-bin/system.cgi ]; then
 			/usr/bin/chcon -v -R -t httpd_unconfined_script_exec_t /var/www/cgi-bin/*.cgi > /dev/null 2>&1
 		fi
@@ -66,13 +66,13 @@ start() {
         echo -n $"Starting $prog: "
 
 	if [ -f /tmp/.s.PGSQL.9988 -o -f /tmp/.s.PGSQL.9988.lock ]; then
-		/quadstor/pgsql/etc/pgsql stop > /dev/null 2>&1
+		/quadstorvtl/pgsql/etc/pgsql stop > /dev/null 2>&1
 		sleep 1
 		rm -f /tmp/.s.PGSQL.9988*
 		sleep 1
 	fi
 
-	/quadstor/pgsql/etc/pgsql start
+	/quadstorvtl/pgsql/etc/pgsql start
 	check_error "Cannot start database"
 	sleep 10 
 
@@ -82,31 +82,31 @@ start() {
 	/sbin/modprobe -q qla2xxx > /dev/null 2>&1
 
 	#Only load srpt related modules if ib_srpt has been built
-	if [ -f /quadstor/lib/modules/$kvers/ib_srpt.ko ]; then
+	if [ -f /quadstorvtl/lib/modules/$kvers/ib_srpt.ko ]; then
 		/sbin/modprobe -q ib_core > /dev/null 2>&1
 		/sbin/modprobe -q ib_cm > /dev/null 2>&1
-		/sbin/insmod /quadstor/lib/modules/$kvers/ib_srpt.ko > /dev/null 2>&1
+		/sbin/insmod /quadstorvtl/lib/modules/$kvers/ib_srpt.ko > /dev/null 2>&1
 	fi
 
-	/sbin/insmod /quadstor/lib/modules/$kvers/vtlcore.ko > /dev/null 2>&1
+	/sbin/insmod /quadstorvtl/lib/modules/$kvers/vtlcore.ko > /dev/null 2>&1
 	check_error "Failed to insert core module"
 
-	/sbin/insmod /quadstor/lib/modules/$kvers/ldev.ko > /dev/null 2>&1 
+	/sbin/insmod /quadstorvtl/lib/modules/$kvers/ldev.ko > /dev/null 2>&1 
 	check_error "Failed to insert ldev module"
 
-	/sbin/insmod /quadstor/lib/modules/$kvers/iscsit.ko > /dev/null 2>&1
+	/sbin/insmod /quadstorvtl/lib/modules/$kvers/iscsit.ko > /dev/null 2>&1
 	check_error "Failed to insert iscsi target module"
 
 	pkill mdaemon
-	export PATH=$PATH:/quadstor/bin:/sbin:/usr/sbin
-	rm -f /quadstor/.mdaemon
-	/quadstor/sbin/mdaemon > /dev/null 2>&1
+	export PATH=$PATH:/quadstorvtl/bin:/sbin:/usr/sbin
+	rm -f /quadstorvtl/.mdaemon
+	/quadstorvtl/sbin/mdaemon > /dev/null 2>&1
 	check_error "Cannot start master daemon"
 
-	/quadstor/etc/initd.iscsi start
+	/quadstorvtl/etc/initd.iscsi start
 
 	sleep 10 
-	/quadstor/bin/scctl -l > /dev/null 2>&1
+	/quadstorvtl/bin/scctl -l > /dev/null 2>&1
 
 	if [ -d /var/lock/subsys ]; then
 		touch /var/lock/subsys/quadstor
@@ -115,15 +115,15 @@ start() {
 
 stop() {
 	echo -n $"Stopping $prog: "
-	/quadstor/etc/initd.iscsi stop > /dev/null 2>&1
+	/quadstorvtl/etc/initd.iscsi stop > /dev/null 2>&1
 
-	/quadstor/bin/scctl -u > /dev/null 2>&1
+	/quadstorvtl/bin/scctl -u > /dev/null 2>&1
 	sleep 10 
 
 	pkill mdaemon
-	rm -f /quadstor/.mdaemon
+	rm -f /quadstorvtl/.mdaemon
 
-	/quadstor/pgsql/etc/pgsql stop
+	/quadstorvtl/pgsql/etc/pgsql stop
 
 	/sbin/rmmod iscsit > /dev/null 2>&1
 	/sbin/rmmod ldev > /dev/null 2>&1
@@ -134,8 +134,8 @@ stop() {
 }
 
 status_check() {
-	mdaemonpid=`$PIDOF /quadstor/sbin/mdaemon 2> /dev/null`
-	ietdpid=`$PIDOF /quadstor/sbin/ietd 2> /dev/null`
+	mdaemonpid=`$PIDOF /quadstorvtl/sbin/mdaemon 2> /dev/null`
+	ietdpid=`$PIDOF /quadstorvtl/sbin/ietd 2> /dev/null`
 	if [ "${mdaemonpid}" != "" -a "${ietdpid}" != "" ] ; then 
 		echo "QUADStor daemon is running..."
 		exit 0

@@ -5,7 +5,7 @@ set -x
 /sbin/insmod kernel/iscsit.ko
 
 cd ./usr 
-#./ietd  -d 3 -c /quadstor/conf/iscsi.conf
+#./ietd  -d 3 -c /quadstorvtl/conf/iscsi.conf
 ulimit -c unlimited
-./ietd  -d 3 -c /quadstor/conf/iscsi.conf
-#./ietd  -c /quadstor/conf/iscsi.conf
+./ietd  -d 3 -c /quadstorvtl/conf/iscsi.conf
+#./ietd  -c /quadstorvtl/conf/iscsi.conf

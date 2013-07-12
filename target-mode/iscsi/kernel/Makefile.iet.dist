@@ -2,7 +2,7 @@ KMOD = iscsit
 
 SRCS = vnode_if.h opt_cam.h tio.c iscsi.c nthread.c config.c crc32c.c digest.c conn.c session.c target.c param.c scdefs.c eventbsd.c
 
-QUADSTOR_ROOT= /quadstor/src/
+QUADSTOR_ROOT= /quadstorvtl/src/
 
 CFLAGS= -I$(QUADSTOR_ROOT)/export -I../include/ -DFREEBSD -O2
 

@@ -1,6 +1,6 @@
 include ../build/rules.mk
 
-CFLAGS += -Wall -I$(QUADSTOR_ROOT)/includes -I$(QUADSTOR_ROOT)/common -I$(QUADSTOR_ROOT)/core -Wl,-rpath=$(QUADSTOR_ROOT)/library/common -Wl,-rpath=$(QUADSTOR_ROOT)/library/client -Wl,-rpath=/quadstor/lib -Wl,-rpath=$(QUADSTOR_ROOT)/library/server
+CFLAGS += -Wall -I$(QUADSTOR_ROOT)/includes -I$(QUADSTOR_ROOT)/common -I$(QUADSTOR_ROOT)/core -Wl,-rpath=$(QUADSTOR_ROOT)/library/common -Wl,-rpath=$(QUADSTOR_ROOT)/library/client -Wl,-rpath=/quadstorvtl/lib -Wl,-rpath=$(QUADSTOR_ROOT)/library/server
 
 LDFLAGS += -L../library/common/ -L../library/client -L../library/server -ltlclnt
 
@@ -19,13 +19,13 @@ cam: cam.c
 
 install:
 	@set -e;
-	mkdir -p /quadstor/bin
-	cp -f scctl /quadstor/bin
-	cp -f dbrecover /quadstor/bin
+	mkdir -p /quadstorvtl/bin
+	cp -f scctl /quadstorvtl/bin
+	cp -f dbrecover /quadstorvtl/bin
 	if [ -f cam ]; then \
-		cp -f cam /quadstor/bin; \
+		cp -f cam /quadstorvtl/bin; \
 	fi
-	cp -f fcconfig /quadstor/bin
+	cp -f fcconfig /quadstorvtl/bin
 
 clean:
 	rm -f *.o scctl vctl cam dbrecover fcconfig

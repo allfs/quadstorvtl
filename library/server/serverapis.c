@@ -2831,7 +2831,7 @@ tl_server_run_diagnostics(struct tl_comm *comm, struct tl_msg *msg)
 	fclose(fp);
 	diag_dump_file(diagdir, "/proc/scsi/scsi", "procscsi");
 	diag_dump_file(diagdir, "/var/log/messages", "varlog.log");
-	snprintf(cmd, sizeof(cmd), "/quadstor/bin/diaghelper %s", diagdir);
+	snprintf(cmd, sizeof(cmd), "/quadstorvtl/bin/diaghelper %s", diagdir);
 	system(cmd);
 	tl_server_msg_success(comm, msg);
 	return 0;

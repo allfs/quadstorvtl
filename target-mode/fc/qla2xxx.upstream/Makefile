@@ -3,7 +3,7 @@ ifeq ($(KDIR),)
 endif
 
 ifeq ($(QUADSTOR_ROOT),)
-	QUADSTOR_ROOT := /quadstor/quadstor
+	QUADSTOR_ROOT := /quadstorvtl/quadstor
 endif
 
 ifneq ($(KERNELRELEASE),)

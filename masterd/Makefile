@@ -3,7 +3,7 @@ include ../build/rules.mk
 CFLAGS += -Wall -O2 -I$(QUADSTOR_ROOT)/includes -I$(QUADSTOR_ROOT)/common
 #CFLAGS += -DENABLE_DEBUG
 
-LDFLAGS += -L../library/common/ -L../library/server -ltlsrv -Wl,-rpath=/quadstor/lib:/quadstor/pgsql/lib:$(QUADSTOR_ROOT)/library/common:$(QUADSTOR_ROOT)/library/server -pthread
+LDFLAGS += -L../library/common/ -L../library/server -ltlsrv -Wl,-rpath=/quadstorvtl/lib:/quadstorvtl/pgsql/lib:$(QUADSTOR_ROOT)/library/common:$(QUADSTOR_ROOT)/library/server -pthread
 
 ifeq ($(UNAME), Linux)
 LDFLAGS += -lpthread
@@ -32,6 +32,6 @@ clobber: clean
 
 install:
 	@set -e; \
-	mkdir -p /quadstor/sbin; \
-	echo "cp -f mdaemon /quadstor/sbin"; \
-	cp -f mdaemon /quadstor/sbin;
+	mkdir -p /quadstorvtl/sbin; \
+	echo "cp -f mdaemon /quadstorvtl/sbin"; \
+	cp -f mdaemon /quadstorvtl/sbin;

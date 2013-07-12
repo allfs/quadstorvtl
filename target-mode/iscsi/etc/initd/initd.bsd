@@ -14,7 +14,7 @@ RETVAL=0
 start()
 {
 	echo -n "Starting iSCSI target service: "
-	daemon /quadstor/sbin/ietd
+	daemon /quadstorvtl/sbin/ietd
 	RETVAL=$?
 	echo
 	return $RETVAL
@@ -23,7 +23,7 @@ start()
 stop()
 {
 	echo -n "Stopping iSCSI target service: "
-	/quadstor/bin/ietadm --op delete >/dev/null 2>/dev/null
+	/quadstorvtl/bin/ietadm --op delete >/dev/null 2>/dev/null
 	sleep 4
 	killall ietd 2> /dev/null
 	echo_success
@@ -38,7 +38,7 @@ restart()
 
 condrestart()
 {
-	PID=`/quadstor/bin/pidof ietd`
+	PID=`/quadstorvtl/bin/pidof ietd`
 	if [ $PID ]; then
         	restart
 	fi
@@ -46,7 +46,7 @@ condrestart()
 
 status()
 {
-	PID=`/quadstor/bin/pidof ietd`
+	PID=`/quadstorvtl/bin/pidof ietd`
 	if [ ! $PID ]; then
 		echo "iSCSI target stopped"
 		exit 1

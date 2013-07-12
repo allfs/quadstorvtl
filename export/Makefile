@@ -8,7 +8,7 @@ endif
 PWD	:= $(shell pwd)
 
 ifeq ($(QUADSTOR_ROOT),)
-	QUADSTOR_ROOT := /quadstor/quadstor
+	QUADSTOR_ROOT := /quadstorvtl/quadstor
 endif
 
 ifneq ($(KERNELRELEASE),)
@@ -28,7 +28,7 @@ EXTRA_CFLAGS += -g
 
 else
 default:
-	cp /quadstor/lib/modules/corelib.o $(PWD)
+	cp /quadstorvtl/lib/modules/corelib.o $(PWD)
 	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
 #	strip --strip-debug *.ko
 #	strip --strip-unneeded *.ko

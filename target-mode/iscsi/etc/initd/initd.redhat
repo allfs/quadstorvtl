@@ -22,9 +22,9 @@ if [ ! -f /sbin/pidof ]; then
 	PIDOF="/bin/pidof"
 fi
 
-DAEMON_CMD="daemon /quadstor/sbin/ietd"
+DAEMON_CMD="daemon /quadstorvtl/sbin/ietd"
 if [ -f /sbin/start-stop-daemon ]; then
-	DAEMON_CMD="/sbin/start-stop-daemon --start --exec /quadstor/sbin/ietd --quiet"
+	DAEMON_CMD="/sbin/start-stop-daemon --start --exec /quadstorvtl/sbin/ietd --quiet"
 fi
 
 start()
@@ -39,7 +39,7 @@ start()
 stop()
 {
 	echo -n "Stopping iSCSI target service: "
-	/quadstor/bin/ietadm --op delete >/dev/null 2>/dev/null
+	/quadstorvtl/bin/ietadm --op delete >/dev/null 2>/dev/null
 	sleep 4
 	killall ietd 2> /dev/null
 	echo_success

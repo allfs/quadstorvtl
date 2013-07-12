@@ -1,4 +1,4 @@
-QUADSTOR_ROOT=/quadstor/quadstor
+QUADSTOR_ROOT=/quadstorvtl/quadstor
 
 include $(QUADSTOR_ROOT)/build/rules.mk
 

@@ -12,7 +12,7 @@ CFLAGS += -DENABLE_IMPEXP
 
 CFLAGS += -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE
 
-LDFLAGS += -Wl,-rpath=/quadstor/lib:$(QUADSTOR_ROOT)/library/common -L../common -L/quadstor/lib -ltlmsg
+LDFLAGS += -Wl,-rpath=/quadstorvtl/lib:$(QUADSTOR_ROOT)/library/common -L../common -L/quadstorvtl/lib -ltlmsg
 
 ifeq ($(UNAME), Linux)
 LDFLAGS += -lpthread

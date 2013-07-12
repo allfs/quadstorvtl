@@ -259,7 +259,7 @@ skip_drives:
 			cgi_print_column("Reload", "N/A");
 		cgi_print_comma();
 
-		cgi_print_column_format("Delete", "<a href=\"deletevcartridge.cgi?tl_id=%u&tape_id=%u&vtltype=%d\"  onclick=\\'return confirm(\\\"Delete VCartrdige %s?\\\");\\'><img src=\"/quadstor/delete.png\" width=16px height=16px border=0></a>", tl_id, vcartridge->tape_id, T_CHANGER, vcartridge->label);
+		cgi_print_column_format("Delete", "<a href=\"deletevcartridge.cgi?tl_id=%u&tape_id=%u&vtltype=%d\"  onclick=\\'return confirm(\\\"Delete VCartrdige %s?\\\");\\'><img src=\"/quadstorvtl/delete.png\" width=16px height=16px border=0></a>", tl_id, vcartridge->tape_id, T_CHANGER, vcartridge->label);
 		cgi_print_row_end();
 	}
 	cgi_print_table_end("vcartridges-table");

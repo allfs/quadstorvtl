@@ -84,13 +84,13 @@ int main()
 	cgi_print_row_start();
 	cgi_print_column("name", "Core Version");
 	cgi_print_comma();
-	cgi_print_column("value", get_version("/quadstor/etc/quadstor-vtl-core-version"));
+	cgi_print_column("value", get_version("/quadstorvtl/etc/quadstor-vtl-core-version"));
 	cgi_print_row_end();
 
 	cgi_print_row_start();
 	cgi_print_column("name", "Itf Version");
 	cgi_print_comma();
-	cgi_print_column("value", get_version("/quadstor/etc/quadstor-vtl-itf-version"));
+	cgi_print_column("value", get_version("/quadstorvtl/etc/quadstor-vtl-itf-version"));
 	cgi_print_row_end();
 
 	cgi_print_row_start();

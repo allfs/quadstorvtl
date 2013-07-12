@@ -14,7 +14,7 @@ ifeq ($(KDIR),)
 endif
 
 ifeq ($(QUADSTOR_ROOT),)
-	QUADSTOR_ROOT := /quadstor/src
+	QUADSTOR_ROOT := /quadstorvtl/src
 endif
 
 ifneq ($(KERNELRELEASE),)

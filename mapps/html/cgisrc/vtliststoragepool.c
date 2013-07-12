@@ -82,7 +82,7 @@ int main()
 		cgi_print_comma();
 
 		if (group_info->group_id)
-			cgi_print_column_format("Delete", "<a href=\"vtdeletestoragepool.cgi?group_id=%u\"  onclick=\\'return confirm(\\\"Delete pool %s?\\\");\\'><img src=\"/quadstor/delete.png\" width=16px height=16px border=0></a>", group_info->group_id, group_info->name);
+			cgi_print_column_format("Delete", "<a href=\"vtdeletestoragepool.cgi?group_id=%u\"  onclick=\\'return confirm(\\\"Delete pool %s?\\\");\\'><img src=\"/quadstorvtl/delete.png\" width=16px height=16px border=0></a>", group_info->group_id, group_info->name);
 		else
 			cgi_print_column("Delete", " ");
 		cgi_print_row_end();

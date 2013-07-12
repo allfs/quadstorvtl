@@ -102,19 +102,19 @@ __cgi_print_header(char *title, char *jsfile, int nocache, char *meta, int refre
 	if (refresh)
 		printf("<meta http-equiv=\"refresh\" content=\"%d\" />\n", refresh);
 	printf("<title>%s</title>\n", title);
-	printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"/quadstor/yui/build/cssgrids/grids-min.css\" />\n");
-	printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"/quadstor/yui/build/cssfonts/fonts-min.css\" />\n");
-	printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"/quadstor/yui/build/cssbutton/cssbutton.css\" />\n");
-	printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"/quadstor/quadstor.css\" />\n");
-	printf("<script type=\"text/javascript\" src=\"/quadstor/yui/build/yui/yui-min.js\"></script>\n");
+	printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"/quadstorvtl/yui/build/cssgrids/grids-min.css\" />\n");
+	printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"/quadstorvtl/yui/build/cssfonts/fonts-min.css\" />\n");
+	printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"/quadstorvtl/yui/build/cssbutton/cssbutton.css\" />\n");
+	printf("<link rel=\"stylesheet\" type=\"text/css\" href=\"/quadstorvtl/quadstor.css\" />\n");
+	printf("<script type=\"text/javascript\" src=\"/quadstorvtl/yui/build/yui/yui-min.js\"></script>\n");
 	if (jsfile)
-		printf("<script type=\"text/javascript\" src=\"/quadstor/%s\"></script>\n", jsfile);
+		printf("<script type=\"text/javascript\" src=\"/quadstorvtl/%s\"></script>\n", jsfile);
 	printf("</head>\n");
 	if (onload)
 		printf("<body class=\"yui3-skin-sam\" onload=\"%s\">\n", onload);
 	else
 		printf("<body class=\"yui3-skin-sam\">\n");
-	printf("<img src=\"/quadstor/quadstorlogo.png\" alt=\"QUADStor Logo\"/>\n");
+	printf("<img src=\"/quadstorvtl/quadstorlogo.png\" alt=\"QUADStor Logo\"/>\n");
 	printf("<div class=\"yui3-g\">\n");
 	printf("<div class=\"yui3-u-23-24\" id=\"main\">\n");
 	printf("\n");

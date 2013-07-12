@@ -173,12 +173,12 @@ struct sense_info {
 };
 
 #ifdef FREEBSD
-#define SG_SCAN_PROG	"/quadstor/bin/cam"
-#define SG_SCAN_PROG_ALL	"/quadstor/bin/cam"
+#define SG_SCAN_PROG	"/quadstorvtl/bin/cam"
+#define SG_SCAN_PROG_ALL	"/quadstorvtl/bin/cam"
 #else
 #define SG_SCAN_PROG	"/usr/bin/sg_map -i -sd"
 #define SG_SCAN_PROG_ALL	"/usr/bin/sg_map"
-#define DMSETUP_PROG	"/quadstor/sbin/dmsetup_mod"
+#define DMSETUP_PROG	"/quadstorvtl/sbin/dmsetup_mod"
 #define SG_MAP_PROG	"/usr/bin/sg_map"
 #endif
 

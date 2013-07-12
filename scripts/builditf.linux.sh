@@ -13,51 +13,51 @@ checkerror() {
 	fi
 }
 
-if [ ! -f /quadstor/lib/modules/corelib.o ]; then
+if [ ! -f /quadstorvtl/lib/modules/corelib.o ]; then
 	echo "Cannot find core library. Check if quadstor-vtl-core package is installed"
 	exit 1
 fi
 
 os=`uname`
-cd /quadstor/src/export
+cd /quadstorvtl/src/export
 make clean && make 
 checkerror
 
 kvers=`uname -r`
-mkdir /quadstor/lib/modules/$kvers
+mkdir /quadstorvtl/lib/modules/$kvers
 
-cp -f vtlcore.ko /quadstor/lib/modules/$kvers/
-cp -f ldev.ko /quadstor/lib/modules/$kvers/
+cp -f vtlcore.ko /quadstorvtl/lib/modules/$kvers/
+cp -f ldev.ko /quadstorvtl/lib/modules/$kvers/
 
-cd /quadstor/src/target-mode/iscsi/kernel/
+cd /quadstorvtl/src/target-mode/iscsi/kernel/
 make clean && make 
 checkerror
 
-cp -f iscsit.ko /quadstor/lib/modules/$kvers/
+cp -f iscsit.ko /quadstorvtl/lib/modules/$kvers/
 
-cd /quadstor/src/target-mode/iscsi/usr/
+cd /quadstorvtl/src/target-mode/iscsi/usr/
 make clean && make 
 checkerror
 
-mkdir -p /quadstor/bin
-cp -f ietadm /quadstor/bin
+mkdir -p /quadstorvtl/bin
+cp -f ietadm /quadstorvtl/bin
 
-mkdir -p /quadstor/sbin
-cp -f ietd /quadstor/sbin
+mkdir -p /quadstorvtl/sbin
+cp -f ietd /quadstorvtl/sbin
 
-cd /quadstor/src/target-mode/fc/qla2xxx
+cd /quadstorvtl/src/target-mode/fc/qla2xxx
 make clean && make 
 checkerror
 
-cp -f qla2xxx.ko /quadstor/lib/modules/$kvers/
+cp -f qla2xxx.ko /quadstorvtl/lib/modules/$kvers/
 
-cd /quadstor/src/target-mode/fc/srpt
+cd /quadstorvtl/src/target-mode/fc/srpt
 make clean && make 
 checkerrorwarnonly
 
 if [ -f ib_srpt.ko ]; then
-	cp -f ib_srpt.ko /quadstor/lib/modules/$kvers/
+	cp -f ib_srpt.ko /quadstorvtl/lib/modules/$kvers/
 fi
 
 #Install the newly build qla2xxx driver
-/quadstor/bin/qlainst
+/quadstorvtl/bin/qlainst

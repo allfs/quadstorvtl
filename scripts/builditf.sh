@@ -12,18 +12,18 @@ if [ "$os" = "FreeBSD" ]; then
 	GMAKE="gmake"
 fi
 
-cd /quadstor/src/target-mode/iscsi/kernel/
+cd /quadstorvtl/src/target-mode/iscsi/kernel/
 make clean && make 
 checkerror
 
-cp -f iscsit.ko /quadstor/lib/modules/
+cp -f iscsit.ko /quadstorvtl/lib/modules/
 
-cd /quadstor/src/target-mode/iscsi/usr/
+cd /quadstorvtl/src/target-mode/iscsi/usr/
 $GMAKE clean && $GMAKE 
 checkerror
 
-mkdir -p /quadstor/bin
-cp -f ietadm /quadstor/bin
+mkdir -p /quadstorvtl/bin
+cp -f ietadm /quadstorvtl/bin
 
-mkdir -p /quadstor/sbin
-cp -f ietd /quadstor/sbin
+mkdir -p /quadstorvtl/sbin
+cp -f ietd /quadstorvtl/sbin

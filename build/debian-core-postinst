@@ -3,16 +3,16 @@
 echo ""
 echo "Performing post install. Please wait..."
 sleep 2
-if [ ! -d /quadstor/pgsql/data ]; then
-	/quadstor/pgsql/scripts/pgpost.sh
+if [ ! -d /quadstorvtl/pgsql/data ]; then
+	/quadstorvtl/pgsql/scripts/pgpost.sh
 fi
 
-/quadstor/pgsql/scripts/pgpatch.sh > /dev/null 2>&1
+/quadstorvtl/pgsql/scripts/pgpatch.sh > /dev/null 2>&1
 
 update-rc.d quadstor defaults
 
 /usr/sbin/setsebool -P httpd_enable_cgi 1 > /dev/null 2>&1
-mkdir -p /quadstor/etc
-echo "2.2.8 for Debian" > /quadstor/etc/quadstor-vtl-core-version
+mkdir -p /quadstorvtl/etc
+echo "2.2.8 for Debian" > /quadstorvtl/etc/quadstor-vtl-core-version
 
 exit 0

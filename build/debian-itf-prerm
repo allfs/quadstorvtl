@@ -20,5 +20,5 @@ if [ "$cmod" != "" ]; then
 	exit 1
 fi
 
-/quadstor/bin/qlauninst
+/quadstorvtl/bin/qlauninst
 exit 0

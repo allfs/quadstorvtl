@@ -13,7 +13,7 @@ CGIBIN = /var/www/cgi-bin/
 
 CFLAGS += -Wall -I../cgihtml/ -I../../../includes/ -DCGIBIN=\"$(CGIBIN)\" -I$(QUADSTOR_ROOT)/pgsql/include/ -I ../../../library/common
 
-LDFLAGS += -Wl,-rpath=/quadstor/lib:$(QUADSTOR_ROOT)/library/common -Wl,-rpath=/quadstor/lib:$(QUADSTOR_ROOT)/library/client -L../../../library/common/ -L../../../library/client -ltlclnt -ltlmsg
+LDFLAGS += -Wl,-rpath=/quadstorvtl/lib:$(QUADSTOR_ROOT)/library/common -Wl,-rpath=/quadstorvtl/lib:$(QUADSTOR_ROOT)/library/client -L../../../library/common/ -L../../../library/client -ltlclnt -ltlmsg
 
 
 CGIHTML = ../cgihtml/cgihtml.a 

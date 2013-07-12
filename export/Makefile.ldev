@@ -2,7 +2,7 @@ KMOD = ldev
 
 SRCS = opt_cam.h ldev_bsd.c devq.c
 
-QUADSTOR_ROOT := /quadstor/quadstor/
+QUADSTOR_ROOT := /quadstorvtl/quadstor/
 CFLAGS = -I. -DFREEBSD
 CFLAGS += -O2
 #CFLAGS += -g

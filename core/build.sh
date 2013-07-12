@@ -31,5 +31,5 @@ fi
 
 #objcopy --strip-debug corelib.o
 #objcopy --strip-unneeded corelib.o
-mkdir -p /quadstor/lib/modules/
-cp -f corelib.o /quadstor/lib/modules/
+mkdir -p /quadstorvtl/lib/modules/
+cp -f corelib.o /quadstorvtl/lib/modules/

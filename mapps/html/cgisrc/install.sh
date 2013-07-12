@@ -1,17 +1,17 @@
 #!/bin/sh
 
-rm -rf /quadstor/httpd/
-mkdir -p /quadstor/httpd/www/quadstor
-mkdir -p /quadstor/httpd/cgi-bin/
-cp -r yui /quadstor/httpd/www/quadstor/
-cp -f *.png /quadstor/httpd/www/quadstor/
-cp -f *.js /quadstor/httpd/www//quadstor/
-cp -f *.css /quadstor/httpd/www//quadstor/
-cp -f index.html /quadstor/httpd/www/
+rm -rf /quadstorvtl/httpd/
+mkdir -p /quadstorvtl/httpd/www/quadstor
+mkdir -p /quadstorvtl/httpd/cgi-bin/
+cp -r yui /quadstorvtl/httpd/www/quadstor/
+cp -f *.png /quadstorvtl/httpd/www/quadstor/
+cp -f *.js /quadstorvtl/httpd/www//quadstor/
+cp -f *.css /quadstorvtl/httpd/www//quadstor/
+cp -f index.html /quadstorvtl/httpd/www/
 
 for i in `ls -1 *.cgi`;do
-	echo "cp -f $i /quadstor/httpd/cgi-bin/"; \
-	cp -f $i /quadstor/httpd/cgi-bin/; \
+	echo "cp -f $i /quadstorvtl/httpd/cgi-bin/"; \
+	cp -f $i /quadstorvtl/httpd/cgi-bin/; \
 done
 
 if [ -d /usr/local/www/apache22/ ]; then 
@@ -34,14 +34,14 @@ else
 	cgibin="/usr/lib/cgi-bin"
 fi
 
-mkdir -p $htdocs/quadstor/ 
-if [ ! -d $htdocs/quadstor/yui ]; then
-	cp -r yui $htdocs/quadstor/
+mkdir -p $htdocs/quadstorvtl/ 
+if [ ! -d $htdocs/quadstorvtl/yui ]; then
+	cp -r yui $htdocs/quadstorvtl/
 fi
 
-cp -f *.js $htdocs/quadstor/
-cp -f *.css $htdocs/quadstor/
-cp -f *.png $htdocs/quadstor/
+cp -f *.js $htdocs/quadstorvtl/
+cp -f *.css $htdocs/quadstorvtl/
+cp -f *.png $htdocs/quadstorvtl/
 cp -f index.html $htdocs/
 for i in `ls -1 *.cgi`;do
 	echo "cp -f $i $cgibin"; \

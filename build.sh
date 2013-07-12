@@ -16,58 +16,58 @@ if [ "$1" = "clobber" ]; then
 	clean="clean"
 fi
 
-rm -f /quadstor/lib/modules/corelib.o
-rm -f /quadstor/quadstor/export/corelib.o
-cd /quadstor/quadstor/core && sh build.sh clean && sh build.sh $clean
+rm -f /quadstorvtl/lib/modules/corelib.o
+rm -f /quadstorvtl/quadstor/export/corelib.o
+cd /quadstorvtl/quadstor/core && sh build.sh clean && sh build.sh $clean
 checkerror
 
 if [ "$clean" != install ]; then
 if [ "$os" = "FreeBSD" ]; then
-	cd /quadstor/quadstor/export && make -f Makefile.core $clean
-	cd /quadstor/quadstor/export && make -f Makefile.ldev $clean
+	cd /quadstorvtl/quadstor/export && make -f Makefile.core $clean
+	cd /quadstorvtl/quadstor/export && make -f Makefile.ldev $clean
 	checkerror
 else
-	cd /quadstor/quadstor/export && make $clean
+	cd /quadstorvtl/quadstor/export && make $clean
 	checkerror
 fi
 fi
 
-cd /quadstor/quadstor/target-mode/iscsi/kernel && $GMAKE -f Makefile.kmod $clean
+cd /quadstorvtl/quadstor/target-mode/iscsi/kernel && $GMAKE -f Makefile.kmod $clean
 checkerror
 
-cd /quadstor/quadstor/target-mode/fc/ && $GMAKE $clean
+cd /quadstorvtl/quadstor/target-mode/fc/ && $GMAKE $clean
 checkerror
 
-cd /quadstor/quadstor/others/ && $GMAKE $clean
+cd /quadstorvtl/quadstor/others/ && $GMAKE $clean
 checkerror
-cd /quadstor/quadstor/library && $GMAKE $clean
+cd /quadstorvtl/quadstorvtl/library && $GMAKE $clean
 checkerror
-cd /quadstor/quadstor/target-mode/iscsi/usr && $GMAKE $clean
+cd /quadstorvtl/quadstor/target-mode/iscsi/usr && $GMAKE $clean
 checkerror
-cd /quadstor/quadstor/mapps/html && $GMAKE $clean
+cd /quadstorvtl/quadstor/mapps/html && $GMAKE $clean
 checkerror
-cd /quadstor/quadstor/masterd && $GMAKE $clean
+cd /quadstorvtl/quadstor/masterd && $GMAKE $clean
 checkerror
-cd /quadstor/quadstor/scctl && $GMAKE $clean
+cd /quadstorvtl/quadstor/scctl && $GMAKE $clean
 checkerror
 
-cd /quadstor/quadstor/etc && $GMAKE $clean
+cd /quadstorvtl/quadstorvtl/etc && $GMAKE $clean
 checkerror
 
 if [ "$clean" = "" ]; then
 	exit 0
 fi
 
-rm -f /quadstor/quadstor/core/@
-rm -f /quadstor/quadstor/core/x86
-rm -f /quadstor/quadstor/core/machine
-rm -f /quadstor/quadstor/export/@
-rm -f /quadstor/quadstor/export/x86
-rm -f /quadstor/quadstor/export/machine
-rm -f /quadstor/quadstor/target-mode/iscsi/kernel/@
-rm -f /quadstor/quadstor/target-mode/iscsi/kernel/x86
-rm -f /quadstor/quadstor/target-mode/iscsi/kernel/machine
-rm -f /quadstor/quadstor/target-mode/fc/isp/@
-rm -f /quadstor/quadstor/target-mode/fc/isp/x86
-rm -f /quadstor/quadstor/target-mode/fc/isp/machine
+rm -f /quadstorvtl/quadstor/core/@
+rm -f /quadstorvtl/quadstor/core/x86
+rm -f /quadstorvtl/quadstor/core/machine
+rm -f /quadstorvtl/quadstor/export/@
+rm -f /quadstorvtl/quadstor/export/x86
+rm -f /quadstorvtl/quadstor/export/machine
+rm -f /quadstorvtl/quadstor/target-mode/iscsi/kernel/@
+rm -f /quadstorvtl/quadstor/target-mode/iscsi/kernel/x86
+rm -f /quadstorvtl/quadstor/target-mode/iscsi/kernel/machine
+rm -f /quadstorvtl/quadstor/target-mode/fc/isp/@
+rm -f /quadstorvtl/quadstor/target-mode/fc/isp/x86
+rm -f /quadstorvtl/quadstor/target-mode/fc/isp/machine
 exit 0

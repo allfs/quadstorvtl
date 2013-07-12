@@ -46,7 +46,7 @@
 
 #define BUFSIZE		4096
 #define CONFIG_FILE	"ietd.conf"
-#define CONFIG_DIR	"/quadstor/etc/iet/"
+#define CONFIG_DIR	"/quadstorvtl/etc/iet/"
 #define INI_ALLOW_FILE	"initiators.allow"
 #define INI_DENY_FILE	"initiators.deny"
 #define TGT_ALLOW_FILE	"targets.allow"
@@ -439,7 +439,7 @@ static int match(u32 tid, struct sockaddr *sa, char *initiator, char *filename)
 		if (errno != ENOENT)
 			return -errno;
 
-		snprintf(fname, sizeof(fname), "%s%s", "/quadstor/etc/", filename);
+		snprintf(fname, sizeof(fname), "%s%s", "/quadstorvtl/etc/", filename);
 		fp = fopen(fname, "r");
 		if (!fp)
 			return -errno;
@@ -820,7 +820,7 @@ static void plain_init(char *params, int *timeout)
 	}
 
 	snprintf(file1, sizeof(file1), "%s%s", CONFIG_DIR, CONFIG_FILE);
-	snprintf(file2, sizeof(file2), "/quadstor/etc/%s", CONFIG_FILE);
+	snprintf(file2, sizeof(file2), "/quadstorvtl/etc/%s", CONFIG_FILE);
 
 	if (!(fp = fopen(params ? params : file1, "r"))) {
 		if ((fp = fopen(file2, "r")))

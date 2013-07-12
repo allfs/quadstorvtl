@@ -1,5 +1,5 @@
 ifeq ($(QUADSTOR_ROOT),)
-	QUADSTOR_ROOT := /quadstor/quadstor
+	QUADSTOR_ROOT := /quadstorvtl/quadstor
 endif
 ENABLE_STDERR := 0
 RELEASE_BUILD := 0

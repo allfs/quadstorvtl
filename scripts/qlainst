@@ -2,9 +2,9 @@
 KERNEL_VERSION=`uname -r`
 INSTALL_PATH="/boot/"
 
-if [ ! -f /quadstor/lib/modules/$KERNEL_VERSION/qla2xxx.ko ]; then
+if [ ! -f /quadstorvtl/lib/modules/$KERNEL_VERSION/qla2xxx.ko ]; then
 	echo "qla2xxx driver has not been build for kernel version $KERNEL_VERSION"
-	echo "Build the itf package by running /quadstor/bin/builditf first"
+	echo "Build the itf package by running /quadstorvtl/bin/builditf first"
 	exit 1
 fi
 
@@ -14,7 +14,7 @@ if [ ! -f /lib/modules/$KERNEL_VERSION/kernel/drivers/scsi/qla2xxx/qla2xxx.ko.qs
 	mv -f /lib/modules/$KERNEL_VERSION/kernel/drivers/scsi/qla2xxx/qla2xxx.ko /lib/modules/$KERNEL_VERSION/kernel/drivers/scsi/qla2xxx/qla2xxx.ko.qssave
 fi
 
-mv -f /quadstor/lib/modules/$KERNEL_VERSION/qla2xxx.ko /lib/modules/$KERNEL_VERSION/kernel/drivers/scsi/qla2xxx/qla2xxx.ko
+mv -f /quadstorvtl/lib/modules/$KERNEL_VERSION/qla2xxx.ko /lib/modules/$KERNEL_VERSION/kernel/drivers/scsi/qla2xxx/qla2xxx.ko
 chmod 744 /lib/modules/$KERNEL_VERSION/kernel/drivers/scsi/qla2xxx/qla2xxx.ko
 
 

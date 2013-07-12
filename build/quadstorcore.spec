@@ -14,60 +14,60 @@ Provides: libtlclnt.so()(64bit) libtlmsg.so()(64bit) libtlsrv.so()(64bit)
 %description
  QUADStor storage virtualization, data deduplication 
 %build
-cd /quadstor/quadstor/ && sh build.sh clean
-cd /quadstor/quadstor/ && sh build.sh
+cd /quadstorvtl/quadstor/ && sh build.sh clean
+cd /quadstorvtl/quadstor/ && sh build.sh
 
 %install
 rm -rf $RPM_BUILD_ROOT/
 
-mkdir -p $RPM_BUILD_ROOT/quadstor/lib/modules
-mkdir -p $RPM_BUILD_ROOT/quadstor/bin
-mkdir -p $RPM_BUILD_ROOT/quadstor/sbin
-mkdir -p $RPM_BUILD_ROOT/quadstor/lib
-mkdir -p $RPM_BUILD_ROOT/quadstor/lib/modules
-mkdir -p $RPM_BUILD_ROOT/quadstor/etc
-mkdir -p $RPM_BUILD_ROOT/quadstor/etc/iet
-#mkdir -p $RPM_BUILD_ROOT/quadstor/etc/specs
+mkdir -p $RPM_BUILD_ROOT/quadstorvtl/lib/modules
+mkdir -p $RPM_BUILD_ROOT/quadstorvtl/bin
+mkdir -p $RPM_BUILD_ROOT/quadstorvtl/sbin
+mkdir -p $RPM_BUILD_ROOT/quadstorvtl/lib
+mkdir -p $RPM_BUILD_ROOT/quadstorvtl/lib/modules
+mkdir -p $RPM_BUILD_ROOT/quadstorvtl/etc
+mkdir -p $RPM_BUILD_ROOT/quadstorvtl/etc/iet
+#mkdir -p $RPM_BUILD_ROOT/quadstorvtl/etc/specs
 mkdir -p $RPM_BUILD_ROOT/var/www/cgi-bin
 mkdir -p $RPM_BUILD_ROOT/var/www/html
-mkdir -p $RPM_BUILD_ROOT/var/www/html/quadstor
+mkdir -p $RPM_BUILD_ROOT/var/www/html/quadstorvtl
 mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
 
-cd /quadstor/quadstor/pgsql
+cd /quadstorvtl/quadstorvtl/pgsql
 make install DESTDIR=$RPM_BUILD_ROOT
 
-install -m 755 /quadstor/quadstor/masterd/mdaemon $RPM_BUILD_ROOT/quadstor/sbin/mdaemon
-install -m 755  /quadstor/quadstor/library/client/libtlclnt.so $RPM_BUILD_ROOT/quadstor/lib/libtlclnt.so.%{libvers}
-install -m 755 /quadstor/quadstor/library/server/libtlsrv.so $RPM_BUILD_ROOT/quadstor/lib/libtlsrv.so.%{libvers}
-install -m 755 /quadstor/quadstor/library/common/libtlmsg.so $RPM_BUILD_ROOT/quadstor/lib/libtlmsg.so.%{libvers}
-install -m 644 /quadstor/lib/modules/corelib.o $RPM_BUILD_ROOT/quadstor/lib/modules/
-install -m 755 /quadstor/quadstor/mapps/html/cgisrc/*.cgi $RPM_BUILD_ROOT/var/www/cgi-bin/
-install -m 755 /quadstor/quadstor/mapps/html/cgisrc/*.css $RPM_BUILD_ROOT/var/www/html/quadstor/
-install -m 755 /quadstor/quadstor/mapps/html/cgisrc/*.js $RPM_BUILD_ROOT/var/www/html/quadstor/
-install -m 755 /quadstor/quadstor/mapps/html/cgisrc/*.png $RPM_BUILD_ROOT/var/www/html/quadstor/
-cp -pr /quadstor/quadstor/mapps/html/cgisrc/yui/ $RPM_BUILD_ROOT/var/www/html/quadstor/
-install -m 755 /quadstor/quadstor/mapps/html/cgisrc/index.html $RPM_BUILD_ROOT/var/www/html/
-install -m 755 /quadstor/quadstor/scctl/scctl $RPM_BUILD_ROOT/quadstor/bin/scctl
-install -m 755 /quadstor/quadstor/scctl/fcconfig $RPM_BUILD_ROOT/quadstor/bin/fcconfig
-install -m 755 /quadstor/quadstor/scctl/dbrecover $RPM_BUILD_ROOT/quadstor/bin/dbrecover
-install -m 744 /quadstor/quadstor/etc/quadstor.linux $RPM_BUILD_ROOT/etc/rc.d/init.d/quadstor
-install -m 444 /quadstor/quadstor/build/LICENSE $RPM_BUILD_ROOT/quadstor/
-install -m 444 /quadstor/quadstor/build/GPLv2 $RPM_BUILD_ROOT/quadstor/
+install -m 755 /quadstorvtl/quadstor/masterd/mdaemon $RPM_BUILD_ROOT/quadstorvtl/sbin/mdaemon
+install -m 755  /quadstorvtl/quadstorvtl/library/client/libtlclnt.so $RPM_BUILD_ROOT/quadstorvtl/lib/libtlclnt.so.%{libvers}
+install -m 755 /quadstorvtl/quadstorvtl/library/server/libtlsrv.so $RPM_BUILD_ROOT/quadstorvtl/lib/libtlsrv.so.%{libvers}
+install -m 755 /quadstorvtl/quadstorvtl/library/common/libtlmsg.so $RPM_BUILD_ROOT/quadstorvtl/lib/libtlmsg.so.%{libvers}
+install -m 644 /quadstorvtl/lib/modules/corelib.o $RPM_BUILD_ROOT/quadstorvtl/lib/modules/
+install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/*.cgi $RPM_BUILD_ROOT/var/www/cgi-bin/
+install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/*.css $RPM_BUILD_ROOT/var/www/html/quadstorvtl/
+install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/*.js $RPM_BUILD_ROOT/var/www/html/quadstorvtl/
+install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/*.png $RPM_BUILD_ROOT/var/www/html/quadstorvtl/
+cp -pr /quadstorvtl/quadstor/mapps/html/cgisrc/yui/ $RPM_BUILD_ROOT/var/www/html/quadstorvtl/
+install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/index.html $RPM_BUILD_ROOT/var/www/html/
+install -m 755 /quadstorvtl/quadstor/scctl/scctl $RPM_BUILD_ROOT/quadstorvtl/bin/scctl
+install -m 755 /quadstorvtl/quadstor/scctl/fcconfig $RPM_BUILD_ROOT/quadstorvtl/bin/fcconfig
+install -m 755 /quadstorvtl/quadstor/scctl/dbrecover $RPM_BUILD_ROOT/quadstorvtl/bin/dbrecover
+install -m 744 /quadstorvtl/quadstorvtl/etc/quadstor.linux $RPM_BUILD_ROOT/etc/rc.d/init.d/quadstor
+install -m 444 /quadstorvtl/quadstor/build/LICENSE $RPM_BUILD_ROOT/quadstorvtl/
+install -m 444 /quadstorvtl/quadstor/build/GPLv2 $RPM_BUILD_ROOT/quadstorvtl/
 
 #Install src
-mkdir -p $RPM_BUILD_ROOT/quadstor/src/others
-cp /quadstor/quadstor/library/server/md5*.[ch] $RPM_BUILD_ROOT/quadstor/src/others/
-cp /quadstor/quadstor/core/lz4*.[ch] $RPM_BUILD_ROOT/quadstor/src/others/
-cp /quadstor/quadstor/core/lzf*.[ch] $RPM_BUILD_ROOT/quadstor/src/others/
-cp /quadstor/quadstor/core/sysdefs/*.h $RPM_BUILD_ROOT/quadstor/src/others/
+mkdir -p $RPM_BUILD_ROOT/quadstorvtl/src/others
+cp /quadstorvtl/quadstorvtl/library/server/md5*.[ch] $RPM_BUILD_ROOT/quadstorvtl/src/others/
+cp /quadstorvtl/quadstor/core/lz4*.[ch] $RPM_BUILD_ROOT/quadstorvtl/src/others/
+cp /quadstorvtl/quadstor/core/lzf*.[ch] $RPM_BUILD_ROOT/quadstorvtl/src/others/
+cp /quadstorvtl/quadstor/core/sysdefs/*.h $RPM_BUILD_ROOT/quadstorvtl/src/others/
 
 
-cd $RPM_BUILD_ROOT/quadstor/lib && ln -fs libtlclnt.so.%{libvers} libtlclnt.so.1
-cd $RPM_BUILD_ROOT/quadstor/lib && ln -fs libtlclnt.so.%{libvers} libtlclnt.so
-cd $RPM_BUILD_ROOT/quadstor/lib && ln -fs libtlsrv.so.%{libvers} libtlsrv.so.1
-cd $RPM_BUILD_ROOT/quadstor/lib && ln -fs libtlsrv.so.%{libvers} libtlsrv.so
-cd $RPM_BUILD_ROOT/quadstor/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so.1
-cd $RPM_BUILD_ROOT/quadstor/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
+cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlclnt.so.%{libvers} libtlclnt.so.1
+cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlclnt.so.%{libvers} libtlclnt.so
+cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlsrv.so.%{libvers} libtlsrv.so.1
+cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlsrv.so.%{libvers} libtlsrv.so
+cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so.1
+cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 
 %pre
 	if [ -f /var/www/html/index.html ];then
@@ -77,19 +77,19 @@ cd $RPM_BUILD_ROOT/quadstor/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 %post
 	echo "Performing post install. Please wait..."
 	sleep 2
-	if [ ! -d /quadstor/pgsql/data ]; then
-		/quadstor/pgsql/scripts/pgpost.sh
+	if [ ! -d /quadstorvtl/pgsql/data ]; then
+		/quadstorvtl/pgsql/scripts/pgpost.sh
 	fi
 
-	/quadstor/pgsql/scripts/pgpatch.sh > /dev/null 2>&1
+	/quadstorvtl/pgsql/scripts/pgpatch.sh > /dev/null 2>&1
 
 
 	/sbin/chkconfig --add quadstor
 
 	/usr/sbin/setsebool -P httpd_enable_cgi 1 > /dev/null 2>&1
 
-	mkdir -p /quadstor/etc
-	echo "2.2.8 for RHEL/CentOS 5.x" > /quadstor/etc/quadstor-vtl-core-version
+	mkdir -p /quadstorvtl/etc
+	echo "2.2.8 for RHEL/CentOS 5.x" > /quadstorvtl/etc/quadstor-vtl-core-version
 
 	exit 0
 
@@ -109,52 +109,50 @@ cd $RPM_BUILD_ROOT/quadstor/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 
 
 %postun
-	rm -f /quadstor/etc/quadstor-vtl-core-version
+	rm -f /quadstorvtl/etc/quadstor-vtl-core-version
 	if [ -f /var/www/html/index.html.ssave ];then
 		mv -f /var/www/html/index.html.ssave /var/www/html/index.html
 	fi
-	rm -rf /quadstor/sbin /quadstor/share /quadstor/src/others/
-	rmdir --ignore-fail-on-non-empty /quadstor/lib > /dev/null 2>&1
-	rmdir --ignore-fail-on-non-empty /quadstor/bin > /dev/null 2>&1
-	rmdir --ignore-fail-on-non-empty /quadstor/etc > /dev/null 2>&1
+	rm -rf /quadstorvtl/sbin /quadstorvtl/share /quadstorvtl/src/others/
+	rmdir --ignore-fail-on-non-empty /quadstorvtl/lib > /dev/null 2>&1
+	rmdir --ignore-fail-on-non-empty /quadstorvtl/bin > /dev/null 2>&1
+	rmdir --ignore-fail-on-non-empty /quadstorvtl/etc > /dev/null 2>&1
 	exit 0
 
 %files
 %defattr(-,root,root)
-/quadstor/sbin/mdaemon
-/quadstor/bin/scctl
-/quadstor/bin/fcconfig
-/quadstor/bin/dbrecover
-/quadstor/lib/libtlclnt.so.1
-/quadstor/lib/libtlclnt.so.%{libvers}
-/quadstor/lib/libtlclnt.so
-/quadstor/lib/libtlsrv.so
-/quadstor/lib/libtlsrv.so.1
-/quadstor/lib/libtlsrv.so.%{libvers}
-/quadstor/lib/libtlmsg.so
-/quadstor/lib/libtlmsg.so.1
-/quadstor/lib/libtlmsg.so.%{libvers}
-/quadstor/lib/modules/corelib.o
+/quadstorvtl/sbin/mdaemon
+/quadstorvtl/bin/scctl
+/quadstorvtl/bin/fcconfig
+/quadstorvtl/bin/dbrecover
+/quadstorvtl/lib/libtlclnt.so.1
+/quadstorvtl/lib/libtlclnt.so.%{libvers}
+/quadstorvtl/lib/libtlclnt.so
+/quadstorvtl/lib/libtlsrv.so
+/quadstorvtl/lib/libtlsrv.so.1
+/quadstorvtl/lib/libtlsrv.so.%{libvers}
+/quadstorvtl/lib/libtlmsg.so
+/quadstorvtl/lib/libtlmsg.so.1
+/quadstorvtl/lib/libtlmsg.so.%{libvers}
+/quadstorvtl/lib/modules/corelib.o
 /var/www/cgi-bin/*.cgi
-/var/www/html/quadstor/
+/var/www/html/quadstorvtl/
 /var/www/html/index.html
 /etc/rc.d/init.d/quadstor
 
 #pgsql files
-/quadstor/pgsql/bin/
-/quadstor/pgsql/lib/
-/quadstor/pgsql/share/
-/quadstor/pgsql/scripts/
-/quadstor/pgsql/etc/
+/quadstorvtl/pgsql/bin/
+/quadstorvtl/pgsql/lib/
+/quadstorvtl/pgsql/share/
+/quadstorvtl/pgsql/scripts/
+/quadstorvtl/pgsql/etc/
 
 #src files
-/quadstor/src/
+/quadstorvtl/src/
 
 #License
-/quadstor/LICENSE
-/quadstor/GPLv2
+/quadstorvtl/LICENSE
+/quadstorvtl/GPLv2
 
 %clean
 rm -rf $RPM_BUILD_ROOT/
-
-

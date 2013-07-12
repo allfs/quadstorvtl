@@ -11,10 +11,10 @@
 ## EDIT FROM HERE
 
 # Installation prefix
-prefix=/quadstor/pgsql
+prefix=/quadstorvtl/pgsql
 
 # Data directory
-PGDATA="/quadstor/pgsql/data"
+PGDATA="/quadstorvtl/pgsql/data"
 
 # Who to run the postmaster as, usually "postgres".  (NOT "root")
 PGUSER=scdbuser
@@ -25,7 +25,7 @@ PGLOG="$PGDATA/serverlog"
 ## STOP EDITING HERE
 
 # The path that is to be used for the script
-PATH=/quadstor/bin:/quadstor/sbin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+PATH=/quadstorvtl/bin:/quadstorvtl/sbin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
 # What to use to start up the postmaster (we do NOT use pg_ctl for this,
 # as it adds no value and can cause the postmaster to misrecognize a stale
@@ -42,19 +42,19 @@ case $1 in
     start)
 #	su -l $PGUSER -c "$DAEMON -D '$PGDATA' &" >>$PGLOG 2>&1
 #	echo 'postgresql server started'
-	rm -f /quadstor/pgsql/data/postmaster.pid
-	rm -f /quadstor/pgsql/pg.log
-	su -l $PGUSER -c "$PGCTL start -w -D '$PGDATA' -l /quadstor/pgsql/pg.log > /dev/null 2>&1"
+	rm -f /quadstorvtl/pgsql/data/postmaster.pid
+	rm -f /quadstorvtl/pgsql/pg.log
+	su -l $PGUSER -c "$PGCTL start -w -D '$PGDATA' -l /quadstorvtl/pgsql/pg.log > /dev/null 2>&1"
 	;;
     stop)
 	su -l $PGUSER -c "$PGCTL stop -w -D '$PGDATA' -s -m fast > /dev/null 2>&1"
 	sleep 3
-	pkill -f /quadstor/pgsql/bin/postmaster > /dev/null 2>&1
-	pkill -f /quadstor/pgsql/bin/postgres > /dev/null 2>&1
-	rm -f /var/run/postmaster.9988.pid > /dev/null 2>&1
-	rm -f /quadstor/pgsql/data/postmaster.pid > /dev/null 2>&1
+	pkill -f /quadstorvtl/pgsql/bin/postmaster > /dev/null 2>&1
+	pkill -f /quadstorvtl/pgsql/bin/postgres > /dev/null 2>&1
+	rm -f /var/run/postmaster.9989.pid > /dev/null 2>&1
+	rm -f /quadstorvtl/pgsql/data/postmaster.pid > /dev/null 2>&1
 	rm -f /var/lock/subsys/pgsql > /dev/null 2>&1
-	rm -f /tmp/.s.PGSQL.9988* > /dev/null 2>&1
+	rm -f /tmp/.s.PGSQL.9989* > /dev/null 2>&1
 	;;
     restart)
     	stop

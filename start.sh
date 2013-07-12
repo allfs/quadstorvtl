@@ -9,24 +9,24 @@ checkerror() {
 
 sync
 sleep 4
-/quadstor/pgsql/etc/pgsql start
+/quadstorvtl/pgsql/etc/pgsql start
 checkerror
 sleep 8
-/sbin/kldload /quadstor/quadstor/export/vtlcore.ko
+/sbin/kldload /quadstorvtl/quadstor/export/vtlcore.ko
 checkerror
 
-/sbin/kldload /quadstor/quadstor/export/ldev.ko
+/sbin/kldload /quadstorvtl/quadstor/export/ldev.ko
 checkerror
 
-/sbin/kldload /quadstor/quadstor/target-mode/iscsi/kernel/iscsit.ko
+/sbin/kldload /quadstorvtl/quadstor/target-mode/iscsi/kernel/iscsit.ko
 checkerror
 
 sleep 4
-cd /quadstor/quadstor/masterd && sh load.sh
+cd /quadstorvtl/quadstor/masterd && sh load.sh
 sleep 4
 
-/quadstor/quadstor/target-mode/iscsi/usr/ietd -d 3 -c /quadstor/conf/iscsi.conf
+/quadstorvtl/quadstor/target-mode/iscsi/usr/ietd -d 3 -c /quadstorvtl/conf/iscsi.conf
 checkerror
 
-cd /quadstor/quadstor/scctl
+cd /quadstorvtl/quadstor/scctl
 ./scctl -l

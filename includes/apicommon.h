@@ -85,12 +85,12 @@ enum {
 #define MDAEMON_PORT		9999
 #define MDAEMON_BACKLOG		64
 #ifdef FREEBSD
-#define MDAEMON_PATH		"/quadstor/.mdaemon"
+#define MDAEMON_PATH		"/quadstorvtl/.mdaemon"
 #else
 #define MDAEMON_PATH		"QUADSTOR_ABSTRACT_NAMESPACE"
 #endif
-#define IETADM_PATH		"/quadstor/bin/ietadm"
-#define QUADSTOR_CONFIG_FILE "/quadstor/etc/quadstor.conf"
+#define IETADM_PATH		"/quadstorvtl/bin/ietadm"
+#define QUADSTOR_CONFIG_FILE "/quadstorvtl/etc/quadstor.conf"
 
 struct tl_msg {
 	int msg_id;

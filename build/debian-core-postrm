@@ -1,11 +1,11 @@
 #!/bin/sh
-rm -f /quadstor/core/quadstor-vtl-core-version
+rm -f /quadstorvtl/core/quadstor-vtl-core-version
 if [ -f /var/www/html/index.html.ssave ];then
 	mv -f /var/www/html/index.html.ssave /var/www/html/index.html
 fi
-rm -rf /quadstor/sbin /quadstor/share /quadstor/src/others/
-rmdir --ignore-fail-on-non-empty /quadstor/lib/modules > /dev/null 2>&1
-rmdir --ignore-fail-on-non-empty /quadstor/lib > /dev/null 2>&1
-rmdir --ignore-fail-on-non-empty /quadstor/bin > /dev/null 2>&1
-rmdir --ignore-fail-on-non-empty /quadstor/etc > /dev/null 2>&1
+rm -rf /quadstorvtl/sbin /quadstorvtl/share /quadstorvtl/src/others/
+rmdir --ignore-fail-on-non-empty /quadstorvtl/lib/modules > /dev/null 2>&1
+rmdir --ignore-fail-on-non-empty /quadstorvtl/lib > /dev/null 2>&1
+rmdir --ignore-fail-on-non-empty /quadstorvtl/bin > /dev/null 2>&1
+rmdir --ignore-fail-on-non-empty /quadstorvtl/etc > /dev/null 2>&1
 exit 0

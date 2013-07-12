@@ -95,10 +95,10 @@ fi
 
 
 # Set defaults for configuration variables
-PGENGINE=/quadstor/pgsql/bin
-PGPORT=9988
-PGDATA=/quadstor/pgsql/data
-PGLOG=/quadstor/pgsql/pgstartup.log
+PGENGINE=/quadstorvtl/pgsql/bin
+PGPORT=9989
+PGDATA=/quadstorvtl/pgsql/data
+PGLOG=/quadstorvtl/pgsql/pgstartup.log
 export PGDATA
 export PGPORT
 
@@ -177,7 +177,7 @@ case "$1" in
 	stop
 	;;
   status)
-	status /quadstor/pgsql/bin/postgres
+	status /quadstorvtl/pgsql/bin/postgres
 	script_result=$?
 	;;
   restart)
