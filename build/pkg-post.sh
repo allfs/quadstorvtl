@@ -1,9 +1,10 @@
 #!/bin/sh
 
-if [ -d /quadstor/pgsql/data ]; then
-	vtl=`grep -r vtl /quadstor/pgsql/data/base/*`
-	if [ "$vtl" != "" ]; then
-		echo "WARNING: Moving /quadstor/pgsql/data to new /quadstorvtl/pgsql/ path"
+if [ -d /quadstor/pgsql/data -a ! -d /quadstorvtl/pgsql/data ]; then
+	vtl=`grep -r vtl /quadstor/pgsql/data/base/* 2> /dev/null`
+	tdisk=`grep -r tdisk /quadstor/pgsql/data/base/* 2> /dev/null`
+	if [ "$vtl" != "" -a "$tdisk" = "" ]; then
+		echo "WARNING: Moving /quadstor/pgsql/data to /quadstorvtl/pgsql/"
 		mv -f /quadstor/pgsql/data /quadstorvtl/pgsql/data
 	fi
 fi
