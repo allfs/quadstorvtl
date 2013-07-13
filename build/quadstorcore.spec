@@ -36,7 +36,7 @@ mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
 cd /quadstorvtl/quadstor/pgsql
 make install DESTDIR=$RPM_BUILD_ROOT
 
-install -m 755 /quadstorvtl/quadstor/masterd/mdaemon $RPM_BUILD_ROOT/quadstorvtl/sbin/mdaemon
+install -m 755 /quadstorvtl/quadstor/masterd/vtmdaemon $RPM_BUILD_ROOT/quadstorvtl/sbin/vtmdaemon
 install -m 755  /quadstorvtl/quadstor/library/client/libtlclnt.so $RPM_BUILD_ROOT/quadstorvtl/lib/libtlclnt.so.%{libvers}
 install -m 755 /quadstorvtl/quadstor/library/server/libtlsrv.so $RPM_BUILD_ROOT/quadstorvtl/lib/libtlsrv.so.%{libvers}
 install -m 755 /quadstorvtl/quadstor/library/common/libtlmsg.so $RPM_BUILD_ROOT/quadstorvtl/lib/libtlmsg.so.%{libvers}
@@ -131,7 +131,7 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 
 %files
 %defattr(-,root,root)
-/quadstorvtl/sbin/mdaemon
+/quadstorvtl/sbin/vtmdaemon
 /quadstorvtl/bin/scctl
 /quadstorvtl/bin/fcconfig
 /quadstorvtl/bin/dbrecover

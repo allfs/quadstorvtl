@@ -12,26 +12,26 @@ LDFLAGS += -pthread
 endif
 
 
-all: mdaemon
+all: vtmdaemon
 
 SRCS = mdaemon.c
 
 OBJS = mdaemon.o
 
-mdaemon: $(SRCS)
+vtmdaemon: $(SRCS)
 	@set -x; \
-	$(CC) $(CFLAGS) -o mdaemon $(SRCS) $(LDFLAGS); \
+	$(CC) $(CFLAGS) -o vtmdaemon $(SRCS) $(LDFLAGS); \
 	if [ "$(RELEASE_BUILD)" -eq "1" ]; then \
-		strip --strip-unneeded mdaemon; \
+		strip --strip-unneeded vtmdaemon; \
 	fi
 
 clean:
-	rm -f *.o mdaemon 
+	rm -f *.o vtmdaemon 
 
 clobber: clean
 
 install:
 	@set -e; \
 	mkdir -p /quadstorvtl/sbin; \
-	echo "cp -f mdaemon /quadstorvtl/sbin"; \
-	cp -f mdaemon /quadstorvtl/sbin;
+	echo "cp -f vtmdaemon /quadstorvtl/sbin"; \
+	cp -f vtmdaemon /quadstorvtl/sbin;

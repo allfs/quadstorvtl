@@ -33,7 +33,7 @@ cd /quadstorvtl/quadstor/pgsql
 make install DESTDIR=$DEBIAN_ROOT
 rm -rf $DEBIAN_ROOT/quadstorvtl/pgsql/data/
 
-install -m 755 /quadstorvtl/quadstor/masterd/mdaemon $DEBIAN_ROOT/quadstorvtl/sbin/mdaemon
+install -m 755 /quadstorvtl/quadstor/masterd/vtmdaemon $DEBIAN_ROOT/quadstorvtl/sbin/vtmdaemon
 install -m 644  /quadstorvtl/quadstor/library/client/libtlclnt.so $DEBIAN_ROOT/quadstorvtl/lib/libtlclnt.so.$libvers
 install -m 644 /quadstorvtl/quadstor/library/server/libtlsrv.so $DEBIAN_ROOT/quadstorvtl/lib/libtlsrv.so.$libvers
 install -m 644 /quadstorvtl/quadstor/library/common/libtlmsg.so $DEBIAN_ROOT/quadstorvtl/lib/libtlmsg.so.$libvers

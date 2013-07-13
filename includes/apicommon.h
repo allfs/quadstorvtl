@@ -81,11 +81,11 @@ enum {
 	Log_TYPE_ERROR		= 0x03,
 };
 
-#define MDAEMON_NAME		"mdaemon"
+#define MDAEMON_NAME		"vtmdaemon"
 #define MDAEMON_PORT		9999
 #define MDAEMON_BACKLOG		64
 #ifdef FREEBSD
-#define MDAEMON_PATH		"/quadstorvtl/.mdaemon"
+#define MDAEMON_PATH		"/quadstorvtl/.vtmdaemon"
 #else
 #define MDAEMON_PATH		"QUADSTOR_ABSTRACT_NAMESPACE"
 #endif

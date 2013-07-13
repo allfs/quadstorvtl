@@ -1,3 +1,3 @@
 #pkill valgrind
-pkill mdaemon
-rm -f /quadstorvtl/.mdaemon
+pkill vtmdaemon
+rm -f /quadstorvtl/.vtmdaemon

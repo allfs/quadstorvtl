@@ -60,7 +60,7 @@ echo "quadstorvtl/bin/scctl" >> /quadstorvtl/quadstor/build/pkg-plist
 echo "quadstorvtl/bin/fcconfig" >> /quadstorvtl/quadstor/build/pkg-plist
 echo "quadstorvtl/bin/dbrecover" >> /quadstorvtl/quadstor/build/pkg-plist
 
-echo "quadstorvtl/sbin/mdaemon" >> /quadstorvtl/quadstor/build/pkg-plist
+echo "quadstorvtl/sbin/vtmdaemon" >> /quadstorvtl/quadstor/build/pkg-plist
 
 echo "quadstorvtl/etc/quadstor" >> /quadstorvtl/quadstor/build/pkg-plist
 
