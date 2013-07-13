@@ -90,10 +90,10 @@ install -m 755 /quadstorvtl/quadstor/scripts/qlauninst $RPM_BUILD_ROOT/quadstorv
 %preun
 	cmod=`/sbin/lsmod | grep vtlcore`
 	if [ "$cmod" != "" ]; then
-		if [ -f /etc/rc.d/init.d/quadstor ]; then
-			/etc/rc.d/init.d/quadstor stop
+		if [ -f /etc/rc.d/init.d/quadstorvtl ]; then
+			/etc/rc.d/init.d/quadstorvtl stop
 		else
-			/etc/rc.d/quadstor stop
+			/etc/rc.d/quadstorvtl stop
 		fi
 	fi
 

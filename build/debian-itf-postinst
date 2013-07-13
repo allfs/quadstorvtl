@@ -1,6 +1,6 @@
 #!/bin/sh
 
-update-rc.d quadstor defaults
+update-rc.d quadstorvtl defaults
 
 if [ ! -f /quadstorvtl/etc/iet/targets.allow ]; then
 	cp /quadstorvtl/etc/iet/targets.allow.sample /quadstorvtl/etc/iet/targets.allow

@@ -47,9 +47,9 @@ cp -pr /quadstorvtl/quadstor/mapps/html/cgisrc/yui/ $DEBIAN_ROOT/var/www/quadsto
 install -m 744 /quadstorvtl/quadstor/scctl/scctl $DEBIAN_ROOT/quadstorvtl/bin/scctl
 install -m 744 /quadstorvtl/quadstor/scctl/fcconfig $DEBIAN_ROOT/quadstorvtl/bin/fcconfig
 install -m 744 /quadstorvtl/quadstor/scctl/dbrecover $DEBIAN_ROOT/quadstorvtl/bin/dbrecover
-install -m 744 /quadstorvtl/quadstor/etc/quadstor.linux $DEBIAN_ROOT/etc/init.d/quadstor
-sed -i -e "s/Default-Start.*/Default-Start:\t\t2 3 4 5/g" $DEBIAN_ROOT/etc/init.d/quadstor
-sed -i -e "s/Default-Stop.*/Default-Stop:\t\t\t0 1 6/g" $DEBIAN_ROOT/etc/init.d/quadstor
+install -m 744 /quadstorvtl/quadstor/etc/quadstor.linux $DEBIAN_ROOT/etc/init.d/quadstorvtl
+sed -i -e "s/Default-Start.*/Default-Start:\t\t2 3 4 5/g" $DEBIAN_ROOT/etc/init.d/quadstorvtl
+sed -i -e "s/Default-Stop.*/Default-Stop:\t\t\t0 1 6/g" $DEBIAN_ROOT/etc/init.d/quadstorvtl
 install -m 444 /quadstorvtl/quadstor/build/LICENSE $DEBIAN_ROOT/quadstorvtl/
 install -m 444 /quadstorvtl/quadstor/build/GPLv2 $DEBIAN_ROOT/quadstorvtl/
 

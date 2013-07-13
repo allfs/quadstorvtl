@@ -15,8 +15,8 @@ fi
 
 /quadstorvtl/pgsql/scripts/pgpatch.sh > /dev/null 2>&1
 
-cp -f /quadstorvtl/etc/quadstor /etc/rc.d/
-chmod +x /quadstorvtl/etc/quadstor
+cp -f /quadstorvtl/etc/quadstor /etc/rc.d/quadstorvtl
+chmod +x /quadstorvtl/etc/quadstorvtl
 chmod +x /quadstorvtl/lib/modules/*
 
 cp -f /quadstorvtl/lib/modules/ispmod.ko /boot/kernel/

@@ -50,7 +50,7 @@ install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/index.html $RPM_BUILD_ROO
 install -m 755 /quadstorvtl/quadstor/scctl/scctl $RPM_BUILD_ROOT/quadstorvtl/bin/scctl
 install -m 755 /quadstorvtl/quadstor/scctl/fcconfig $RPM_BUILD_ROOT/quadstorvtl/bin/fcconfig
 install -m 755 /quadstorvtl/quadstor/scctl/dbrecover $RPM_BUILD_ROOT/quadstorvtl/bin/dbrecover
-install -m 744 /quadstorvtl/quadstor/etc/quadstor.linux $RPM_BUILD_ROOT/etc/rc.d/init.d/quadstor
+install -m 744 /quadstorvtl/quadstor/etc/quadstor.linux $RPM_BUILD_ROOT/etc/rc.d/init.d/quadstorvtl
 install -m 444 /quadstorvtl/quadstor/build/LICENSE $RPM_BUILD_ROOT/quadstorvtl/
 install -m 444 /quadstorvtl/quadstor/build/GPLv2 $RPM_BUILD_ROOT/quadstorvtl/
 
@@ -108,7 +108,7 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 
 	cmod=`/sbin/lsmod | grep vtlcore`
 	if [ "$cmod" != "" ]; then
-		/etc/rc.d/init.d/quadstor stop
+		/etc/rc.d/init.d/quadstorvtl stop
 	fi
 
 	cmod=`/sbin/lsmod | grep vtlcore`
@@ -148,7 +148,7 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 /var/www/cgi-bin/*.cgi
 /var/www/html/quadstorvtl/
 /var/www/html/index.html
-/etc/rc.d/init.d/quadstor
+/etc/rc.d/init.d/quadstorvtl
 
 #pgsql files
 /quadstorvtl/pgsql/bin/

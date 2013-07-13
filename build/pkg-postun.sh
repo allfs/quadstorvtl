@@ -13,7 +13,7 @@ rm -rf /quadstorvtl/pgsql/lib
 rm -rf /quadstorvtl/pgsql/scripts
 rm -rf /quadstorvtl/pgsql/share
 rm -f /boot/kernel/ispmod.ko
-rm -f /etc/rc.d/quadstor
+rm -f /etc/rc.d/quadstorvtl
 rmdir /quadstorvtl/bin > /dev/null 2>&1
 rmdir /quadstorvtl/sbin > /dev/null 2>&1
 rmdir /quadstorvtl/src > /dev/null 2>&1
