@@ -22,7 +22,7 @@ sync
 /sbin/insmod /quadstorvtl/quadstor/export/vtlcore.ko
 checkerror
 
-/sbin/insmod /quadstorvtl/quadstor/export/ldev.ko
+/sbin/insmod /quadstorvtl/quadstor/export/vtldev.ko
 checkerror
 
 /sbin/insmod /quadstorvtl/quadstor/target-mode/iscsi/kernel/iscsit.ko

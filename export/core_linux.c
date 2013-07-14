@@ -1546,21 +1546,21 @@ static void
 exit_caches(void)
 {
 	if (bpriv_cache)
-		uma_zdestroy("bpriv_cache", bpriv_cache);
+		uma_zdestroy("vt_bpriv_cache", bpriv_cache);
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,0,0))
 	if (tpriv_cache)
-		uma_zdestroy("tpriv_cache", tpriv_cache);
+		uma_zdestroy("vt_tpriv_cache", tpriv_cache);
 #endif
 
 	if (mtx_cache)
-		uma_zdestroy("mtx_cache", mtx_cache);
+		uma_zdestroy("vt_mtx_cache", mtx_cache);
 
 	if (sx_cache)
-		uma_zdestroy("sx_cache", sx_cache);
+		uma_zdestroy("vt_sx_cache", sx_cache);
 
 	if (cv_cache)
-		uma_zdestroy("cv_cache", cv_cache);
+		uma_zdestroy("vt_cv_cache", cv_cache);
 }
 
 static int
@@ -1568,27 +1568,27 @@ init_caches(void)
 {
 	int mtx_size;
 
-	bpriv_cache = uma_zcreate("bpriv_cache", sizeof(struct bio_priv));
+	bpriv_cache = uma_zcreate("vt_bpriv_cache", sizeof(struct bio_priv));
 	if (unlikely(!bpriv_cache))
 		return -1;
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,0,0))
-	tpriv_cache = uma_zcreate("tpriv_cache", sizeof(struct blk_plug));
+	tpriv_cache = uma_zcreate("vt_tpriv_cache", sizeof(struct blk_plug));
 	if (unlikely(!tpriv_cache))
 		return -1;
 #endif
 
 	mtx_size = max_t(int, sizeof(mtx_t), sizeof(void *));
 
-	mtx_cache = uma_zcreate("mtx_cache", mtx_size);
+	mtx_cache = uma_zcreate("vt_mtx_cache", mtx_size);
 	if (unlikely(!mtx_cache))
 		return -1;
 
-	sx_cache = uma_zcreate("sx_cache", sizeof(sx_t));
+	sx_cache = uma_zcreate("vt_sx_cache", sizeof(sx_t));
 	if (unlikely(!sx_cache))
 		return -1;
  
-	cv_cache = uma_zcreate("cv_cache", sizeof(cv_t));
+	cv_cache = uma_zcreate("vt_cv_cache", sizeof(cv_t));
 	if (unlikely(!cv_cache))
 		return -1;
 	return 0; 

@@ -17,7 +17,7 @@ sh unloadiscsi.sh
 
 cd $root
 #/sbin/rmmod qla2xxx
-/sbin/rmmod ldev 
+/sbin/rmmod vtldev 
 /sbin/rmmod vtlcore 
 
 /quadstorvtl/pgsql/etc/pgsql stop

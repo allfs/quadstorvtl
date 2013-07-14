@@ -151,27 +151,27 @@ exit_caches(void)
 
 	debug_print("free tcache_cache\n");
 	if (tcache_cache)
-		__uma_zdestroy("qs_tcache", tcache_cache);
+		__uma_zdestroy("vt_qs_tcache", tcache_cache);
 
 	debug_print("free chan_cache\n");
 	if (chan_cache)
-		__uma_zdestroy("qs_wait_chan", chan_cache);
+		__uma_zdestroy("vt_qs_wait_chan", chan_cache);
 
 	debug_print("free compl_cache\n");
 	if (compl_cache)
-		__uma_zdestroy("qs_wait_compl", compl_cache);
+		__uma_zdestroy("vt_qs_wait_compl", compl_cache);
 
 	debug_print("free ctio_cache\n");
 	if (ctio_cache)
-		__uma_zdestroy("qs_ctio", ctio_cache);
+		__uma_zdestroy("vt_qs_ctio", ctio_cache);
 
 	debug_print("free istate_cache\n");
 	if (istate_cache)
-		__uma_zdestroy("qs_istate", istate_cache);
+		__uma_zdestroy("vt_qs_istate", istate_cache);
 
 	debug_print("free pgdata_cache\n");
 	if (pgdata_cache)
-		__uma_zdestroy("qs_pgdata", pgdata_cache);
+		__uma_zdestroy("vt_qs_pgdata", pgdata_cache);
 #ifdef FREEBSD
 	debug_print("biot_cache_free\n");
 	if (biot_cache)
@@ -236,56 +236,56 @@ init_caches(void)
 		return -1;
 	}
 
-	CREATE_CACHE(tcache_cache, "qs_tcache", sizeof(struct tcache));
+	CREATE_CACHE(tcache_cache, "vt_qs_tcache", sizeof(struct tcache));
 	if (!tcache_cache) {
 		debug_warn("Cannot create tcache cache\n");
 		return -1;
 	}
 
-	CREATE_CACHE(chan_cache, "qs_wait_chan", sizeof(wait_chan_t));
+	CREATE_CACHE(chan_cache, "vt_qs_wait_chan", sizeof(wait_chan_t));
 	if (unlikely(!chan_cache)) {
 		return -1;
 	}
 
-	CREATE_CACHE(compl_cache, "qs_wait_compl", sizeof(wait_compl_t));
+	CREATE_CACHE(compl_cache, "vt_qs_wait_compl", sizeof(wait_compl_t));
 	if (unlikely(!compl_cache)) {
 		return -1;
 	}
 
-	CREATE_CACHE(ctio_cache, "ctio_cache", sizeof(struct qsio_scsiio));
+	CREATE_CACHE(ctio_cache, "vt_ctio_cache", sizeof(struct qsio_scsiio));
 	if (!ctio_cache) {
 		debug_warn("Cannot create ctio cache\n");
 		return -1;
 	}
 
-	CREATE_CACHE(istate_cache, "qs_istate", sizeof(struct initiator_state));
+	CREATE_CACHE(istate_cache, "vt_qs_istate", sizeof(struct initiator_state));
 	if (unlikely(!istate_cache)) {
 		return -1;
 	}
 
-	CREATE_CACHE(pgdata_cache, "pgdata_cache", sizeof(struct pgdata));
+	CREATE_CACHE(pgdata_cache, "vt_pgdata_cache", sizeof(struct pgdata));
 	if (!pgdata_cache) {
 		debug_warn("Cannot create pgdata cache\n");
 		return -1;
 	}
 
 #ifdef FREEBSD
-	CREATE_CACHE(biot_cache, "qs_biot", sizeof(struct biot));
+	CREATE_CACHE(biot_cache, "vt_qs_biot", sizeof(struct biot));
 	if (unlikely(!biot_cache)) {
 		return -1;
 	}
 
-	CREATE_CACHE(biot_page_cache, "qs_biot_page", ((MAXPHYS >> LBA_SHIFT) * sizeof(pagestruct_t *)));
+	CREATE_CACHE(biot_page_cache, "vt_qs_biot_page", ((MAXPHYS >> LBA_SHIFT) * sizeof(pagestruct_t *)));
 	if (unlikely(!biot_page_cache)) {
 		return -1;
 	}
 
-	CREATE_CACHE(sx_cache, "qs_sx", sizeof(sx_t));
+	CREATE_CACHE(sx_cache, "vt_qs_sx", sizeof(sx_t));
 	if (unlikely(!sx_cache)) {
 		return -1;
 	}
 
-	CREATE_CACHE(mtx_cache, "qs_mtx", sizeof(mtx_t));
+	CREATE_CACHE(mtx_cache, "vt_qs_mtx", sizeof(mtx_t));
 	if (unlikely(!mtx_cache)) {
 		return -1;
 	}
