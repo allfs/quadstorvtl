@@ -20,7 +20,7 @@ mkdir -p /quadstorvtl/lib/modules
 mkdir -p /quadstorvtl/etc
 rm -f /quadstorvtl/lib/modules/corelib.o
 install -m 755  /quadstorvtl/quadstor/export/vtlcore.ko /quadstorvtl/lib/modules
-install -m 755  /quadstorvtl/quadstor/export/ldev.ko /quadstorvtl/lib/modules
+install -m 755  /quadstorvtl/quadstor/export/vtldev.ko /quadstorvtl/lib/modules
 install -m 755  /quadstorvtl/quadstor/library/client/libtlclnt.so /quadstorvtl/lib/libtlclnt.so.$libvers
 install -m 755 /quadstorvtl/quadstor/library/server/libtlsrv.so /quadstorvtl/lib/libtlsrv.so.$libvers
 install -m 755 /quadstorvtl/quadstor/library/common/libtlmsg.so /quadstorvtl/lib/libtlmsg.so.$libvers
@@ -67,7 +67,7 @@ echo "quadstorvtl/etc/quadstor" >> /quadstorvtl/quadstor/build/pkg-plist
 cd / && find quadstorvtl/lib/lib* >> /quadstorvtl/quadstor/build/pkg-plist
 #modules dir
 echo "quadstorvtl/lib/modules/vtlcore.ko" >> /quadstorvtl/quadstor/build/pkg-plist
-echo "quadstorvtl/lib/modules/ldev.ko" >> /quadstorvtl/quadstor/build/pkg-plist
+echo "quadstorvtl/lib/modules/vtldev.ko" >> /quadstorvtl/quadstor/build/pkg-plist
 echo "quadstorvtl/lib/modules/ispmod.ko" >> /quadstorvtl/quadstor/build/pkg-plist
 
 cd / && find quadstorvtl/httpd/www/*.html >> /quadstorvtl/quadstor/build/pkg-plist
