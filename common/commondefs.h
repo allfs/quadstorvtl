@@ -21,8 +21,8 @@
 
 #define TL_MAX_DISKS	512
 #define TL_MAX_POOLS	512	
-#define TL_DEV_NAME	"iodev"
-#define TL_DEV		"/dev/iodev"
+#define TL_DEV_NAME	"vtiodev"
+#define TL_DEV		"/dev/vtiodev"
 #define MIN_PHYSDISK_SIZE	(1ULL << 32)
 
 
