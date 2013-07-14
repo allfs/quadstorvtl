@@ -31,15 +31,6 @@ tdrive_wait_for_write_queue(struct tdrive *tdrive)
 		pause("psg", 100);
 }
 
-static void tdrive_init_drive_params(struct tdrive *tdrive);
-static void tdrive_init_inquiry_data(struct tdrive *tdrive);
-static void tdrive_init_rw_error_recovery_page(struct tdrive *tdrive);
-static void tdrive_init_disconnect_reconnect_page(struct tdrive *tdrive);
-static void tdrive_init_mode_block_descriptor(struct tdrive *tdrive);
-static void tdrive_init_data_compression_page(struct tdrive *tdrive);
-static void tdrive_init_device_configuration_page(struct tdrive *tdrive);
-static void tdrive_init_device_configuration_ext_page(struct tdrive *tdrive);
-
 void
 tdrive_empty_write_queue(struct tdrive *tdrive)
 {
@@ -69,7 +60,7 @@ tdrive_init_mode_block_descriptor(struct tdrive *tdrive)
 }
 
 static void
-tdrive_init_device_configuration_page(struct tdrive *tdrive)
+tdrive_init_device_configuration_page(struct tdrive *tdrive, struct vdeviceinfo *deviceinfo)
 {
 	struct device_configuration_page *page = &tdrive->configuration_page;
 
@@ -77,7 +68,8 @@ tdrive_init_device_configuration_page(struct tdrive *tdrive)
 	page->page_code = DEVICE_CONFIGURATION_PAGE;
 	page->page_length = 0xE;
 	page->rew = 0x40; /* Block identifiers supported */
-	page->select_data_compression_algorithm = 1;
+	if (deviceinfo->enable_compression)
+		page->select_data_compression_algorithm = 1;
 }
 
 static void
@@ -321,7 +313,7 @@ tdrive_init(struct tdrive *tdrive, struct vdeviceinfo *deviceinfo)
 	tdrive_init_mode_block_descriptor(tdrive);
 	tdrive_init_data_compression_page(tdrive);
 	tdrive_init_medium_partition_page(tdrive);
-	tdrive_init_device_configuration_page(tdrive);
+	tdrive_init_device_configuration_page(tdrive, deviceinfo);
 	tdrive_init_device_configuration_ext_page(tdrive);
 	tdrive_init_disconnect_reconnect_page(tdrive);
 	tdrive_init_rw_error_recovery_page(tdrive);

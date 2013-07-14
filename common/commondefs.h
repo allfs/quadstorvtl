@@ -89,7 +89,7 @@ struct vdeviceinfo {
 	int type;
 	uint8_t tape_loaded;
 	uint8_t free_alloc;
-	uint8_t isnew;
+	uint8_t enable_compression;
 	uint8_t mod_type; /* modification type */
 	uint8_t tape_label[40];
 	uint32_t tape_id;

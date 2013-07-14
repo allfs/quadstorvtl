@@ -5,19 +5,18 @@
 # description: QUADStor Data Protection 
 #
 
-# PROVIDE: quadstor
-# REQUIRE: DAEMON HOSTNAME mountcritlocal NETWORK
-# BEFORE: nfsd
+# PROVIDE: quadstorvtl
+# REQUIRE: DAEMON HOSTNAME mountcritlocal NETWORK quadstor
 # KEYWORD: nojail shutdown
 
 . /etc/rc.subr
-name="quadstor"
-start_cmd="quadstor_start"
-stop_cmd="quadstor_stop"
-status_cmd="quadstor_status"
+name="quadstorvtl"
+start_cmd="quadstorvtl_start"
+stop_cmd="quadstorvtl_stop"
+status_cmd="quadstorvtl_status"
 rcvar=`set_rcvar`
 
-quadstor_stop() {
+quadstorvtl_stop() {
 	if [ -f /quadstorvtl/quadstor.lock ]; then
 		echo "Waiting 60 seconds for lock"
 		sleep 60
@@ -39,7 +38,7 @@ quadstor_stop() {
 	/quadstorvtl/pgsql/etc/pgsql stop
 
 	/sbin/kldunload iscsit > /dev/null 2>&1
-	/sbin/kldunload ldev > /dev/null 2>&1
+	/sbin/kldunload vtldev > /dev/null 2>&1
 	/sbin/kldunload vtlcore > /dev/null 2>&1
 	rm -f /tmp/.quadstortl.* > /dev/null 2>&1
 	rm -f /quadstorvtl/quadstor.lock
@@ -54,7 +53,7 @@ check_error() {
 	fi
 }
 
-quadstor_start() {
+quadstorvtl_start() {
 
 	if [ -f /quadstorvtl/quadstor.lock ]; then
 		sleep 60
@@ -62,7 +61,7 @@ quadstor_start() {
 
 	vtmdaemonpid=`/quadstorvtl/bin/pidof /quadstorvtl/sbin/vtmdaemon 2> /dev/null`
 	if [ "$vtmdaemonpid" != "" ]; then
-		echo "QUADStor Daemon already running..."
+		echo "QUADStor VTL Daemon already running..."
 		exit 1
 	fi
 	
@@ -105,7 +104,7 @@ quadstor_start() {
 	rm -f /quadstorvtl/quadstor.lock
 }
 
-quadstor_status() {
+quadstorvtl_status() {
 	vtmdaemonpid=`/quadstorvtl/bin/pidof /quadstorvtl/sbin/vtmdaemon 2> /dev/null`
 	ietdpid=`/quadstorvtl/bin/pidof /quadstorvtl/sbin/ietd 2> /dev/null`
 	if [ "${vtmdaemonpid}" != "" -o "${ietdpid}" != "" ] ; then 
@@ -120,7 +119,7 @@ quadstor_status() {
 
 load_rc_config $name
 
-: ${quadstor_enable:="NO"}
+: ${quadstorvtl_enable:="NO"}
 
 run_rc_command "$1"
 

@@ -39,6 +39,7 @@ uint64_t max_vcart_size;
 int done_socket_init;
 int done_server_init;
 int done_init;
+int enable_drive_compression;
 pthread_mutex_t daemon_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t daemon_cond = PTHREAD_COND_INITIALIZER;
 pthread_cond_t socket_cond = PTHREAD_COND_INITIALIZER;
@@ -1803,6 +1804,7 @@ load_vtl(struct vdevice *vdevice)
 		dinfo.target_id = drive_vdevice->target_id;
 		dinfo.iscsi_tid = -1;
 		dinfo.vhba_id = -1;
+		dinfo.enable_compression = enable_drive_compression;
 		strcpy(dinfo.serialnumber, drive_vdevice->serialnumber);
 		retval = tl_ioctl(TLTARGIOCNEWDEVICE, &dinfo);
 		if (retval != 0) {
@@ -1836,7 +1838,7 @@ vtl_add_drive(struct vtlconf *vtlconf, int drivetype, int target_id, char *errms
 	deviceinfo.target_id = target_id;
 	deviceinfo.iscsi_tid = -1;
 	deviceinfo.vhba_id = -1;
-	deviceinfo.isnew = 1;
+	deviceinfo.enable_compression = enable_drive_compression;
 	strcpy(deviceinfo.name, dname);
 	strcpy(deviceinfo.serialnumber, serialnumber);
 
@@ -1902,7 +1904,6 @@ add_new_vtl(char *name, int vtltype, int slots, int ieports, char *errmsg)
 	dinfo.tl_id = tl_id;
 	dinfo.iscsi_tid = -1;
 	dinfo.vhba_id = -1;
-	dinfo.isnew = 1;
 	dinfo.slots = slots;
 	dinfo.ieports = ieports;
 
@@ -2010,7 +2011,7 @@ add_new_drive(char *name, int drivetype, char *errmsg)
 	deviceinfo.tl_id = tl_id; 
 	deviceinfo.iscsi_tid = -1;
 	deviceinfo.vhba_id = -1;
-	deviceinfo.isnew = 1;
+	deviceinfo.enable_compression = enable_drive_compression;
 	strcpy(deviceinfo.name, name);
 	strcpy(deviceinfo.serialnumber, serialnumber);
 
@@ -3268,11 +3269,22 @@ tl_server_unload(void)
 	return 0;
 }
 
+static void
+check_drive_compression(void)
+{
+	struct stat stbuf;
+
+	if (stat("/dev/iodev", &stbuf) < 0)
+		enable_drive_compression = 1;
+}
+
 void
 tl_server_load(void)
 {
 	int retval;
 	int check;
+
+	check_drive_compression();
 
 	tl_common_scan_physdisk();
 
