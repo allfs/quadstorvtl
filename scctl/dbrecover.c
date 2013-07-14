@@ -427,6 +427,9 @@ check_disk(struct physdisk *disk, int formaster)
 	if (memcmp(raw_bint.magic, "QUADSTOR", strlen("QUADSTOR")))
 		return 0;
 
+	if (memcmp(raw_bint.quad_prod, "VTL", strlen("VTL")))
+		return 0;
+
 	if (formaster && !atomic_test_bit(GROUP_FLAGS_MASTER, &raw_bint.group_flags))
 		return 0;
 	else if (!formaster && atomic_test_bit(GROUP_FLAGS_MASTER, &raw_bint.group_flags))

@@ -509,6 +509,7 @@ bint_sync(struct bdevint *bint)
 	raw_bint->flags |= RID_SET;
 	memcpy(raw_bint->mrid, bint->mrid, TL_RID_MAX);
 	memcpy(raw_bint->magic, "QUADSTOR", strlen("QUADSTOR"));
+	memcpy(raw_bint->quad_prod, "VTL", strlen("VTL"));
 	memcpy(raw_bint->vendor, bint->vendor, sizeof(bint->vendor));
 	memcpy(raw_bint->product, bint->product, sizeof(bint->product));
 	memcpy(raw_bint->serialnumber, bint->serialnumber, sizeof(bint->serialnumber));
@@ -719,8 +720,17 @@ bint_load(struct bdevint *bint)
 
 	debug_info("usize %llu free %llu\n", (unsigned long long)bint->usize, (unsigned long long)(free << BINT_UNIT_SHIFT));
 	atomic64_set(&bint->free, (free << BINT_UNIT_SHIFT));
+
+	retval = 0;
+	if (memcmp(raw_bint->quad_prod, "VTL", strlen("VTL"))) {
+		memcpy(raw_bint->quad_prod, "VTL", strlen("VTL"));
+		retval = qs_lib_bio_lba(bint, bint->b_start, page, QS_IO_WRITE, 0);
+		if (unlikely(retval != 0))
+			debug_warn("Fixing quad prod failed\n");
+	}
+
 	vm_pg_free(page);
-	return 0;
+	return retval;
 err:
 	vm_pg_free(page);
 	return -1;

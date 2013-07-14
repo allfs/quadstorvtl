@@ -335,7 +335,8 @@ struct raw_bdevint {
 	uint32_t group_id;
 	int32_t group_flags;
 	uint8_t write_cache;
-	uint8_t pad2[7];
+	uint8_t quad_prod[4];
+	uint8_t pad2[3];
 	uint64_t pad3;
 	uint64_t pad4;
 	uint64_t pad5;
