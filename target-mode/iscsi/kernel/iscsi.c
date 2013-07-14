@@ -1783,7 +1783,7 @@ static void iscsi_exit(void)
 {
 	target_del_all();
 
-	device_unregister_interface(&icbs);
+	vtdevice_unregister_interface(&icbs);
 #ifdef LINUX
 	unregister_chrdev(ctr_major, ctr_name);
 #else
@@ -1855,7 +1855,7 @@ static int iscsi_init(void)
 	if ((err = tio_init()) < 0)
 		goto err;
 
-	err = device_register_interface(&icbs);
+	err = vtdevice_register_interface(&icbs);
 	if (err != 0)
 		goto err;
 

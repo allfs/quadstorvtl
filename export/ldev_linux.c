@@ -71,7 +71,7 @@ ldev_new_device_cb(struct tdevice *newdevice)
 	priv = (struct ldev_priv *)(host->hostdata);
 	memset(priv, 0, sizeof(struct ldev_priv));
 	priv->device = newdevice;
-	priv->devq = devq_init(host->host_no, "ldev");
+	priv->devq = devq_init(host->host_no, "vtldev");
 
 	if (unlikely(!priv->devq)) {
 		scsi_host_put(host);	
@@ -524,7 +524,7 @@ ldev_proc_cmd(struct qsio_scsiio *ctio)
 	(*icbs.device_queue_ctio)(device, ctio);
 	return;
 err:
-	DEBUG_WARN_NEW("ldev queueing error\n");
+	DEBUG_WARN_NEW("vtldev queueing error\n");
 	SCpnt->result = (DRIVER_SENSE << 24) | SAM_STAT_TASK_ABORTED;
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,0,0))
 	SCpnt->scsi_done(SCpnt);
@@ -664,7 +664,7 @@ ldev_init(void)
 {
 	int retval;
 
-	retval = device_register_interface(&icbs);
+	retval = vtdevice_register_interface(&icbs);
 	if (unlikely(retval != 0)) {
 		return -1;
 	}
@@ -675,7 +675,7 @@ ldev_init(void)
 static void
 ldev_exit(void)
 {
-	device_unregister_interface(&icbs);
+	vtdevice_unregister_interface(&icbs);
 }
 
 MODULE_AUTHOR("Shivaram Upadhyayula, QUADStor Systems");

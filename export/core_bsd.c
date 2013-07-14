@@ -178,12 +178,12 @@ static int coremod_init(void)
 
 	sx_init(&ioctl_lock, "core ioctl lck");
 
-	retval = kern_interface_init(&kcbs);
+	retval = vtkern_interface_init(&kcbs);
 	if (retval != 0) {
 		return -1;
 	}
 
-	tldev = make_dev(&tldev_csw, 0, UID_ROOT, GID_WHEEL, 0550, "iodev");
+	tldev = make_dev(&tldev_csw, 0, UID_ROOT, GID_WHEEL, 0550, "vtiodev");
 	return 0; 
 }
 
@@ -191,7 +191,7 @@ static void
 coremod_exit(void)
 {
 	sx_xlock(&ioctl_lock);
-	kern_interface_exit();
+	vtkern_interface_exit();
 	sx_xunlock(&ioctl_lock);
 
 	destroy_dev(tldev);
@@ -251,7 +251,7 @@ event_handler(struct module *module, int event, void *arg) {
 }
 
 static moduledata_t tldev_info = {
-    "tldev",    /* module name */
+    "vtldev",    /* module name */
      event_handler,  /* event handler */
      NULL            /* extra data */
 };

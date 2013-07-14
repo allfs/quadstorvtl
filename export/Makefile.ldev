@@ -1,12 +1,12 @@
-KMOD = ldev
+KMOD = vtldev
 
 SRCS = opt_cam.h ldev_bsd.c devq.c
 
 QUADSTOR_ROOT := /quadstorvtl/quadstor/
 CFLAGS = -I. -DFREEBSD
-CFLAGS += -O2
+#CFLAGS += -O2
 #CFLAGS += -g
-#DEBUG_FLAGS = -g
+DEBUG_FLAGS = -g
 #CFLAGS += -DENABLE_STATS
 
 .include <bsd.kmod.mk>

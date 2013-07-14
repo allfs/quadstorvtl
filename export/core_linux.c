@@ -1596,7 +1596,7 @@ init_caches(void)
 
 #define coremod	THIS_MODULE
 int
-device_register_interface(struct qs_interface_cbs *icbs)
+vtdevice_register_interface(struct qs_interface_cbs *icbs)
 {
 	int retval;
 
@@ -1611,7 +1611,7 @@ device_register_interface(struct qs_interface_cbs *icbs)
 }
 
 void
-device_unregister_interface(struct qs_interface_cbs *icbs)
+vtdevice_unregister_interface(struct qs_interface_cbs *icbs)
 {
 	int retval;
 
@@ -1622,7 +1622,8 @@ device_unregister_interface(struct qs_interface_cbs *icbs)
 
 static int dev_major;
 
-static int coremod_init(void)
+static int
+coremod_init(void)
 {
 	int retval;
 
@@ -1634,7 +1635,7 @@ static int coremod_init(void)
 		return -1;
 	}
 
-	retval = kern_interface_init(&kcbs);
+	retval = vtkern_interface_init(&kcbs);
 	if (unlikely(retval != 0)) {
 		exit_caches();
 		return -1;
@@ -1642,7 +1643,7 @@ static int coremod_init(void)
 
 	dev_major = register_chrdev(0, TL_DEV_NAME, &coremod_fops);
 	if (unlikely(dev_major < 0)) {
-		kern_interface_exit();
+		vtkern_interface_exit();
 		exit_caches();
 		return dev_major;
 	}
@@ -1654,7 +1655,7 @@ static void
 coremod_exit(void)
 {
 	sx_xlock(&ioctl_lock);
-	kern_interface_exit();
+	vtkern_interface_exit();
 	sx_xunlock(&ioctl_lock);
 	exit_caches();
 	unregister_chrdev(dev_major, TL_DEV_NAME);
@@ -1664,7 +1665,7 @@ MODULE_AUTHOR("Shivaram Upadhyayula, QUADStor Systems");
 MODULE_LICENSE("GPL");
 module_init (coremod_init);
 module_exit (coremod_exit);
-EXPORT_SYMBOL(kern_interface_init);
-EXPORT_SYMBOL(kern_interface_exit);
-EXPORT_SYMBOL(device_register_interface);
-EXPORT_SYMBOL(device_unregister_interface);
+EXPORT_SYMBOL(vtkern_interface_init);
+EXPORT_SYMBOL(vtkern_interface_exit);
+EXPORT_SYMBOL(vtdevice_register_interface);
+EXPORT_SYMBOL(vtdevice_unregister_interface);

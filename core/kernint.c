@@ -403,7 +403,7 @@ coremod_load_done(void)
 }
 
 int
-kern_interface_init(struct qs_kern_cbs *kern_cbs)
+vtkern_interface_init(struct qs_kern_cbs *kern_cbs)
 {
 	int retval;
 
@@ -454,7 +454,7 @@ kern_interface_init(struct qs_kern_cbs *kern_cbs)
 }
 
 void
-kern_interface_exit(void)
+vtkern_interface_exit(void)
 {
 	__kern_exit();
 	exit_globals();

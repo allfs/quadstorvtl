@@ -16,7 +16,7 @@ struct qs_interface_cbs icbs = {
 };
 
 
-MALLOC_DEFINE(M_LDEV, "ldev", "QUADStor ldev allocs");
+MALLOC_DEFINE(M_LDEV, "vtldev", "QUADStor ldev allocs");
 
 
 struct cdev *ldevdev;
@@ -501,11 +501,11 @@ ldev_new_device_cb(struct tdevice *newdevice)
 	uint32_t tid;
 
 	ldev = zalloc(sizeof(struct ldev_bsd), M_LDEV, M_WAITOK);
-	spin_lock_initt(&ldev->cam_mtx, "ldev cam mtx");
+	spin_lock_initt(&ldev->cam_mtx, "vtldev cam mtx");
 	ldev->device = newdevice;
 
 	tid = (*icbs.device_tid)(newdevice);
-	ldev->devq = devq_init(tid, "ldev");
+	ldev->devq = devq_init(tid, "vtldev");
 	if (!ldev->devq)
 	{
 		free(ldev, M_LDEV);
@@ -520,7 +520,7 @@ ldev_new_device_cb(struct tdevice *newdevice)
 		return -1;
 	}
 
-	sim = cam_sim_alloc(ldev_action, ldev_poll, "ldev", ldev, 0, &ldev->cam_mtx, MAX_SIM_COMMANDS, 0, devq);
+	sim = cam_sim_alloc(ldev_action, ldev_poll, "vtldev", ldev, 0, &ldev->cam_mtx, MAX_SIM_COMMANDS, 0, devq);
 	if (unlikely(!sim)) {
 		DEBUG_WARN_NEW("CAM SIM Alloc failed\n");
 		cam_simq_free(devq);
@@ -575,7 +575,7 @@ ldev_remove_device_cb(struct tdevice *removedevice, int tid, void *hpriv)
 
 	atomic_set(&ldev->disabled, 1);
 	while (atomic_read(&ldev->pending_cmds) > 0)
-		pause("ldev_remove", 1000);
+		pause("vtldev_remove", 1000);
 
 	spin_lock(&ldev->cam_mtx);
 	xpt_async(AC_LOST_DEVICE, ldev->path, NULL);
@@ -592,15 +592,15 @@ ldev_remove_device_cb(struct tdevice *removedevice, int tid, void *hpriv)
 static void
 ldev_exit(void)
 {
-	device_unregister_interface(&icbs);
+	vtdevice_unregister_interface(&icbs);
 	destroy_dev(ldevdev);
 }
 
 static int
 ldev_init(void)
 {
-	ldevdev = make_dev(&ldevdev_csw, 0, UID_ROOT, GID_WHEEL, 0550, "ldevdev");
-	device_register_interface(&icbs);
+	ldevdev = make_dev(&ldevdev_csw, 0, UID_ROOT, GID_WHEEL, 0550, "vtldevdev");
+	vtdevice_register_interface(&icbs);
 	return 0;
 }
 
@@ -622,7 +622,7 @@ event_handler(struct module *module, int event, void *arg) {
 }
 
 static moduledata_t ldevmod_info = {
-    "ldevmod",    /* module name */
+    "vtldevmod",    /* module name */
      event_handler,  /* event handler */
      NULL            /* extra data */
 };

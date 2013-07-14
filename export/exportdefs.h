@@ -228,14 +228,14 @@ enum {
 };
 
 /* libcore interfaces */
-int kern_interface_init(struct qs_kern_cbs *kcbs);
-void kern_interface_exit(void);
+int vtkern_interface_init(struct qs_kern_cbs *kcbs);
+void vtkern_interface_exit(void);
 int __device_register_interface(struct qs_interface_cbs *cbs);
 int __device_unregister_interface(struct qs_interface_cbs *cbs);
 
 /* Used by interface modules */
-int device_register_interface(struct qs_interface_cbs *cbs);
-void device_unregister_interface(struct qs_interface_cbs *cbs);
+int vtdevice_register_interface(struct qs_interface_cbs *cbs);
+void vtdevice_unregister_interface(struct qs_interface_cbs *cbs);
 
 #define LBA_SHIFT		12
 #define LBA_SIZE		(1U << LBA_SHIFT)

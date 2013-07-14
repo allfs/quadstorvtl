@@ -870,9 +870,9 @@ linker_detach(linker_file_t lf, void *arg)
 	if (strcmp(lf->filename, "vtlcore.ko"))
 		return 0;
 
-	device_unregister_interface = (void *)linker_file_lookup_symbol(lf, "device_unregister_interface", 0);
+	device_unregister_interface = (void *)linker_file_lookup_symbol(lf, "vtdevice_unregister_interface", 0);
 	if (!device_unregister_interface) {
-		DEBUG_WARN_NEW("failed to get device_unregister_interface symbol\n");
+		DEBUG_WARN_NEW("failed to get vtdevice_unregister_interface symbol\n");
 		return 1;
 	}
 
@@ -910,9 +910,9 @@ linker_attach(linker_file_t lf, void *arg)
 	if (strcmp(lf->filename, "vtlcore.ko"))
 		return 0;
 
-	device_register_interface = (void *)linker_file_lookup_symbol(lf, "device_register_interface", 0);
+	device_register_interface = (void *)linker_file_lookup_symbol(lf, "vtdevice_register_interface", 0);
 	if (!device_register_interface) {
-		DEBUG_WARN_NEW("device_register_interface symbol missing from core mod\n");
+		DEBUG_WARN_NEW("vtdevice_register_interface symbol missing from core mod\n");
 		return 1;
 	}
 
@@ -950,9 +950,9 @@ fcbridge_detach_interface(void)
 		sx_xlock(&itf_lock);
 	}
 
-	unregister_interface = (void *)symbol_get(device_unregister_interface);
+	unregister_interface = (void *)symbol_get(vtdevice_unregister_interface);
 	if (!unregister_interface) {
-		DEBUG_WARN_NEW("failed to get device_unregister_interface symbol\n");
+		DEBUG_WARN_NEW("failed to get vtdevice_unregister_interface symbol\n");
 		sx_xunlock(&itf_lock);
 		return;
 	}
@@ -972,7 +972,7 @@ fcbridge_attach_interface(void)
 	if (atomic_read(&icbs.itf_enabled))
 		return;
 
-	register_interface = (void *)symbol_get(device_register_interface);
+	register_interface = (void *)symbol_get(vtdevice_register_interface);
 	if (!register_interface) {
 		return;
 	}
