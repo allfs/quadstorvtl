@@ -10,7 +10,7 @@ struct ldev_priv {
 	atomic_t disabled;
 };
 
-#define LDEV_NAME	"QUADStor ldev"
+#define LDEV_NAME	"QUADStor vtldev"
 #define LDEV_HOST_ID	15
 
 struct qsio_scsiio;

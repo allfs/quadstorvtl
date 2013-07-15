@@ -27,7 +27,7 @@ kvers=`uname -r`
 mkdir /quadstorvtl/lib/modules/$kvers
 
 cp -f vtlcore.ko /quadstorvtl/lib/modules/$kvers/
-cp -f ldev.ko /quadstorvtl/lib/modules/$kvers/
+cp -f vtldev.ko /quadstorvtl/lib/modules/$kvers/
 
 cd /quadstorvtl/src/target-mode/iscsi/kernel/
 make clean && make 
