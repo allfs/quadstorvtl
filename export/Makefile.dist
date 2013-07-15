@@ -13,9 +13,9 @@ endif
 
 ifneq ($(KERNELRELEASE),)
 
-obj-m   += vtlcore.o ldev.o
+obj-m   += vtlcore.o vtldev.o
 
-ldev-objs := ldev_linux.o devq.o
+vtldev-objs := ldev_linux.o devq.o
 
 vtlcore-objs := core_linux.o corelib.o
 

@@ -91,8 +91,8 @@ start() {
 	/sbin/insmod /quadstorvtl/lib/modules/$kvers/vtlcore.ko > /dev/null 2>&1
 	check_error "Failed to insert core module"
 
-	/sbin/insmod /quadstorvtl/lib/modules/$kvers/ldev.ko > /dev/null 2>&1 
-	check_error "Failed to insert ldev module"
+	/sbin/insmod /quadstorvtl/lib/modules/$kvers/vtldev.ko > /dev/null 2>&1 
+	check_error "Failed to insert vtldev module"
 
 	/sbin/insmod /quadstorvtl/lib/modules/$kvers/iscsit.ko > /dev/null 2>&1
 	check_error "Failed to insert iscsi target module"
@@ -126,7 +126,7 @@ stop() {
 	/quadstorvtl/pgsql/etc/pgsql stop
 
 	/sbin/rmmod iscsit > /dev/null 2>&1
-	/sbin/rmmod ldev > /dev/null 2>&1
+	/sbin/rmmod vtldev > /dev/null 2>&1
 	sleep 2
 	/sbin/rmmod vtlcore > /dev/null 2>&1
 	rm -f /tmp/.quadstortl.* > /dev/null 2>&1

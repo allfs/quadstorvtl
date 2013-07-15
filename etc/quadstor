@@ -82,8 +82,8 @@ quadstorvtl_start() {
 	/sbin/kldload /quadstorvtl/lib/modules/vtlcore.ko > /dev/null 2>&1
 	check_error "Failed to insert core module"
 
-	/sbin/kldload /quadstorvtl/lib/modules/ldev.ko > /dev/null 2>&1 
-	check_error "Failed to insert ldev module"
+	/sbin/kldload /quadstorvtl/lib/modules/vtldev.ko > /dev/null 2>&1 
+	check_error "Failed to insert vtldev module"
 
 	if [ -f /quadstorvtl/lib/modules/iscsit.ko ]; then
 		/sbin/kldload /quadstorvtl/lib/modules/iscsit.ko > /dev/null 2>&1
