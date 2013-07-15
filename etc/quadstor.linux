@@ -109,7 +109,7 @@ start() {
 	/quadstorvtl/bin/scctl -l > /dev/null 2>&1
 
 	if [ -d /var/lock/subsys ]; then
-		touch /var/lock/subsys/quadstor
+		touch /var/lock/subsys/quadstorvtl
 	fi
 }
 
@@ -130,7 +130,7 @@ stop() {
 	sleep 2
 	/sbin/rmmod vtlcore > /dev/null 2>&1
 	rm -f /tmp/.quadstortl.* > /dev/null 2>&1
-	rm -f /var/lock/subsys/quadstor
+	rm -f /var/lock/subsys/quadstorvtl
 }
 
 status_check() {

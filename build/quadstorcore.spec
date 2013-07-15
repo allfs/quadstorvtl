@@ -90,7 +90,7 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 	/quadstorvtl/pgsql/scripts/pgpatch.sh > /dev/null 2>&1
 
 
-	/sbin/chkconfigvtl --add quadstor
+	/sbin/chkconfig --add quadstorvtl
 
 	/usr/sbin/setsebool -P httpd_enable_cgi 1 > /dev/null 2>&1
 
@@ -100,7 +100,7 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 	exit 0
 
 %preun
-	/sbin/chkconfigvtl --del quadstor
+	/sbin/chkconfig --del quadstorvtl
 
 	cmod=`/sbin/lsmod | grep vtlcore`
 	if [ "$cmod" != "" ]; then
