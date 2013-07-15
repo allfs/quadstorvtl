@@ -87,7 +87,7 @@ enum {
 #ifdef FREEBSD
 #define MDAEMON_PATH		"/quadstorvtl/.vtmdaemon"
 #else
-#define MDAEMON_PATH		"QUADSTOR_ABSTRACT_NAMESPACE"
+#define MDAEMON_PATH		"QUADVTL_ABSTRACT_NAMESPACE"
 #endif
 #define IETADM_PATH		"/quadstorvtl/bin/ietadm"
 #define QUADSTOR_CONFIG_FILE "/quadstorvtl/etc/quadstor.conf"
