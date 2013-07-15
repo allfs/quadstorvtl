@@ -1955,6 +1955,7 @@ load_drive(struct vdevice *vdevice)
 	dinfo.make = dconf->type;
 	dinfo.tl_id = vdevice->tl_id;
 	dinfo.target_id = vdevice->target_id;
+	dinfo.enable_compression = enable_drive_compression;
 	strcpy(dinfo.serialnumber, vdevice->serialnumber);
 
 	retval = tl_ioctl(TLTARGIOCNEWDEVICE, &dinfo);

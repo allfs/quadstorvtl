@@ -60,7 +60,7 @@ tdrive_init_mode_block_descriptor(struct tdrive *tdrive)
 }
 
 static void
-tdrive_init_device_configuration_page(struct tdrive *tdrive, struct vdeviceinfo *deviceinfo)
+tdrive_init_device_configuration_page(struct tdrive *tdrive)
 {
 	struct device_configuration_page *page = &tdrive->configuration_page;
 
@@ -68,8 +68,7 @@ tdrive_init_device_configuration_page(struct tdrive *tdrive, struct vdeviceinfo 
 	page->page_code = DEVICE_CONFIGURATION_PAGE;
 	page->page_length = 0xE;
 	page->rew = 0x40; /* Block identifiers supported */
-	if (deviceinfo->enable_compression)
-		page->select_data_compression_algorithm = 1;
+	page->select_data_compression_algorithm = 1;
 }
 
 static void
@@ -86,7 +85,7 @@ tdrive_init_device_configuration_ext_page(struct tdrive *tdrive)
 
 
 static void
-tdrive_init_data_compression_page(struct tdrive *tdrive)
+tdrive_init_data_compression_page(struct tdrive *tdrive, struct vdeviceinfo *deviceinfo)
 {
 	struct data_compression_page *page = &tdrive->compression_page;
 
@@ -94,7 +93,8 @@ tdrive_init_data_compression_page(struct tdrive *tdrive)
 	page->page_code = DATA_COMPRESSION_PAGE;
 	page->page_length = sizeof(struct data_compression_page) - offsetof(struct data_compression_page, dcc);
 	page->dcc |= 0x40; /* Data compression capable now */
-	page->dcc |= 0x80; /* Data compression enable by default*/
+	if (deviceinfo->enable_compression)
+		page->dcc |= 0x80; /* Data compression enable by default*/
 	page->red |= 0x80; /* Data decompression enabled all the times */
 }
 
@@ -311,9 +311,9 @@ tdrive_init(struct tdrive *tdrive, struct vdeviceinfo *deviceinfo)
 
 	tdrive_init_drive_params(tdrive);
 	tdrive_init_mode_block_descriptor(tdrive);
-	tdrive_init_data_compression_page(tdrive);
+	tdrive_init_data_compression_page(tdrive, deviceinfo);
 	tdrive_init_medium_partition_page(tdrive);
-	tdrive_init_device_configuration_page(tdrive, deviceinfo);
+	tdrive_init_device_configuration_page(tdrive);
 	tdrive_init_device_configuration_ext_page(tdrive);
 	tdrive_init_disconnect_reconnect_page(tdrive);
 	tdrive_init_rw_error_recovery_page(tdrive);
