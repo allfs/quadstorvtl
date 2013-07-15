@@ -62,7 +62,7 @@ echo "quadstorvtl/bin/dbrecover" >> /quadstorvtl/quadstor/build/pkg-plist
 
 echo "quadstorvtl/sbin/vtmdaemon" >> /quadstorvtl/quadstor/build/pkg-plist
 
-echo "quadstorvtl/etc/quadstor" >> /quadstorvtl/quadstor/build/pkg-plist
+echo "quadstorvtl/etc/quadstorvtl" >> /quadstorvtl/quadstor/build/pkg-plist
 
 cd / && find quadstorvtl/lib/lib* >> /quadstorvtl/quadstor/build/pkg-plist
 #modules dir

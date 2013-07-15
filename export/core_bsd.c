@@ -200,7 +200,7 @@ coremod_exit(void)
 static struct module *coremod;
 
 int
-device_register_interface(struct qs_interface_cbs *icbs)
+vtdevice_register_interface(struct qs_interface_cbs *icbs)
 {
 	int retval;
 
@@ -217,7 +217,7 @@ device_register_interface(struct qs_interface_cbs *icbs)
 }
 
 void
-device_unregister_interface(struct qs_interface_cbs *icbs)
+vtdevice_unregister_interface(struct qs_interface_cbs *icbs)
 {
 	int retval;
 

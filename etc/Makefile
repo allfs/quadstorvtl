@@ -13,4 +13,4 @@ clobber:
 install:
 	@set -x; \
 	mkdir -p /quadstorvtl/etc; \
-	cp $(ETC) /quadstorvtl/etc/
+	cp $(ETC) /quadstorvtl/etc/quadstorvtl
