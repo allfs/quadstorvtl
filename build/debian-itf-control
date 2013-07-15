@@ -4,5 +4,6 @@ Section: base
 Priority: optional
 Architecture: amd64 
 Depends: linux-headers, build-essential
-Maintainer: QUADStor Support <support@quadstor.com>
-Description: QUADStor storage virtualization, data deduplication 
+Conflicts: quadstor-itf
+Maintainer: QUADStor VTL Support <vtlsupport@quadstor.com>
+Description: QUADStor virtual tape library

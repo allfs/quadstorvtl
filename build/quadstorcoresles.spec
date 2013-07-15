@@ -1,5 +1,5 @@
 %define libvers 2.2.8
-Summary: QuadStor Storage Virtualization 
+Summary: QuadStor Virtual Tape Library
 Name: quadstor-vtl-core 
 Version: 2.2.8
 Release: sles11sp1
@@ -11,8 +11,9 @@ URL: http://www.quadstor.com
 Requires: apache2, tar, coreutils, sg3_utils, util-linux
 BuildRoot: /var/tmp/%{name}-buildroot
 Provides: libtlclnt.so()(64bit) libtlmsg.so()(64bit) libtlsrv.so()(64bit)
+Conflicts: quadstor-itf
 %description
- QUADStor storage virtualization, data deduplication 
+ QUADStor virtual tape library
 %build
 cd /quadstorvtl/quadstor/ && sh build.sh clean
 cd /quadstorvtl/quadstor/ && sh build.sh
