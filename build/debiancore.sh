@@ -38,7 +38,7 @@ install -m 644  /quadstorvtl/quadstor/library/client/libtlclnt.so $DEBIAN_ROOT/q
 install -m 644 /quadstorvtl/quadstor/library/server/libtlsrv.so $DEBIAN_ROOT/quadstorvtl/lib/libtlsrv.so.$libvers
 install -m 644 /quadstorvtl/quadstor/library/common/libtlmsg.so $DEBIAN_ROOT/quadstorvtl/lib/libtlmsg.so.$libvers
 install -m 644 /quadstorvtl/lib/modules/corelib.o $DEBIAN_ROOT/quadstorvtl/lib/modules/
-install -m 644 /quadstorvtl/quadstor/mapps/html/cgisrc/index.html $DEBIAN_ROOT/var/www/
+install -m 644 /quadstorvtl/quadstor/mapps/html/cgisrc/vtindex.html $DEBIAN_ROOT/var/www/
 install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/*.cgi $DEBIAN_ROOT/usr/lib/cgi-bin/
 install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/*.css $DEBIAN_ROOT/var/www/quadstorvtl/
 install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/*.js $DEBIAN_ROOT/var/www/quadstorvtl/

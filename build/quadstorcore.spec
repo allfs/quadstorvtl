@@ -47,7 +47,7 @@ install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/*.css $RPM_BUILD_ROOT/var
 install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/*.js $RPM_BUILD_ROOT/var/www/html/quadstorvtl/
 install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/*.png $RPM_BUILD_ROOT/var/www/html/quadstorvtl/
 cp -pr /quadstorvtl/quadstor/mapps/html/cgisrc/yui/ $RPM_BUILD_ROOT/var/www/html/quadstorvtl/
-install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/index.html $RPM_BUILD_ROOT/var/www/html/
+install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/vtindex.html $RPM_BUILD_ROOT/var/www/html/
 install -m 755 /quadstorvtl/quadstor/scctl/scctl $RPM_BUILD_ROOT/quadstorvtl/bin/scctl
 install -m 755 /quadstorvtl/quadstor/scctl/fcconfig $RPM_BUILD_ROOT/quadstorvtl/bin/fcconfig
 install -m 755 /quadstorvtl/quadstor/scctl/dbrecover $RPM_BUILD_ROOT/quadstorvtl/bin/dbrecover
@@ -69,11 +69,6 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlsrv.so.%{libvers} libtlsrv.so.
 cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlsrv.so.%{libvers} libtlsrv.so
 cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so.1
 cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
-
-%pre
-	if [ -f /var/www/html/index.html ];then
-		mv -f /var/www/html/index.html /var/www/html/index.html.ssave
-	fi
 
 %post
 	echo "Performing post install. Please wait..."
@@ -121,9 +116,6 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 
 %postun
 	rm -f /quadstorvtl/etc/quadstor-vtl-core-version
-	if [ -f /var/www/html/index.html.ssave ];then
-		mv -f /var/www/html/index.html.ssave /var/www/html/index.html
-	fi
 	rm -rf /quadstorvtl/sbin /quadstorvtl/share /quadstorvtl/src/others/
 	rmdir --ignore-fail-on-non-empty /quadstorvtl/lib > /dev/null 2>&1
 	rmdir --ignore-fail-on-non-empty /quadstorvtl/bin > /dev/null 2>&1
@@ -148,7 +140,7 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 /quadstorvtl/lib/modules/corelib.o
 /var/www/cgi-bin/*.cgi
 /var/www/html/quadstorvtl/
-/var/www/html/index.html
+/var/www/html/vtindex.html
 /etc/rc.d/init.d/quadstorvtl
 
 #pgsql files

@@ -1,8 +1,5 @@
 #!/bin/sh
 rm -f /quadstorvtl/core/quadstor-vtl-core-version
-if [ -f /var/www/html/index.html.ssave ];then
-	mv -f /var/www/html/index.html.ssave /var/www/html/index.html
-fi
 rm -rf /quadstorvtl/sbin /quadstorvtl/share /quadstorvtl/src/others/
 rmdir --ignore-fail-on-non-empty /quadstorvtl/lib/modules > /dev/null 2>&1
 rmdir --ignore-fail-on-non-empty /quadstorvtl/lib > /dev/null 2>&1

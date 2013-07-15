@@ -47,7 +47,7 @@ install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/*.css $RPM_BUILD_ROOT/srv
 install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/*.js $RPM_BUILD_ROOT/srv/www/htdocs/quadstorvtl/
 install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/*.png $RPM_BUILD_ROOT/srv/www/htdocs/quadstorvtl/
 cp -pr /quadstorvtl/quadstor/mapps/html/cgisrc/yui/ $RPM_BUILD_ROOT/srv/www/htdocs/quadstorvtl/
-install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/index.html $RPM_BUILD_ROOT/srv/www/htdocs/qsindex.html
+install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/vtindex.html $RPM_BUILD_ROOT/srv/www/htdocs/
 install -m 755 /quadstorvtl/quadstor/scctl/scctl $RPM_BUILD_ROOT/quadstorvtl/bin/scctl
 install -m 755 /quadstorvtl/quadstor/scctl/fcconfig $RPM_BUILD_ROOT/quadstorvtl/bin/fcconfig
 install -m 755 /quadstorvtl/quadstor/scctl/dbrecover $RPM_BUILD_ROOT/quadstorvtl/bin/dbrecover
@@ -69,11 +69,6 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlsrv.so.%{libvers} libtlsrv.so.
 cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlsrv.so.%{libvers} libtlsrv.so
 cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so.1
 cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
-
-%pre
-	if [ -f /srv/www/htdocs/index.html ];then
-		mv -f /srv/www/htdocs/index.html /srv/www/htdocs/index.html.ssave
-	fi
 
 %post
 	echo "Performing post install. Please wait..."
@@ -99,7 +94,6 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 
 	/usr/sbin/setsebool -P httpd_enable_cgi 1 > /dev/null 2>&1
 
-	cp -f /srv/www/htdocs/qsindex.html /srv/www/htdocs/index.html
 	mkdir -p /quadstorvtl/etc
 	echo "2.2.8 for SLES 11 SP1" > /quadstorvtl/etc/quadstor-vtl-core-version
 	exit 0
@@ -121,9 +115,6 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 
 %postun
 	rm -f /quadstorvtl/etc/quadstor-vtl-core-version
-	if [ -f /srv/www/htdocs/index.html.ssave ];then
-		mv -f /srv/www/htdocs/index.html.ssave /srv/www/htdocs/index.html
-	fi
 	rm -rf /quadstorvtl/sbin /quadstorvtl/share /quadstorvtl/src/others/
 	rmdir --ignore-fail-on-non-empty /quadstorvtl/lib/modules > /dev/null 2>&1
 	rmdir --ignore-fail-on-non-empty /quadstorvtl/lib > /dev/null 2>&1
@@ -149,7 +140,7 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 /quadstorvtl/lib/modules/corelib.o
 /srv/www/cgi-bin/*.cgi
 /srv/www/htdocs/quadstorvtl/
-/srv/www/htdocs/qsindex.html
+/srv/www/htdocs/vtindex.html
 /etc/rc.d/quadstorvtl
 
 #pgsql files

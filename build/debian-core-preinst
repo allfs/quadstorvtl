@@ -1,4 +1,2 @@
 #!/bin/sh
-if [ -f /var/www/html/index.html ];then
-	mv -f /var/www/html/index.html /var/www/html/index.html.ssave
-fi
+exit 0
