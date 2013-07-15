@@ -2669,6 +2669,12 @@ tl_server_add_disk(struct tl_comm *comm, struct tl_msg *msg)
 		goto senderr;
 	}
 
+	retval = dev_used_by_virt(disk->info.devname);
+	if (retval) {
+		snprintf(errmsg, sizeof(errmsg), "device %s seems to be used by quadstor virtualization software\n", disk->info.devname);
+		goto senderr;
+	}
+
 	retval = check_blkdev_exists(disk->info.devname);
 	if (retval != 0) {
 		snprintf(errmsg, sizeof(errmsg), "Disk at devpath %s already added\n", disk->info.devname);

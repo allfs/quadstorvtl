@@ -109,6 +109,27 @@ fake_device_identification(struct physdevice *device)
 	device->idflags |= ID_FLAGS_T10;
 }
 
+int
+dev_used_by_virt(char *devpath)
+{
+	char buf[4096];
+	struct raw_bdevint *bint;
+	int retval;
+
+	retval = read_from_device(devpath, buf, sizeof(buf), BDEV_META_OFFSET);
+	if (retval < 0)
+		return 0;
+
+	bint = (struct raw_bdevint *)(buf);
+	if (memcmp(buf+0x30, "QUADSTOR", strlen("QUADSTOR")))
+		return 0;
+
+	if (memcmp(buf+0x79, "VIRT", strlen("VIRT")))
+		return 0;
+	else
+		return 1;
+}
+
 static int
 read_serial(char *devpath, char *serial)
 {
@@ -593,6 +614,9 @@ scan_partitions(char *start, char type, struct d_list *tmp_disk_list, char *vend
 		if (is_ignore_dev(devname) || !partid)
 			continue;
 
+		if (dev_used_by_virt(devname))
+			continue;
+
 #ifdef FREEBSD
 		add_disk(devname, vendor, product, serial, serial_len, tmp_disk_list, fake_ident, controller_disk, raid_disk, device, 1);
 #else
@@ -620,6 +644,9 @@ add_disk(char *devname, char *vendor, char *product, char *serial, int serial_le
 {
 	uint64_t size;
 	int retval;
+
+	if (dev_used_by_virt(devname))
+		return;
 
 	DEBUG_INFO("add disk %s\n", devname);
 	if (!frompart) {

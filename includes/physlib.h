@@ -252,4 +252,5 @@ int send_scsi_request(struct scsi_request *request);
 int read_from_device(char *devpath, char *buf, int len, int offset);
 int get_bdevname(char *devname, char *b_devname);
 int is_ignore_dev(char *devname);
+int dev_used_by_virt(char *devpath);
 #endif 

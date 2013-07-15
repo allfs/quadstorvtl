@@ -7,7 +7,7 @@ cp -r yui /quadstorvtl/httpd/www/quadstor/
 cp -f *.png /quadstorvtl/httpd/www/quadstor/
 cp -f *.js /quadstorvtl/httpd/www//quadstor/
 cp -f *.css /quadstorvtl/httpd/www//quadstor/
-cp -f index.html /quadstorvtl/httpd/www/
+cp -f vtindex.html /quadstorvtl/httpd/www/
 
 for i in `ls -1 *.cgi`;do
 	echo "cp -f $i /quadstorvtl/httpd/cgi-bin/"; \
@@ -42,7 +42,7 @@ fi
 cp -f *.js $htdocs/quadstorvtl/
 cp -f *.css $htdocs/quadstorvtl/
 cp -f *.png $htdocs/quadstorvtl/
-cp -f index.html $htdocs/
+cp -f vtindex.html $htdocs/
 for i in `ls -1 *.cgi`;do
 	echo "cp -f $i $cgibin"; \
 	cp -f $i $cgibin; \
