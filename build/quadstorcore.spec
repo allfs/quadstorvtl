@@ -88,6 +88,7 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 			/usr/sbin/groupadd vtdbuser > /dev/null 2>&1
 			/usr/sbin/useradd -d /quadstorvtl/pgsql -g vtdbuser vtdbuser > /dev/null 2>&1
 			mv -f /quadstor/pgsql/data /quadstorvtl/pgsql/data
+			/quadstorvtl/pgsql/scripts/pgmvown.sh > /dev/null 2>&1
 			chown -R vtdbuser:vtdbuser /quadstorvtl/pgsql/data
 		fi
 	fi

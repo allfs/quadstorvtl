@@ -11,8 +11,8 @@ if [ -d /quadstor/pgsql/data -a ! -d /quadstorvtl/pgsql/data ]; then
 		echo "Moving /quadstor/pgsql/data to /quadstorvtl/pgsql/"
 		/usr/sbin/groupadd vtdbuser > /dev/null 2>&1
 		/usr/sbin/useradd -d /quadstorvtl/pgsql -g vtdbuser vtdbuser > /dev/null 2>&1
-
 		mv -f /quadstor/pgsql/data /quadstorvtl/pgsql/data
+		/quadstorvtl/pgsql/scripts/pgmvown.sh > /dev/null 2>&1
 		chown -R vtdbuser:vtdbuser /quadstorvtl/pgsql/data
 	fi
 fi
