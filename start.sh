@@ -15,7 +15,7 @@ sleep 8
 /sbin/kldload /quadstorvtl/quadstor/export/vtlcore.ko
 checkerror
 
-/sbin/kldload /quadstorvtl/quadstor/export/ldev.ko
+/sbin/kldload /quadstorvtl/quadstor/export/vtldev.ko
 checkerror
 
 /sbin/kldload /quadstorvtl/quadstor/target-mode/iscsi/kernel/iscsit.ko

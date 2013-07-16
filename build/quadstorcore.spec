@@ -79,7 +79,10 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 		tdisk=`grep -r tdisk /quadstor/pgsql/data/base/* 2> /dev/null`
 		if [ "$vtl" != "" -a "$tdisk" = "" ]; then
 			echo "WARNING: Moving /quadstor/pgsql/data to /quadstorvtl/pgsql/"
+			/usr/sbin/groupadd vtdbuser > /dev/null 2>&1
+			/usr/sbin/useradd -d /quadstorvtl/pgsql -g vtdbuser vtdbuser > /dev/null 2>&1
 			mv -f /quadstor/pgsql/data /quadstorvtl/pgsql/data
+			chown -R vtdbuser:vtdbuser /quadstorvtl/pgsql/data
 		fi
 	fi
 

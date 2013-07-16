@@ -52,7 +52,7 @@ int main()
 	}
 
 	cgi_print_div_start("center");
-	cgi_print_form_start("rescandisk", "rescandisk.cgi", "post", 0);
+	cgi_print_form_start("vtrescandisk", "vtrescandisk.cgi", "post", 0);
 	cgi_print_submit_button("submit", "Rescan");
 	cgi_print_form_end();
 	cgi_print_div_end();

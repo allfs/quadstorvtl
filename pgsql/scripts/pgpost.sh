@@ -10,13 +10,13 @@ rm -f /var/lock/subsys/pgsql > /dev/null 2>&1
 rm -f /tmp/.s.PGSQL.9989* > /dev/null 2>&1
 
 if [ "$os" = "FreeBSD" ]; then
-	echo "scdbuser" | /usr/sbin/pw add user scdbuser -d /quadstorvtl/pgsql -h 0 
+	echo "vtdbuser" | /usr/sbin/pw add user vtdbuser -d /quadstorvtl/pgsql -h 0 
 else 
-	/usr/sbin/groupadd scdbuser > /dev/null 2>&1
-	/usr/sbin/useradd -d /quadstorvtl/pgsql -g scdbuser scdbuser > /dev/null 2>&1
+	/usr/sbin/groupadd vtdbuser > /dev/null 2>&1
+	/usr/sbin/useradd -d /quadstorvtl/pgsql -g vtdbuser vtdbuser > /dev/null 2>&1
 fi
 
-chown -R scdbuser:scdbuser /quadstorvtl/pgsql/
+chown -R vtdbuser:vtdbuser /quadstorvtl/pgsql/
 if [ -x /sbin/runuser ]
 then
     SU=/sbin/runuser
@@ -27,7 +27,7 @@ fi
 rm -f /tmp/qstorpgdb.log
 
 if [ "$os" = "FreeBSD" ]; then
-	su -l scdbuser /quadstorvtl/pgsql/scripts/pginit.sh
+	su -l vtdbuser /quadstorvtl/pgsql/scripts/pginit.sh
 else
-	$SU -l scdbuser -c "/quadstorvtl/pgsql/scripts/pginit.sh"
+	$SU -l vtdbuser -c "/quadstorvtl/pgsql/scripts/pginit.sh"
 fi

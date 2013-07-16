@@ -366,6 +366,37 @@ build_raid_list(void)
 }
 
 static int
+build_gmirror_list(void)
+{
+	char buf[512];
+	char devname[256];
+	char ignoredev[256];
+	FILE *fp;
+
+	fp = popen("gmirror status", "r");
+
+	if (!fp)
+		return 0;
+
+	while (fgets(buf, sizeof(buf), fp) != NULL) {
+		if (strncmp(buf, "Device", strlen("Device")) == 0)
+			continue;
+
+		if (buf[0] == ' ') {
+			if (sscanf(buf, "%s", devname) != 1)
+				continue;
+		} else {
+			if (sscanf(buf, "%*s %*s %s", devname) != 1)
+				continue;
+		}
+		snprintf(ignoredev, sizeof(ignoredev), "/dev/%s", devname);
+		ignore_dev_add(ignoredev);
+	}
+	pclose(fp);
+	return 0;
+}
+
+static int
 build_swap_list(void)
 {
 	char buf[512];
@@ -1674,6 +1705,8 @@ tl_common_scan_physdisk(void)
 	build_mount_list();
 #ifdef LINUX
 	build_pvs();
+#else
+	build_gmirror_list();
 #endif
 	TAILQ_INIT(&tmp_disk_list);
 #ifdef FREEBSD

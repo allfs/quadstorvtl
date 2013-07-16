@@ -14,9 +14,9 @@ fi
 
 rm -f /tmp/qstorpgdbpatch.log
 if [ "$os" = "FreeBSD" ]; then
-	su -l scdbuser -c '/quadstorvtl/pgsql/bin/psql -f /quadstorvtl/pgsql/share/qsdbpatch.sql qsdb > /tmp/qstorpgdbpatch.log 2>&1'
+	su -l vtdbuser -c '/quadstorvtl/pgsql/bin/psql -f /quadstorvtl/pgsql/share/qsdbpatch.sql qsdb > /tmp/qstorpgdbpatch.log 2>&1'
 else
-	$SU -l scdbuser -c "/quadstorvtl/pgsql/bin/psql -f /quadstorvtl/pgsql/share/qsdbpatch.sql qsdb > /tmp/qstorpgdbpatch.log 2>&1"
+	$SU -l vtdbuser -c "/quadstorvtl/pgsql/bin/psql -f /quadstorvtl/pgsql/share/qsdbpatch.sql qsdb > /tmp/qstorpgdbpatch.log 2>&1"
 fi
 
 /quadstorvtl/pgsql/etc/pgsql stop > /dev/null 2>&1

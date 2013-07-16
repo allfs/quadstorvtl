@@ -117,8 +117,8 @@ start(){
 	rm -f /quadstorvtl/pgsql/data/postmaster.pid
 	rm -f /quadstorvtl/pgsql/pg.log
 	touch /quadstorvtl/pgsql/pg.log
-	chown scdbuser:scdbuser /quadstorvtl/pgsql/pg.log
-	$SU -l scdbuser -c "bin/pg_ctl -w -D /quadstorvtl/pgsql/data/ -l /quadstorvtl/pgsql/pg.log start > /dev/null 2>&1"
+	chown vtdbuser:vtdbuser /quadstorvtl/pgsql/pg.log
+	$SU -l vtdbuser -c "bin/pg_ctl -w -D /quadstorvtl/pgsql/data/ -l /quadstorvtl/pgsql/pg.log start > /dev/null 2>&1"
 	sleep 5
 	pid=`pidof -s "$PGENGINE/postgres"`
 	if [ $pid ] && [ -f "$PGDATA/postmaster.pid" ]
@@ -135,7 +135,7 @@ start(){
 stop(){
 	echo -n $"Stopping ${NAME} service: "
 	cd /quadstorvtl/pgsql/
-	$SU -l scdbuser -c "bin/pg_ctl -w -D /quadstorvtl/pgsql/data/ -l /quadstorvtl/pgsql/pg.log stop > /dev/null 2>&1"
+	$SU -l vtdbuser -c "bin/pg_ctl -w -D /quadstorvtl/pgsql/data/ -l /quadstorvtl/pgsql/pg.log stop > /dev/null 2>&1"
 	mypid=`/sbin/pidof /quadstorvtl/pgsql/bin/postgres`
 	if [ "$mypid" != "" ]; then
 		kill -9 $mypid

@@ -9,7 +9,7 @@ fi
 
 echo quadstor > $sctmpfile
 cd /quadstorvtl/pgsql/
-bin/initdb -D /quadstorvtl/pgsql/data/ -U scdbuser --pwfile=$sctmpfile  > /tmp/qstorpgdb.log 2>&1
+bin/initdb -D /quadstorvtl/pgsql/data/ -U vtdbuser --pwfile=$sctmpfile  > /tmp/qstorpgdb.log 2>&1
 if [ "$?" != "0" ]; then
  echo "Failed to initialize postgresql database! Check /tmp/qstorpgdb.log for more information"
  rm -f $sctmpfile
@@ -20,7 +20,7 @@ bin/pg_ctl -w -D /quadstorvtl/pgsql/data/ -l $sctmpfile start >> /tmp/qstorpgdb.
 
 sleep 5
 
-bin/createdb --owner=scdbuser qsdb >> /tmp/qstorpgdb.log 2>&1
+bin/createdb --owner=vtdbuser qsdb >> /tmp/qstorpgdb.log 2>&1
 if [ "$?" != "0" ]; then
  echo "Failed to create quadstor database! Check /tmp/qstorpgdb.log for more information"
  bin/pg_ctl -w -D /quadstorvtl/pgsql/data/ -l $sctmpfile stop >> /tmp/qstorpgdb.log 2>&1

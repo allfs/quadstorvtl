@@ -14,7 +14,7 @@ sh unload.sh
 sleep 4
 
 /sbin/kldunload iscsit
-/sbin/kldunload ldev 
+/sbin/kldunload vtldev 
 /sbin/kldunload vtlcore 
 
 /quadstorvtl/pgsql/etc/pgsql stop
