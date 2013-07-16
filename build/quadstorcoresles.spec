@@ -70,6 +70,13 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlsrv.so.%{libvers} libtlsrv.so
 cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so.1
 cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 
+%pre
+	if [ ! -f /quadstor/etc/quadstor-core-version ]; then
+		if [ -f /srv/www/htdocs/index.html ]; then
+			mv -f /srv/www/htdocs/index.html /srv/www/htdocs/index.html.ssave
+		fi
+	fi
+
 %post
 	echo "Performing post install. Please wait..."
 	sleep 2
@@ -100,8 +107,8 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 	mkdir -p /quadstorvtl/etc
 	echo "2.2.8 for SLES 11 SP1" > /quadstorvtl/etc/quadstor-vtl-core-version
 
-	if [ ! -f /srv/www/html/index.html ]; then
-		cp -f /srv/www/html/vtindex.html /srv/www/html/index.html
+	if [ ! -f /quadstor/etc/quadstor-core-version ]; then
+		cp -f /srv/www/htdocs/vtindex.html /srv/www/htdocs/index.html
 	fi
 
 	exit 0
@@ -109,10 +116,11 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 %preun
 	/sbin/chkconfig --del quadstorvtl > /dev/null 2>&1
 
-	if [ -f /srv/www/html/index.html ]; then
-		cmp=`cmp -s /srv/www/html/index.html /srv/www/html/vtindex.html`
-		if [ "$?" = "0" ]; then
-			rm -f /srv/www/html/index.html
+	cmp=`cmp -s /srv/www/htdocs/index.html /srv/www/htdocs/vtindex.html`
+	if [ "$?" = "0" ]; then
+		rm -f /srv/www/htdocs/index.html
+		if [ -f /srv/www/htdocs/index.html.ssave ];then
+			mv -f /srv/www/htdocs/index.html.ssave /srv/www/htdocs/index.html
 		fi
 	fi
 

@@ -70,6 +70,12 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlsrv.so.%{libvers} libtlsrv.so
 cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so.1
 cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 
+%pre
+	if [ ! -f /quadstor/etc/quadstor-core-version ]; then
+		if [ -f /var/www/html/index.html ]; then
+			mv -f /var/www/html/index.html /var/www/html/index.html.ssave
+		fi
+	fi
 %post
 	echo "Performing post install. Please wait..."
 	sleep 2
@@ -100,7 +106,7 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 	mkdir -p /quadstorvtl/etc
 	echo "2.2.8 for RHEL/CentOS 5.x" > /quadstorvtl/etc/quadstor-vtl-core-version
 
-	if [ ! -f /var/www/html/index.html ]; then
+	if [ ! -f /quadstor/etc/quadstor-core-version ]; then
 		cp -f /var/www/html/vtindex.html /var/www/html/index.html
 	fi
 
@@ -109,11 +115,14 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 %preun
 	/sbin/chkconfig --del quadstorvtl
 
-	if [ -f /var/www/html/index.html ]; then
-		cmp=`cmp -s /var/www/html/index.html /var/www/html/vtindex.html`
-		if [ "$?" = "0" ]; then
-			rm -f /var/www/html/index.html
+	cmp=`cmp -s /var/www/html/index.html /var/www/html/vtindex.html`
+	if [ "$?" = "0" ]; then
+		rm -f /var/www/html/index.html
+		if [ -f /var/www/html/index.html.ssave ];then
+			mv -f /var/www/html/index.html.ssave /var/www/html/index.html
 		fi
+        fi
+
 	fi
 
 	cmod=`/sbin/lsmod | grep vtlcore`
