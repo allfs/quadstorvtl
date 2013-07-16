@@ -29,4 +29,8 @@ update-rc.d quadstorvtl defaults
 mkdir -p /quadstorvtl/etc
 echo "2.2.8 for Debian" > /quadstorvtl/etc/quadstor-vtl-core-version
 
+if [ ! -f /var/www/html/index.html ]; then
+	cp -f /var/www/html/vtindex.html /var/www/html/index.html
+fi
+
 exit 0

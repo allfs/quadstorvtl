@@ -8,6 +8,13 @@ rm -f /etc/rc4.d/*quadstorvtl
 rm -f /etc/rc5.d/*quadstorvtl
 rm -f /etc/rc6.d/*quadstorvtl
 
+if [ -f /var/www/html/index.html ]; then
+	cmp=`cmp -s /var/www/html/index.html /var/www/html/vtindex.html`
+	if [ "$?" = "0" ]; then
+		rm -f /var/www/html/index.html
+	fi
+fi
+
 cmod=`lsmod | grep vtlcore`
 if [ "$cmod" != "" ]; then
 	/etc/init.d/quadstorvtl stop

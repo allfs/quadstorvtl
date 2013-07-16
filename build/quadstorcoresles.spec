@@ -99,10 +99,22 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 
 	mkdir -p /quadstorvtl/etc
 	echo "2.2.8 for SLES 11 SP1" > /quadstorvtl/etc/quadstor-vtl-core-version
+
+	if [ ! -f /srv/www/html/index.html ]; then
+		cp -f /srv/www/html/vtindex.html /srv/www/html/index.html
+	fi
+
 	exit 0
 
 %preun
 	/sbin/chkconfig --del quadstorvtl > /dev/null 2>&1
+
+	if [ -f /srv/www/html/index.html ]; then
+		cmp=`cmp -s /srv/www/html/index.html /srv/www/html/vtindex.html`
+		if [ "$?" = "0" ]; then
+			rm -f /srv/www/html/index.html
+		fi
+	fi
 
 	cmod=`/sbin/lsmod | grep vtlcore`
 	if [ "$cmod" != "" ]; then

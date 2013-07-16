@@ -100,10 +100,21 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 	mkdir -p /quadstorvtl/etc
 	echo "2.2.8 for RHEL/CentOS 5.x" > /quadstorvtl/etc/quadstor-vtl-core-version
 
+	if [ ! -f /var/www/html/index.html ]; then
+		cp -f /var/www/html/vtindex.html /var/www/html/index.html
+	fi
+
 	exit 0
 
 %preun
 	/sbin/chkconfig --del quadstorvtl
+
+	if [ -f /var/www/html/index.html ]; then
+		cmp=`cmp -s /var/www/html/index.html /var/www/html/vtindex.html`
+		if [ "$?" = "0" ]; then
+			rm -f /var/www/html/index.html
+		fi
+	fi
 
 	cmod=`/sbin/lsmod | grep vtlcore`
 	if [ "$cmod" != "" ]; then
