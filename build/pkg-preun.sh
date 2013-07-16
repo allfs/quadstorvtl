@@ -24,6 +24,7 @@ if [ -f $htdocs/index.html ]; then
 		rm -f $htdocs/index.html
 	fi
 fi
+rm -f $htdocs/vtindex.html
 
 cmod=`/sbin/kldstat | grep vtlcore`
 if [ "$cmod" = "" ]; then
