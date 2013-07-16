@@ -4,7 +4,7 @@ if [ -d /quadstor/pgsql/data -a ! -d /quadstorvtl/pgsql/data ]; then
 	vtl=`grep -r vtl /quadstor/pgsql/data/base/* 2> /dev/null`
 	tdisk=`grep -r tdisk /quadstor/pgsql/data/base/* 2> /dev/null`
 	if [ "$vtl" != "" -a "$tdisk" = "" ]; then
-		echo "WARNING: Moving /quadstor/pgsql/data to /quadstorvtl/pgsql/"
+		echo "Moving /quadstor/pgsql/data to /quadstorvtl/pgsql/"
 		echo "vtdbuser" | /usr/sbin/pw add user vtdbuser -d /quadstorvtl/pgsql -h 0 
 		mv -f /quadstor/pgsql/data /quadstorvtl/pgsql/data
 		chown -R vtdbuser:vtdbuser /quadstorvtl/pgsql/data
