@@ -1,12 +1,12 @@
 #!/bin/sh
 
 rm -rf /quadstorvtl/httpd/
-mkdir -p /quadstorvtl/httpd/www/quadstor
+mkdir -p /quadstorvtl/httpd/www/quadstorvtl
 mkdir -p /quadstorvtl/httpd/cgi-bin/
-cp -r yui /quadstorvtl/httpd/www/quadstor/
-cp -f *.png /quadstorvtl/httpd/www/quadstor/
-cp -f *.js /quadstorvtl/httpd/www//quadstor/
-cp -f *.css /quadstorvtl/httpd/www//quadstor/
+cp -r yui /quadstorvtl/httpd/www/quadstorvtl/
+cp -f *.png /quadstorvtl/httpd/www/quadstorvtl/
+cp -f *.js /quadstorvtl/httpd/www//quadstorvtl/
+cp -f *.css /quadstorvtl/httpd/www//quadstorvtl/
 cp -f vtindex.html /quadstorvtl/httpd/www/
 
 for i in `ls -1 *.cgi`;do
