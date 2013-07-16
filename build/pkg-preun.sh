@@ -11,6 +11,13 @@ else
 	cgibin=/var/www/cgi-bin
 fi
 
+cgilist=`cd /quadstorvtl/httpd/cgi-bin && ls -1 *.cgi`
+for i in $cgilist; do
+	rm -f $cgibin/$i
+done
+
+rm -rf $htdocs/quadstorvtl
+
 if [ -f $htdocs/index.html ]; then
 	cmp=`cmp -s $htdocs/index.html $htdocs/vtindex.html`
 	if [ "$?" = "0" ]; then
