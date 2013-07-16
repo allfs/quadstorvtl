@@ -17,7 +17,7 @@ fi
 
 /quadstorvtl/pgsql/scripts/pgpatch.sh > /dev/null 2>&1
 
-cp -f /quadstorvtl/etc/quadstor /etc/rc.d/quadstorvtl
+cp -f /quadstorvtl/etc/quadstorvtl /etc/rc.d/quadstorvtl
 chmod +x /quadstorvtl/etc/quadstorvtl
 chmod +x /quadstorvtl/lib/modules/*
 
@@ -38,7 +38,7 @@ fi
 cp -f /quadstorvtl/httpd/www/*.html $htdocs/
 rm -rf $htdocs/quadstorvtl/
 mkdir -p $htdocs/quadstorvtl
-cp -fr /quadstorvtl/httpd/www/quadstor/* $htdocs/quadstorvtl/
+cp -fr /quadstorvtl/httpd/www/quadstorvtl/* $htdocs/quadstorvtl/
 cp -f /quadstorvtl/httpd/cgi-bin/* $cgibin/
 mkdir -p /quadstorvtl/etc
 echo "2.2.8 for FreeBSD 9.0" > /quadstorvtl/etc/quadstor-vtl-core-version
