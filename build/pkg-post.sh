@@ -43,7 +43,8 @@ cp -f /quadstorvtl/httpd/cgi-bin/* $cgibin/
 mkdir -p /quadstorvtl/etc
 echo "2.2.8 for FreeBSD 9.0" > /quadstorvtl/etc/quadstor-vtl-core-version
 
-if [ ! -f $htdocs/index.html ]; then
+core=`pkg_info | grep quadstor-core`
+if [ "$core" = "" ]; then
 	cp -f $htdocs/vtindex.html $htdocs/index.html
 fi
 
