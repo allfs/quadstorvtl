@@ -8,10 +8,10 @@ rm -f /etc/rc4.d/*quadstorvtl
 rm -f /etc/rc5.d/*quadstorvtl
 rm -f /etc/rc6.d/*quadstorvtl
 
-if [ -f /var/www/html/index.html ]; then
-	cmp=`cmp -s /var/www/html/index.html /var/www/html/vtindex.html`
+if [ -f /var/www/index.html ]; then
+	cmp=`cmp -s /var/www/index.html /var/www/vtindex.html`
 	if [ "$?" = "0" ]; then
-		rm -f /var/www/html/index.html
+		rm -f /var/www/index.html
 	fi
 fi
 

@@ -30,7 +30,7 @@ mkdir -p /quadstorvtl/etc
 echo "2.2.8 for Debian" > /quadstorvtl/etc/quadstor-vtl-core-version
 
 if [ ! -f /quadstor/etc/quadstor-core-version ]; then
-	cp -f /var/www/html/vtindex.html /var/www/html/index.html
+	cp -f /var/www/vtindex.html /var/www/index.html
 fi
 
 exit 0

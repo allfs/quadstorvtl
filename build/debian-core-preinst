@@ -1,6 +1,6 @@
 #!/bin/sh
 if [ ! -f /quadstor/etc/quadstor-core-version ]; then
-	if [ -f /var/www/html/index.html ]; then
-		mv -f /var/www/html/index.html /var/www/html/index.html.ssave
+	if [ -f /var/www/index.html ]; then
+		mv -f /var/www/index.html /var/www/index.html.ssave
 	fi
 fi
