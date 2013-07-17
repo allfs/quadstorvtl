@@ -113,14 +113,12 @@ int
 dev_used_by_virt(char *devpath)
 {
 	char buf[4096];
-	struct raw_bdevint *bint;
 	int retval;
 
 	retval = read_from_device(devpath, buf, sizeof(buf), BDEV_META_OFFSET);
 	if (retval < 0)
 		return 0;
 
-	bint = (struct raw_bdevint *)(buf);
 	if (memcmp(buf+0x30, "QUADSTOR", strlen("QUADSTOR")))
 		return 0;
 
