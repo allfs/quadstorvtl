@@ -52,13 +52,13 @@ start() {
 
 	if [ -f /usr/bin/chcon ]; then
 		/usr/bin/chcon -t textrel_shlib_t /quadstorvtl/lib/libtl* > /dev/null 2>&1
-		if [ -f /var/www/cgi-bin/system.cgi ]; then
+		if [ -f /var/www/cgi-bin/vtsystem.cgi ]; then
 			/usr/bin/chcon -v -R -t httpd_unconfined_script_exec_t /var/www/cgi-bin/*.cgi > /dev/null 2>&1
 		fi
-		if [ -f /srv/www/cgi-bin/system.cgi ]; then
+		if [ -f /srv/www/cgi-bin/vtsystem.cgi ]; then
 			/usr/bin/chcon -v -R -t httpd_unconfined_script_exec_t /srv/www/cgi-bin/*.cgi > /dev/null 2>&1
 		fi
-		if [ -f /usr/lib/cgi-bin/system.cgi ]; then
+		if [ -f /usr/lib/cgi-bin/vtsystem.cgi ]; then
 			/usr/bin/chcon -v -R -t httpd_unconfined_script_exec_t /usr/lib/cgi-bin/*.cgi > /dev/null 2>&1
 		fi
 	fi
