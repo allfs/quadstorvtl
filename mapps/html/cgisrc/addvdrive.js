@@ -52,7 +52,6 @@ function filldrive()
 		else
 			frm.drivetype.options[i] = new Option(vtlval[0], vtlval[1], false, false);
 	}
-	frm.drivetype0.options.length = 0;
 }
 
 function ValidString(str){
