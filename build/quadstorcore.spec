@@ -124,8 +124,6 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 		fi
         fi
 
-	fi
-
 	cmod=`/sbin/lsmod | grep vtlcore`
 	if [ "$cmod" != "" ]; then
 		/etc/rc.d/init.d/quadstorvtl stop
