@@ -10,10 +10,20 @@ fi
 rm -f /tmp/qstorpgdbmove.sql
 rm -f /tmp/qstorpgdbmove.log
 echo "ALTER DATABASE qsdb OWNER TO vtdbuser;" >> /tmp/qstorpgdbmove.sql
-echo "ALTER DATABASE postgresql OWNER TO vtdbuser;" >> /tmp/qstorpgdbmove.sql
+echo "ALTER DATABASE postgres OWNER TO vtdbuser;" >> /tmp/qstorpgdbmove.sql
 echo "ALTER DATABASE template0 OWNER TO vtdbuser;" >> /tmp/qstorpgdbmove.sql
 echo "ALTER DATABASE template1 OWNER TO vtdbuser;" >> /tmp/qstorpgdbmove.sql
-echo "REASSIGN OWNED BY scdbuser to vtdbuser;" >> /tmp/qstorpgdbmove.sql
+echo "ALTER TABLE fcconfig OWNER TO vtdbuser;" >> /tmp/qstorpgdbmove.sql
+echo "ALTER TABLE iscsiconf OWNER TO vtdbuser;" >> /tmp/qstorpgdbmove.sql
+echo "ALTER TABLE physstor OWNER TO vtdbuser;" >> /tmp/qstorpgdbmove.sql
+echo "ALTER TABLE physstor_bid_seq OWNER TO vtdbuser;" >> /tmp/qstorpgdbmove.sql
+echo "ALTER TABLE storagegroup OWNER TO vtdbuser;" >> /tmp/qstorpgdbmove.sql
+echo "ALTER TABLE storagegroup_groupid_seq OWNER TO vtdbuser;" >> /tmp/qstorpgdbmove.sql
+echo "ALTER TABLE sysinfo OWNER TO vtdbuser;" >> /tmp/qstorpgdbmove.sql
+echo "ALTER TABLE vcartridge OWNER TO vtdbuser;" >> /tmp/qstorpgdbmove.sql
+echo "ALTER TABLE vcartridge_tapeid_seq OWNER TO vtdbuser;" >> /tmp/qstorpgdbmove.sql
+echo "ALTER TABLE vdrives OWNER TO vtdbuser;" >> /tmp/qstorpgdbmove.sql
+echo "ALTER TABLE vtls OWNER TO vtdbuser;" >> /tmp/qstorpgdbmove.sql
 
 chown -R scdbuser:scdbuser /quadstorvtl/pgsql/
 if [ "$os" = "FreeBSD" ]; then
