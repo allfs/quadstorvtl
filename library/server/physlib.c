@@ -1370,6 +1370,37 @@ tl_common_scan_zvol(struct d_list *tmp_disk_list)
 }
 #ifdef FREEBSD
 int
+tl_common_scan_vdisks(struct d_list *tmp_disk_list)
+{
+	FILE *fp;
+	char cmd[256];
+	char buf[512];
+	char devname[256];
+
+	snprintf(cmd, sizeof(cmd), "ls -1 /dev/quadstor/* 2> /dev/null");
+	fp = popen(cmd, "r");
+
+	if (!fp) {
+		DEBUG_ERR_SERVER("Unable to execute program %s\n", cmd);
+		return -1;
+	}
+
+	while (fgets(buf, sizeof(buf), fp) != NULL) {
+
+		buf[strlen(buf) - 1] = 0;
+		strcpy(devname, buf);
+
+		if (is_ignore_dev(devname))
+			continue;
+
+		add_disk(devname, "QUADSTOR", "VDISK", NULL, 0, tmp_disk_list, 1 /*fake_ident*/, 1 /* controller_disk */, 0 /*raid disk */, NULL, 0);
+	}
+	pclose(fp);
+	return 0;
+
+}
+
+int
 tl_common_scan_controller(char *start, char *vendor, char *product, struct d_list *tmp_disk_list)
 {
 	/* Scan the list of Physical Disks available on this system */
@@ -1717,6 +1748,7 @@ tl_common_scan_physdisk(void)
 	tl_common_scan_controller("mlxd", "MLX", "MLX VOLUME", &tmp_disk_list);
 	tl_common_scan_controller("pst", "PST", "PST VOLUME", &tmp_disk_list);
 	tl_common_scan_controller("twed", "TWE", "TWE VOLUME", &tmp_disk_list);
+	tl_common_scan_vdisks(&tmp_disk_list);
 #else
 	tl_common_scan_controller("/dev/cciss", "HP", "Smart Array", "c[0-9].*d[0-9].*", &tmp_disk_list);
 	tl_common_scan_lvs(&tmp_disk_list);

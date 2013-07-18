@@ -628,4 +628,4 @@ static moduledata_t ldevmod_info = {
 };
 
 DECLARE_MODULE(ldevmod, ldevmod_info, SI_SUB_DRIVERS, SI_ORDER_MIDDLE);
-MODULE_DEPEND(ldevmod, tldev, 1, 1, 2);
+MODULE_DEPEND(ldevmod, vtldev, 1, 1, 2);

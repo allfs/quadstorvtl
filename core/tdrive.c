@@ -2598,11 +2598,8 @@ tdrive_cmd_log_select6(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	ctio->dxfer_len = 0;
 	ctio->scsi_status = SCSI_STATUS_OK;
 
-	if (pcr) {
-		/* Reset All Stats */
-		bzero(&tdrive->stats, sizeof(struct tdrive_stats));
+	if (pcr)
 		return 0;
-	}
 
 	/* The rest is to be implemented yet */
 	return 0;

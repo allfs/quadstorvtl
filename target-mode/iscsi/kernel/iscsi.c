@@ -1913,5 +1913,5 @@ MALLOC_DEFINE(M_IETTIO, "iet tio", "IET allocations");
 
 DECLARE_MODULE(iet, iet_info, SI_SUB_DRIVERS, SI_ORDER_MIDDLE);
 MODULE_VERSION(iet, 1);
-MODULE_DEPEND(iet, tldev, 1, 1, 2);
+MODULE_DEPEND(iet, vtldev, 1, 1, 2);
 #endif

@@ -166,8 +166,8 @@ coremod_ioctl(struct cdev *dev, unsigned long cmd, caddr_t arg, int fflag, struc
 	return retval;
 }
 
-struct cdev *tldev;
-static struct cdevsw tldev_csw = {
+struct cdev *vtldev;
+static struct cdevsw vtldev_csw = {
 	.d_version = D_VERSION,
 	.d_ioctl = coremod_ioctl,
 };
@@ -183,7 +183,7 @@ static int coremod_init(void)
 		return -1;
 	}
 
-	tldev = make_dev(&tldev_csw, 0, UID_ROOT, GID_WHEEL, 0550, "vtiodev");
+	vtldev = make_dev(&vtldev_csw, 0, UID_ROOT, GID_WHEEL, 0550, "vtiodev");
 	return 0; 
 }
 
@@ -194,7 +194,7 @@ coremod_exit(void)
 	vtkern_interface_exit();
 	sx_xunlock(&ioctl_lock);
 
-	destroy_dev(tldev);
+	destroy_dev(vtldev);
 }
 
 static struct module *coremod;
@@ -250,11 +250,11 @@ event_handler(struct module *module, int event, void *arg) {
         return retval;
 }
 
-static moduledata_t tldev_info = {
+static moduledata_t vtldev_info = {
     "vtldev",    /* module name */
      event_handler,  /* event handler */
      NULL            /* extra data */
 };
 
-DECLARE_MODULE(tldev, tldev_info, SI_SUB_DRIVERS, SI_ORDER_MIDDLE);
-MODULE_VERSION(tldev, 1);
+DECLARE_MODULE(vtldev, vtldev_info, SI_SUB_DRIVERS, SI_ORDER_MIDDLE);
+MODULE_VERSION(vtldev, 1);
