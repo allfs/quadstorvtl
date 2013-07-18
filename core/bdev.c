@@ -159,6 +159,7 @@ bint_index_free(struct bintindex *index)
 	wait_on_chan(index->index_wait, TAILQ_EMPTY(&index->unmap_list));
 	if (index->metadata)
 		vm_pg_free(index->metadata);
+	wait_chan_free(index->index_wait);
 	free(index, M_BINDEX);
 }
 
@@ -206,6 +207,8 @@ bint_index_load(struct bdevint *bint, int index_id)
 		return NULL;
 	}
 
+	TAILQ_INIT(&index->unmap_list);
+	index->index_wait = wait_chan_alloc("bint index wait");
 	index->b_start = bint_index_bstart(bint, index_id);
 	index->index_id = index_id;
 	index->bint = bint;

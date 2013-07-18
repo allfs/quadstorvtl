@@ -45,6 +45,8 @@ bint_get_check_index(struct bdevint *bint, int index_id, int alloc)
 		return NULL;
 	}
 
+	TAILQ_INIT(&index->unmap_list);
+	index->index_wait = wait_chan_alloc("bint index wait");
 	index->b_start = bint_index_bstart(bint, index_id);
 	index->index_id = index_id;
 	index->bint = bint;
