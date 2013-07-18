@@ -414,8 +414,9 @@ vtkern_interface_init(struct qs_kern_cbs *kern_cbs)
 	kern_cbs->bdev_add_new = bdev_add_new;
 	kern_cbs->bdev_remove = bdev_remove;
 	kern_cbs->bdev_get_info = bdev_get_info;
+	kern_cbs->bdev_unmap_config = bdev_unmap_config;
 	kern_cbs->bdev_add_group = bdev_group_add; 
-	kern_cbs->bdev_delete_group = bdev_group_remove; 
+	kern_cbs->bdev_delete_group = bdev_group_remove;
 	kern_cbs->bdev_rename_group = bdev_group_rename; 
 	kern_cbs->vdevice_new = vdevice_new;
 	kern_cbs->vdevice_delete = vdevice_delete;

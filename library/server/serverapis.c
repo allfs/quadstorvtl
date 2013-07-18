@@ -2634,6 +2634,15 @@ senderr:
 }
 
 static int
+is_quadstor_vdisk(uint8_t *vendor, uint8_t *product)
+{
+	if (strncmp((char *)vendor, "QUADSTOR", strlen("QUADSTOR")))
+		return 0;
+	else
+		return 1;
+}
+
+static int
 tl_server_add_disk(struct tl_comm *comm, struct tl_msg *msg)
 {
 	struct group_info *group_info;
@@ -2705,6 +2714,7 @@ tl_server_add_disk(struct tl_comm *comm, struct tl_msg *msg)
 	memcpy(binfo.product, blkdev->disk.info.product, sizeof(binfo.product));
 	memcpy(binfo.serialnumber, blkdev->disk.info.serialnumber, sizeof(binfo.serialnumber));
 	binfo.isnew = 1;
+	binfo.unmap = is_quadstor_vdisk(binfo.vendor, binfo.product);
 
 	retval = tl_ioctl(TLTARGIOCNEWBLKDEV, &binfo);
 	if (retval != 0) {

@@ -26,11 +26,20 @@ struct raw_bintindex {
 	uint16_t pad[3];
 };
 
+struct bintunmap {
+	struct bintindex *index;
+	int entry;
+	int pos;
+	TAILQ_ENTRY(bintunmap) u_list;
+};
+
 struct bintindex {
 	pagestruct_t *metadata;
 	struct bdevint *bint;
 	uint64_t b_start;
 	STAILQ_ENTRY(bintindex) i_list;
+	TAILQ_HEAD(, bintunmap) unmap_list;
+	wait_chan_t *index_wait;
 	atomic_t refs;
 	int index_id;
 };
@@ -188,6 +197,7 @@ bdev_find(uint32_t bid)
 int bdev_add_new(struct bdev_info *binfo);
 int bdev_remove(struct bdev_info *binfo);
 int bdev_get_info(struct bdev_info *binfo);
+int bdev_unmap_config(struct bdev_info *binfo);
 int bdev_release_block(struct bdevint *bint, uint64_t block);
 uint64_t bdev_get_block(struct bdevint *bint, struct bdevint **ret, uint64_t *b_end);
 struct bdevint *bdev_alloc_first(struct bdevgroup *group, uint64_t *b_start, uint64_t *b_end);
@@ -201,5 +211,11 @@ int bint_toggle_index_full(struct bdevint *bint, int index, int full, int async)
 void bint_index_free(struct bintindex *index);
 int bint_sync(struct bdevint *bint);
 int bdev_check_disks(void);
+
+static inline int
+bint_unmap_supported(struct bdevint *bint)
+{
+	return atomic_test_bit(GROUP_FLAGS_UNMAP, &bint->group_flags);
+}
 
 #endif

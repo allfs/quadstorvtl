@@ -156,6 +156,7 @@ bint_index_io(struct bdevint *bint, struct bintindex *index, int rw)
 void
 bint_index_free(struct bintindex *index)
 {
+	wait_on_chan(index->index_wait, TAILQ_EMPTY(&index->unmap_list));
 	if (index->metadata)
 		vm_pg_free(index->metadata);
 	free(index, M_BINDEX);
@@ -175,6 +176,8 @@ bint_index_new(struct bdevint *bint, int index_id)
 		return NULL;
 	}
 
+	TAILQ_INIT(&index->unmap_list);
+	index->index_wait = wait_chan_alloc("bint index wait");
 	index->b_start = bint_index_bstart(bint, index_id);
 	index->index_id = index_id;
 	index->bint = bint;
@@ -227,6 +230,8 @@ static void
 bint_index_insert(struct bdevint *bint, struct bintindex *index)
 {
 	struct bintindex *tmp;
+	unsigned long flags;
+	int unmap_done;
 
 	if (bint->index_count < BINT_MAX_INDEX_COUNT || STAILQ_EMPTY(&bint->index_list)) {
 		bint->index_count++;
@@ -235,8 +240,13 @@ bint_index_insert(struct bdevint *bint, struct bintindex *index)
 	}
 
 	tmp = STAILQ_FIRST(&bint->index_list);
-	STAILQ_REMOVE_HEAD(&bint->index_list, i_list);
-	bint_index_free(tmp);
+	chan_lock_intr(tmp->index_wait, &flags);
+	unmap_done = TAILQ_EMPTY(&tmp->unmap_list);
+	chan_unlock_intr(tmp->index_wait, &flags);
+	if (unmap_done) {
+		STAILQ_REMOVE_HEAD(&bint->index_list, i_list);
+		bint_index_free(tmp);
+	}
 	STAILQ_INSERT_TAIL(&bint->index_list, index, i_list);
 }
 
@@ -368,6 +378,27 @@ bint_index_free_blocks(struct bdevint *bint, struct bintindex *index)
 	return free;
 }
 
+static int
+bint_index_unmap_done(struct bintindex *index, int entry, int pos, int wait)
+{
+	unsigned long flags;
+	struct bintunmap *unmap;
+
+again:
+	chan_lock_intr(index->index_wait, &flags);
+	TAILQ_FOREACH(unmap, &index->unmap_list, u_list) {
+		if (unmap->entry == entry && unmap->pos == pos) {
+			chan_unlock_intr(index->index_wait, &flags);
+			if (!wait)
+				return 0;
+			pause("unmap wt", 100);
+			goto again;
+		}
+	}
+	chan_unlock_intr(index->index_wait, &flags);
+	return 1;
+}
+
 static uint64_t
 bint_get_block(struct bdevint *bint, struct bintindex *index, uint64_t *b_end)
 {
@@ -377,12 +408,16 @@ bint_get_block(struct bdevint *bint, struct bintindex *index, uint64_t *b_end)
 	int index_id;
 	uint8_t *bmap;
 	int retval, bmap_entries;
+	int wait = 0;
+	int retry;
 
 	debug_check(!index);
 	index_id = index->index_id;
 	bmap = (uint8_t *)(vm_pg_address(index->metadata));
 
 	bmap_entries = calc_bmap_entries(bint, index_id);
+again:
+	retry = 0;
 	for (i = 0; i < bmap_entries; i++) {
 		uint8_t val = bmap[i];
 
@@ -392,10 +427,20 @@ bint_get_block(struct bdevint *bint, struct bintindex *index, uint64_t *b_end)
 		j = get_iter_start(index_id, i);
 		for (; j < 8; j++) {
 			if (!(val & (1 << j))) {
-				bmap[i] |= (1 << j);
-				goto found;
+				retval = bint_index_unmap_done(index, i, j, wait);
+				if (retval) {
+					bmap[i] |= (1 << j);
+					goto found;
+				}
+				debug_check(wait);
+				retry = 1;
 			}
 		}
+	}
+
+	if (retry && !wait) {
+		wait = 1;
+		goto again;
 	}
 
 	return 0;
@@ -451,10 +496,35 @@ again:
 	return block;
 }
 
+#ifdef FREEBSD 
+static void bio_unmap_end_bio(bio_t *bio)
+#else
+static void bio_unmap_end_bio(bio_t *bio, int err)
+#endif
+{
+	struct bintunmap *unmap = (struct bintunmap *)bio_get_caller(bio);
+	struct bintindex *index = unmap->index;
+#ifdef FREEBSD
+	int err = bio->bio_error;
+
+	if (err == EOPNOTSUPP)
+		atomic_clear_bit(GROUP_FLAGS_UNMAP, &index->bint->group_flags);
+#endif
+
+	chan_lock(index->index_wait);
+	TAILQ_REMOVE(&index->unmap_list, unmap, u_list);
+	chan_wakeup_unlocked(index->index_wait);
+	chan_unlock(index->index_wait);
+	g_destroy_bio(bio);
+	free(unmap, M_UNMAP);
+}
+
 static int
 __bint_release_block(struct bdevint *bint, uint64_t block)
 {
 	struct bintindex *index;
+	struct bintunmap *unmap;
+	unsigned long intr_flags;
 	int index_id;
 	int entry, pos;
 	uint8_t *bmap;
@@ -482,6 +552,23 @@ __bint_release_block(struct bdevint *bint, uint64_t block)
 		bmap[entry] |= (1 << pos);
 	}
 	bint_incr_free(bint, BINT_UNIT_SIZE);
+	if (bint_unmap_supported(bint)) {
+		unmap = zalloc(sizeof(*unmap), M_UNMAP, Q_WAITOK);
+		unmap->index = index;
+		unmap->entry = entry;
+		unmap->pos = pos;
+		chan_lock_intr(index->index_wait, &intr_flags);
+		TAILQ_INSERT_TAIL(&index->unmap_list, unmap, u_list);
+		chan_unlock_intr(index->index_wait, &intr_flags);
+		retval = bio_unmap(bint->b_dev, bint->cp, block, (BINT_UNIT_SIZE) >> bint->sector_shift, bint->sector_shift, bio_unmap_end_bio, unmap);
+		if (unlikely(retval != 0)) {
+			chan_lock_intr(index->index_wait, &intr_flags);
+			TAILQ_REMOVE(&index->unmap_list, unmap, u_list);
+			chan_wakeup_unlocked(index->index_wait);
+			chan_unlock_intr(index->index_wait, &intr_flags);
+			free(unmap, M_UNMAP);
+		}
+	}
 	return 0;
 }
 
@@ -580,6 +667,38 @@ bdev_remove(struct bdev_info *binfo)
 }
 
 int
+bdev_unmap_config(struct bdev_info *binfo)
+{
+	struct bdevint *bint;
+	int retval, unmap;
+
+	bint = bdev_find(binfo->bid);
+	if (!bint) {
+		debug_warn("Cannot find bdev at id %u\n", binfo->bid);
+		return -1;
+	}
+
+	if (binfo->unmap && atomic_test_bit(GROUP_FLAGS_UNMAP_ENABLED, &bint->group_flags))
+		return 0;
+	else if (!binfo->unmap && !atomic_test_bit(GROUP_FLAGS_UNMAP_ENABLED, &bint->group_flags))
+		return 0;
+
+	if (binfo->unmap) {
+		atomic_set_bit(GROUP_FLAGS_UNMAP_ENABLED, &bint->group_flags);
+		unmap = bdev_unmap_support(bint->b_dev);
+		if (unmap)
+			atomic_set_bit(GROUP_FLAGS_UNMAP, &bint->group_flags);
+	}
+	else {
+		atomic_clear_bit(GROUP_FLAGS_UNMAP_ENABLED, &bint->group_flags);
+		atomic_clear_bit(GROUP_FLAGS_UNMAP, &bint->group_flags);
+	}
+
+	retval = bint_sync(bint);
+	return retval;
+}
+
+int
 bdev_get_info(struct bdev_info *binfo)
 {
 	struct bdevint *bint;
@@ -595,6 +714,7 @@ bdev_get_info(struct bdev_info *binfo)
 	binfo->usize = bint->usize;
 	binfo->free = atomic64_read(&bint->free);
 	binfo->ismaster = bint_is_group_master(bint);
+	binfo->unmap = atomic_test_bit(GROUP_FLAGS_UNMAP_ENABLED, &bint->group_flags) ? 1 : 0;
 	return 0;
 }
 
@@ -898,6 +1018,15 @@ bdev_add_new(struct bdev_info *binfo)
 		}
 
 		atomic64_set(&bint->free, bint->usize - BINT_RESERVED_SIZE);
+
+		if (binfo->unmap) {
+			int unmap;
+
+			atomic_set_bit(GROUP_FLAGS_UNMAP_ENABLED, &bint->group_flags);
+			unmap = bdev_unmap_support(bint->b_dev);
+			if (unmap)
+				atomic_set_bit(GROUP_FLAGS_UNMAP, &bint->group_flags);
+		}
 
 		if (!atomic_read(&bint->group->bdevs)) {
 			atomic_set_bit(GROUP_FLAGS_MASTER, &bint->group_flags);

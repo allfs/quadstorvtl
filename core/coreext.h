@@ -101,6 +101,7 @@ typedef void bio_t;
 
 #define M_QUADSTOR		0
 #define M_DEVBUF		0
+#define M_UNMAP			0
 #define M_TSEGMENT		0
 #define M_BLKENTRY		0
 #define M_QCACHE		0

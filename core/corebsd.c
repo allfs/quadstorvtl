@@ -21,6 +21,7 @@
 #include "bdev.h"
 
 MALLOC_DEFINE(M_QUADSTOR, "quads", "QUADStor allocations");
+MALLOC_DEFINE(M_UNMAP, "quad unmap", "QUADStor allocations");
 MALLOC_DEFINE(M_TSEGMENT, "quad tsegment", "QUADStor allocations");
 MALLOC_DEFINE(M_BLKENTRY, "quad blkentry", "QUADStor allocations");
 MALLOC_DEFINE(M_QCACHE, "quad qcache", "QUADStor allocations");

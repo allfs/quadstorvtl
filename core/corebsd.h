@@ -478,6 +478,7 @@ int biot_add_page(struct biot *biot, pagestruct_t *page, int pg_length);
 struct bio * bio_get_new(struct bdevint *bint, void *end_bio_func, void *consumer, uint64_t b_start, int bio_vec_count, int rw);
 
 MALLOC_DECLARE(M_QUADSTOR);
+MALLOC_DECLARE(M_UNMAP);
 MALLOC_DECLARE(M_TSEGMENT);
 MALLOC_DECLARE(M_BLKENTRY);
 MALLOC_DECLARE(M_QCACHE);
