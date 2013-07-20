@@ -38,7 +38,7 @@
 #define LOCATE_TYPE_EOD				0x03
 
 #define TDRIVE_MIN_BLOCK_SIZE		1
-#define TDRIVE_MAX_BLOCK_SIZE		(4 * 1024 * 1024)
+#define TDRIVE_MAX_BLOCK_SIZE		(8 * 1024 * 1024)
 #define TDRIVE_MAX_PENDING_CMDS		64
 #define TDRIVE_WRITE_CACHE_SIZE		(32 * 1024 * 1024)
 
@@ -156,7 +156,7 @@ struct tapealert_log_page {
 
 };
 
-#define TDRIVE_GRANULARITY		10	
+#define TDRIVE_GRANULARITY		0	
 #define READ_BLOCK_LIMITS_CMDLEN	6
 #define READ_POSITION_SHORT_CMDLEN	20
 #define READ_POSITION_LONG_CMDLEN	32
@@ -280,7 +280,6 @@ struct tdrive {
 	struct medium_partition_page partition_page;
 	struct disconnect_reconnect_page disreconn_page;
 	struct rw_error_recovery_page rw_recovery_page; 
-	struct drive_parameters drive_params;
 
 	uint8_t supports_evpd;
 	uint8_t supports_devid; /* Support Device Identifiers, everthing should */

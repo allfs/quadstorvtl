@@ -224,10 +224,8 @@ tdrive_init_disconnect_reconnect_page(struct tdrive *tdrive)
 }
 
 static void
-tdrive_init_drive_params(struct tdrive *tdrive)
+tdrive_init_drive_params(struct drive_parameters *drive_params)
 {
-	struct drive_parameters *drive_params = &tdrive->drive_params;
-
 	drive_params->granularity = TDRIVE_GRANULARITY;
 	drive_params->max_block_size[0] = (TDRIVE_MAX_BLOCK_SIZE >> 16) & 0xFF;
 	drive_params->max_block_size[1] = (TDRIVE_MAX_BLOCK_SIZE >> 8) & 0xFF;
@@ -309,7 +307,6 @@ tdrive_init(struct tdrive *tdrive, struct vdeviceinfo *deviceinfo)
 	LIST_INIT(&tdrive->media_list);
 	TDRIVE_SET_BUFFERED_MODE(tdrive);
 
-	tdrive_init_drive_params(tdrive);
 	tdrive_init_mode_block_descriptor(tdrive);
 	tdrive_init_data_compression_page(tdrive, deviceinfo);
 	tdrive_init_medium_partition_page(tdrive);
@@ -1837,17 +1834,44 @@ tdrive_cmd_read6(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 }
 
 static int
-tdrive_cmd_read_block_limits(struct tdrive *tdrive, struct qsio_scsiio *ctio)
+__tdrive_cmd_read_block_limits_mloi(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 {
+	ctio_allocate_buffer(ctio, 20, Q_WAITOK);
+	if (unlikely(!ctio->data_ptr))
+		return -1;
+	bzero(ctio->data_ptr, 20);
+
+	*((uint64_t *)(ctio->data_ptr + 12)) = htobe64(0xFFFFFFFF);
+	return 0;
+}
+
+static int
+__tdrive_cmd_read_block_limits(struct tdrive *tdrive, struct qsio_scsiio *ctio)
+{
+	struct drive_parameters params;
+
 	ctio_allocate_buffer(ctio, READ_BLOCK_LIMITS_CMDLEN, Q_WAITOK);
 	if (unlikely(!ctio->data_ptr))
-	{
 		return -1;
-	}
 
+	tdrive_init_drive_params(&params);
 	ctio->scsi_status = SCSI_STATUS_OK;
-	memcpy(ctio->data_ptr, &tdrive->drive_params, READ_BLOCK_LIMITS_CMDLEN);
+	memcpy(ctio->data_ptr, &params, READ_BLOCK_LIMITS_CMDLEN);
 	return 0;
+}
+
+static int
+tdrive_cmd_read_block_limits(struct tdrive *tdrive, struct qsio_scsiio *ctio)
+{
+	uint8_t *cdb = ctio->cdb;
+	uint8_t mloi;
+
+	mloi = cdb[1] & 0x1;
+
+	if (!mloi)
+		return __tdrive_cmd_read_block_limits(tdrive, ctio);
+	else
+		return __tdrive_cmd_read_block_limits_mloi(tdrive, ctio);
 }
 
 static int
