@@ -246,83 +246,324 @@ struct vol_stats_partition_record32 {
 	uint32_t counter;
 } __attribute__ ((__packed__));
 
+static inline void
+log_counter8_parameter_copy(uint8_t *buffer, int buffer_length, int *ret_done, int *ret_page_length, uint16_t code, uint8_t value)
+{
+	struct log_parameter8 *param, tmp;
+	int done = *ret_done;
+	int page_length = *ret_page_length;
+	int min_len;
+
+	param = (struct log_parameter8 *)(buffer+done);
+	tmp.parameter_code = htobe16(code);
+	tmp.parameter_flags = 0x3;
+	tmp.parameter_length = sizeof(uint8_t);
+	tmp.parameter_value = value;
+
+	min_len = min_t(int, sizeof(tmp), buffer_length - done);
+	memcpy(param, &tmp, min_len);
+	done += min_len;
+	page_length += sizeof(tmp);
+	*ret_done = done;
+	*ret_page_length = page_length;
+}
+
+static inline void
+log_counter32_parameter_copy(uint8_t *buffer, int buffer_length, int *ret_done, int *ret_page_length, uint16_t code, uint32_t value)
+{
+	struct log_parameter32 *param, tmp;
+	int done = *ret_done;
+	int page_length = *ret_page_length;
+	int min_len;
+
+	param = (struct log_parameter32 *)(buffer+done);
+	tmp.parameter_code = htobe16(code);
+	tmp.parameter_flags = 0x3;
+	tmp.parameter_length = sizeof(uint32_t);
+	tmp.parameter_value = htobe32(value);
+
+	min_len = min_t(int, sizeof(tmp), buffer_length - done);
+	memcpy(param, &tmp, min_len);
+	done += min_len;
+	page_length += sizeof(tmp);
+	*ret_done = done;
+	*ret_page_length = page_length;
+}
+
+static inline void
+log_counter16_parameter_copy(uint8_t *buffer, int buffer_length, int *ret_done, int *ret_page_length, uint16_t code, uint16_t value)
+{
+	struct log_parameter16 *param, tmp;
+	int done = *ret_done;
+	int page_length = *ret_page_length;
+	int min_len;
+
+	param = (struct log_parameter16 *)(buffer+done);
+	tmp.parameter_code = htobe16(code);
+	tmp.parameter_flags = 0x3;
+	tmp.parameter_length = sizeof(uint16_t);
+	tmp.parameter_value = htobe16(value);
+
+	min_len = min_t(int, sizeof(tmp), buffer_length - done);
+	memcpy(param, &tmp, min_len);
+	done += min_len;
+	page_length += sizeof(tmp);
+	*ret_done = done;
+	*ret_page_length = page_length;
+}
+
+static void
+log_partition32_parameter_copy(uint8_t *buffer, int buffer_length, int *ret_done, int *ret_page_length, uint16_t code, int count)
+{
+	struct log_parameter *param, tmp;
+	int done = *ret_done;
+	int page_length = *ret_page_length;
+	int min_len;
+
+	param = (struct log_parameter *)(buffer+done);
+	tmp.parameter_code = htobe16(code);
+	tmp.parameter_flags = 0x3;
+	tmp.parameter_length = (count * sizeof(struct vol_stats_partition_record32));
+	min_len = min_t(int, sizeof(tmp), buffer_length - done);
+	memcpy(param, &tmp, min_len);
+	done += min_len;
+	page_length += sizeof(tmp);
+	*ret_done = done;
+	*ret_page_length = page_length;
+}
+
+static inline void
+log_counter64_parameter_copy(uint8_t *buffer, int buffer_length, int *ret_done, int *ret_page_length, uint16_t code, uint64_t value)
+{
+	struct log_parameter64 *param, tmp;
+	int done = *ret_done;
+	int page_length = *ret_page_length;
+	int min_len;
+
+	param = (struct log_parameter64 *)(buffer+done);
+	tmp.parameter_code = htobe16(code);
+	tmp.parameter_flags = 0x3;
+	tmp.parameter_length = sizeof(uint64_t);
+	tmp.parameter_value = htobe64(value);
+
+	min_len = min_t(int, sizeof(tmp), buffer_length - done);
+	memcpy(param, &tmp, min_len);
+	done += min_len;
+	page_length += sizeof(tmp);
+	*ret_done = done;
+	*ret_page_length = page_length;
+}
+
+static void 
+log_partition32_value_copy(uint8_t *buffer, int buffer_length, int *ret_done, int *ret_page_length, int id, uint32_t value)
+{
+	struct vol_stats_partition_record32 *record, tmp1;
+	int done = *ret_done;
+	int page_length = *ret_page_length;
+	int min_len;
+
+	bzero(&tmp1, sizeof(tmp1));
+	tmp1.length = sizeof(tmp1) - 1;
+	tmp1.partition_num = htobe16(id);
+	tmp1.counter = htobe32(value);
+	min_len = min_t(int, sizeof(tmp1), buffer_length - done);
+	record = (struct vol_stats_partition_record32 *)(buffer+done);
+	memcpy(record, &tmp1, min_len);
+	done += min_len;
+	page_length += sizeof(tmp1);
+	*ret_done = done;
+	*ret_page_length = page_length;
+}
+
+static uint32_t
+log_value_partition_remaining(struct tape_partition *partition)
+{
+	uint64_t remaining;
+
+	if (partition->used >= partition->size)
+		remaining = 0;
+	else
+		remaining = (partition->size - partition->used);
+	if (remaining <= EW_SIZE)
+		remaining = 0;
+	return (remaining >> 20);
+}
+
+static uint32_t
+log_value_partition_used(struct tape_partition *partition)
+{
+	return (partition->used >> 20);
+}
+
+static uint32_t
+log_value_partition_capacity(struct tape_partition *partition)
+{
+	return (partition->size >> 20);
+}
+
+#define WRITE_LOG_COUNTER8(parameter_pointer, buffer, buffer_length, done, page_length, log_counter, value)						\
+do  {									\
+	if (parameter_pointer <= log_counter) {				\
+		log_counter8_parameter_copy(buffer, buffer_length, &done, &page_length, log_counter, value);						\
+	}								\
+} while (0)
+
+#define WRITE_LOG_COUNTER16(parameter_pointer, buffer, buffer_length, done, page_length, log_counter, value)						\
+do  {									\
+	if (parameter_pointer <= log_counter) {				\
+		log_counter16_parameter_copy(buffer, buffer_length, &done, &page_length, log_counter, value);						\
+	}								\
+} while (0)
+
+#define WRITE_LOG_COUNTER32(parameter_pointer, buffer, buffer_length, done, page_length, log_counter, value)						\
+do  {									\
+	if (parameter_pointer <= log_counter) {				\
+		log_counter32_parameter_copy(buffer, buffer_length, &done, &page_length, log_counter, value);						\
+	}								\
+} while (0)
+
+#define WRITE_LOG_COUNTER64(parameter_pointer, buffer, buffer_length, done, page_length, log_counter, value)						\
+do  {									\
+	if (parameter_pointer <= log_counter) {				\
+		log_counter64_parameter_copy(buffer, buffer_length, &done, &page_length, log_counter, value);						\
+	}								\
+} while (0)
+
+#define WRITE_LOG_PARTITION32(tape, parameter_pointer, buffer, buffer_length, done, page_length, log_counter, count, part_func)				\
+do  {									\
+	int i;								\
+	uint32_t value;							\
+	if (parameter_pointer <= log_counter) {				\
+		log_partition32_parameter_copy(buffer, buffer_length, &done, &page_length, log_counter, count);						\
+		for (i = 0; i < count; i++) {				\
+			partition = tape_get_partition(tape, i);	\
+			value = part_func(partition);			\
+			log_partition32_value_copy(buffer, buffer_length, &done, &page_length, i, value);						\
+		}							\
+	}								\
+} while (0)
+
+static uint64_t
+tape_get_datasets_written(struct tape *tape)
+{
+	return 0;
+}
+
+static uint64_t
+tape_get_datasets_read(struct tape *tape)
+{
+	return 0;
+}
+
+static uint64_t
+tape_written_mb(struct tape *tape)
+{
+	return 0;
+}
+
+static uint64_t
+tape_read_mb(struct tape *tape)
+{
+	return 0;
+}
+
+static uint32_t
+tape_get_load_count(struct tape *tape)
+{
+	return 1;
+}
+
+static uint16_t
+vultrium_performance_characteristics_log_sense(struct tdrive *tdrive, uint8_t *buffer, uint16_t buffer_length, uint16_t parameter_pointer)
+{
+	struct tape *tape;
+	struct scsi_log_page page;
+	int count, done, page_length = 0;
+	int min_len;
+	uint8_t val8;
+
+	tape = tdrive->tape;
+	count = tape_partition_count(tape);
+	bzero(buffer, buffer_length);
+
+	bzero(&page, sizeof(page));
+	page.page_code = PERFORMANCE_CHARACTERISTICS_LOG_PAGE;
+	done = min_t(int, sizeof(page), buffer_length);
+
+	val8 = 1;
+	WRITE_LOG_COUNTER32(parameter_pointer, buffer, buffer_length, done, page_length, 0x0001, val8);
+
+	page.page_length = htobe16(page_length);
+	min_len = min_t(int, sizeof(page), buffer_length);
+	memcpy(buffer, &page, min_len);
+	return done;
+}
+
 static uint16_t
 vultrium_volume_statistics_log_sense(struct tdrive *tdrive, uint8_t *buffer, uint16_t buffer_length, uint16_t parameter_pointer)
 {
-	struct log_parameter *param, tmp;
-	struct vol_stats_partition_record32 *record, tmp1;
 	struct tape *tape;
 	struct tape_partition *partition;
 	struct scsi_log_page page;
 	int count, done, page_length = 0;
-	uint64_t remaining;
 	int min_len;
-	int i;
+	uint16_t val16;
+	uint32_t val32;
+	uint64_t val64;
 
 	tape = tdrive->tape;
 	count = tape_partition_count(tape);
+	bzero(buffer, buffer_length);
 
 	bzero(&page, sizeof(page));
 	page.page_code = VOLUME_STATISTICS_LOG_PAGE;
 	done = min_t(int, sizeof(page), buffer_length);
 
-	if (parameter_pointer > 0x203)
-		goto skip1;
+	val32 = tape_get_load_count(tape);
+	WRITE_LOG_COUNTER32(parameter_pointer, buffer, buffer_length, done, page_length, 0x0001, val32);
 
-	param = (struct log_parameter *)(buffer+done);
-	bzero(param, sizeof(*param));
-	tmp.parameter_code = htobe16(0x203);
-	tmp.parameter_flags = 0x3;
-	tmp.parameter_length = (count * sizeof(tmp1));
-	min_len = min_t(int, sizeof(tmp), buffer_length - done);
-	memcpy(param, &tmp, min_len);
-	done += min_len;
-	page_length += sizeof(tmp);
+	val64 = tape_get_datasets_written(tape);
+	WRITE_LOG_COUNTER32(parameter_pointer, buffer, buffer_length, done, page_length, 0x0002, val64);
 
-	for (i = 0; i < count; i++) {
-		partition = tape_get_partition(tape, i);
-		bzero(&tmp1, sizeof(tmp1));
-		tmp1.length = sizeof(tmp1) - 1;
-		tmp1.partition_num = htobe16(i);
-		tmp1.counter = htobe32((partition->used >> 20));
-		min_len = min_t(int, sizeof(tmp1), buffer_length - done);
-		record = (struct vol_stats_partition_record32 *)(buffer+done);
-		memcpy(record, &tmp1, min_len);
-		done += min_len;
-		page_length += sizeof(tmp1);
-	} 
-skip1:
-	if (parameter_pointer > 0x204)
-		goto skip2;
+	val32 = 0;
+	WRITE_LOG_COUNTER32(parameter_pointer, buffer, buffer_length, done, page_length, 0x0003, val32);
 
-	param = (struct log_parameter *)(buffer+done);
-	tmp.parameter_code = htobe16(0x204);
-	tmp.parameter_length = (count * sizeof(tmp1));
-	tmp.parameter_flags = 0x3;
-	min_len = min_t(int, sizeof(tmp), buffer_length - done);
-	memcpy(param, &tmp, min_len);
-	done += min_len;
-	page_length += sizeof(tmp);
+	val16 = 0;
+	WRITE_LOG_COUNTER16(parameter_pointer, buffer, buffer_length, done, page_length, 0x0004, val16);
 
-	for (i = 0; i < count; i++) {
-		partition = tape_get_partition(tape, i);
-		bzero(&tmp1, sizeof(tmp1));
-		tmp1.length = sizeof(tmp1) - 1;
-		tmp1.partition_num = htobe16(i);
-		if (partition->used >= partition->size)
-			remaining = 0;
-		else
-			remaining = (partition->size - partition->used);
-		if (remaining <= EW_SIZE)
-			remaining = 0;
-		tmp1.counter = htobe32((remaining >> 20));
-		min_len = min_t(int, sizeof(tmp1), buffer_length - done);
-		record = (struct vol_stats_partition_record32 *)(buffer+done);
-		memcpy(record, &tmp1, min_len);
-		done += min_len;
-		page_length += sizeof(tmp1);
-	} 
-skip2:
+	val64 = tape_get_datasets_read(tape);
+	WRITE_LOG_COUNTER64(parameter_pointer, buffer, buffer_length, done, page_length, 0x0007, val64);
+
+	val32 = 0;
+	WRITE_LOG_COUNTER32(parameter_pointer, buffer, buffer_length, done, page_length, 0x0008, val32);
+
+	val16 = 0;
+	WRITE_LOG_COUNTER16(parameter_pointer, buffer, buffer_length, done, page_length, 0x0009, val16);
+
+	val16 = 0;
+	WRITE_LOG_COUNTER16(parameter_pointer, buffer, buffer_length, done, page_length, 0x000C, val16);
+
+	val16 = 0;
+	WRITE_LOG_COUNTER16(parameter_pointer, buffer, buffer_length, done, page_length, 0x000D, val16);
+
+	val64 = tape_written_mb(tape);
+	WRITE_LOG_COUNTER64(parameter_pointer, buffer, buffer_length, done, page_length, 0x0010, val64);
+
+	val64 = tape_read_mb(tape);
+	WRITE_LOG_COUNTER64(parameter_pointer, buffer, buffer_length, done, page_length, 0x0011, val64);
+
+	val32 = 0;
+	WRITE_LOG_COUNTER32(parameter_pointer, buffer, buffer_length, done, page_length, 0x0101, val32); /* Beginning of Medium Passes */
+
+	val32 = 0;
+	WRITE_LOG_COUNTER32(parameter_pointer, buffer, buffer_length, done, page_length, 0x0102, val32); /* Middle of tape passes */
+
+	WRITE_LOG_PARTITION32(tape, parameter_pointer, buffer, buffer_length, done, page_length, 0x202, count, log_value_partition_capacity);
+
+	WRITE_LOG_PARTITION32(tape, parameter_pointer, buffer, buffer_length, done, page_length, 0x203, count, log_value_partition_used);
+
+	WRITE_LOG_PARTITION32(tape, parameter_pointer, buffer, buffer_length, done, page_length, 0x204, count, log_value_partition_remaining);
+
 	page.page_length = htobe16(page_length);
 	min_len = min_t(int, sizeof(page), buffer_length);
 	memcpy(buffer, &page, min_len);
@@ -422,6 +663,8 @@ vultrium_log_sense(struct tdrive *tdrive, uint8_t page_code, uint8_t *buffer, ui
 		return vultrium_tape_capacity_log_sense(tdrive, buffer, buffer_length, parameter_pointer);
 	case VOLUME_STATISTICS_LOG_PAGE:
 		return vultrium_volume_statistics_log_sense(tdrive, buffer, buffer_length, parameter_pointer);
+	case PERFORMANCE_CHARACTERISTICS_LOG_PAGE:
+		return vultrium_performance_characteristics_log_sense(tdrive, buffer, buffer_length, parameter_pointer);
 	default:
 		break;
 	}
@@ -689,10 +932,11 @@ vultrium_init_handlers(struct tdrive *tdrive)
 	tdrive->evpd_info.page_code[2] = UNIT_SERIAL_NUMBER_PAGE;
 	tdrive->supports_evpd = 1;
 
-	tdrive->log_info.num_pages = 0x03;
+	tdrive->log_info.num_pages = 0x04;
 	tdrive->log_info.page_code[0] = 0x00;
 	tdrive->log_info.page_code[1] = VOLUME_STATISTICS_LOG_PAGE;
 	tdrive->log_info.page_code[2] = TAPE_CAPACITY_LOG_PAGE;
+	tdrive->log_info.page_code[3] = PERFORMANCE_CHARACTERISTICS_LOG_PAGE;
 
 	/* Ideally we should be moving this elsewhere */
 	vultrium_update_device_configuration_page(tdrive);

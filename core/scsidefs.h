@@ -206,6 +206,13 @@ struct log_parameter32 {
 	uint32_t parameter_value;
 } __attribute__ ((__packed__));
 
+struct log_parameter64 {
+	uint16_t parameter_code;
+	uint8_t parameter_flags;
+	uint8_t parameter_length;
+	uint64_t parameter_value;
+} __attribute__ ((__packed__));
+
 struct log_parameter16 {
 	uint16_t parameter_code;
 	uint8_t parameter_flags;
@@ -227,6 +234,7 @@ struct log_parameter8 {
 #define COMPRESSION_LOG_PAGE		0x32
 #define TAPE_ALERT_LOG_PAGE		0x2E
 #define TAPE_CAPACITY_LOG_PAGE		0x31 /* Check if specific to drive */
+#define PERFORMANCE_CHARACTERISTICS_LOG_PAGE	0x37
 
 #ifndef SYNCHRONIZE_CACHE_16
 #define SYNCHRONIZE_CACHE_16		0x91
