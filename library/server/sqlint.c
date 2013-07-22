@@ -687,7 +687,7 @@ sql_query_groups(struct group_info *group_list[])
 int
 sql_query_blkdevs(struct tl_blkdevinfo *bdev_list[])
 {
-	char sqlcmd[128];
+	char sqlcmd[256];
 	PGconn *conn;
 	PGresult *res;
 	int nrows;
