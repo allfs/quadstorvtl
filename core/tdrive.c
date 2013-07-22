@@ -146,7 +146,7 @@ tdrive_init_medium_partition_page(struct tdrive *tdrive)
 	struct tape *tape;
 	struct tape_partition *partition;
 	uint16_t partition_size;
-	int count = 0, idp = 1, i;
+	int count = 0, idp = 0, i;
 
 	bzero(page, sizeof(*page));
 	page->page_code = MEDIUM_PARTITION_PAGE;
@@ -167,8 +167,8 @@ tdrive_init_medium_partition_page(struct tdrive *tdrive)
 		partition_size = partition_size_to_units(partition->size, page->partition_units & 0xF);
 		page->partition_size[i] = htobe16(partition_size);
 		if (!partition->partition_id) {
-			if (partition->size == tape->size && tape->size == tape->set_size)
-				idp = 0;
+			if (partition->size != tape->size || tape->size != tape->set_size)
+				idp = 1;
 		}
 #if 0
 		page->page_length += 2;
@@ -177,11 +177,11 @@ tdrive_init_medium_partition_page(struct tdrive *tdrive)
 	page->addl_partitions_defined = count - 1;
 	if (count > 1)
 		idp = 1;
+
 	if (idp)
 		page->fdp |= 0x20;
-	page->fdp |= 0x20;
-	page->fdp |= 0x40;
-	page->fdp |= 0x80;
+	else
+		page->fdp |= 0x80;
 }
 
 int 
@@ -2837,6 +2837,19 @@ copy_current_control_mode_dp_page(struct tdrive *tdrive, uint8_t *buffer, int mi
 }
 
 static void
+copy_changeable_device_configuration_page(struct tdrive *tdrive, uint8_t *buffer, int min_len)
+{
+	struct device_configuration_page page;
+
+	bzero(&page, sizeof(page));
+	page.page_code = DEVICE_CONFIGURATION_PAGE;
+	page.page_length = 0xE;
+	page.sew = 0x08;
+	page.select_data_compression_algorithm = 0xFF;
+	memcpy(buffer, &page, min_len);
+}
+
+static void
 copy_current_device_configuration_page(struct tdrive *tdrive, uint8_t *buffer, int min_len)
 {
 	struct tape *tape;
@@ -2855,6 +2868,24 @@ copy_current_device_configuration_ext_page(struct tdrive *tdrive, uint8_t *buffe
 	memcpy(buffer, &tdrive->configuration_ext_page, min_len);
 }
 
+static int
+copy_changeable_medium_partition_page(struct tdrive *tdrive, uint8_t *buffer, int todo)
+{
+	struct medium_partition_page page;
+	int min_len = min_t(int, todo, tdrive->partition_page.page_length + 2);
+
+	bzero(&page, sizeof(page));
+	page.page_code = MEDIUM_PARTITION_PAGE;
+	page.page_length = sizeof(page) - 2;
+	page.addl_partitions_defined = 0xFF;
+	page.fdp = 0xFC;
+	page.partition_units = 0xF;
+	sys_memset(page.partition_size, 0xFF, sizeof(page.partition_size));
+
+	memcpy(buffer, &page, min_len);
+	return min_len;
+}
+
 static int 
 copy_current_medium_partition_page(struct tdrive *tdrive, uint8_t *buffer, int todo)
 {
@@ -2865,10 +2896,20 @@ copy_current_medium_partition_page(struct tdrive *tdrive, uint8_t *buffer, int t
 }
 
 static void
+copy_changeable_data_compression_page(struct tdrive *tdrive, uint8_t *buffer, int min_len)
+{
+	struct data_compression_page page;
+
+	bzero(&page, sizeof(page));
+	page.page_code = DATA_COMPRESSION_PAGE;
+	page.page_length = sizeof(struct data_compression_page) - offsetof(struct data_compression_page, dcc);
+	page.dcc |= 0x80; /* Data compression enable modifyable */
+}
+
+static void
 copy_current_data_compression_page(struct tdrive *tdrive, uint8_t *buffer, int min_len)
 {
 	memcpy(buffer, &tdrive->compression_page, min_len);
-	return;
 }
 
 int 
@@ -2984,7 +3025,44 @@ mode_sense_current_values(struct tdrive *tdrive, uint8_t *buffer, uint16_t alloc
 static int
 mode_sense_changeable_values(struct tdrive *tdrive, uint8_t *buffer, uint16_t allocation_length, uint8_t dbd, uint8_t page_code, uint8_t sub_page_code, int *start_offset)
 {
-	return mode_sense_current_values(tdrive, buffer, allocation_length, dbd, page_code, sub_page_code, start_offset);
+	int offset = *start_offset;
+	int avail = 0;
+	int min_len;
+
+	bzero(buffer, allocation_length);
+
+	if (page_code == ALL_PAGES || page_code == DEVICE_CONFIGURATION_PAGE) {
+		if (!sub_page_code) {
+			min_len = min_t(int, sizeof(struct device_configuration_page), allocation_length - offset); 
+			if (min_len > 0) {
+				copy_changeable_device_configuration_page(tdrive, buffer+offset, min_len);
+				offset += min_len;
+			}
+			avail += sizeof(struct device_configuration_page);
+		}
+	}
+
+	if (page_code == ALL_PAGES || page_code == DATA_COMPRESSION_PAGE) {
+		min_len = min_t(int, sizeof(struct data_compression_page), allocation_length - offset); 
+		if (min_len > 0) {
+			copy_changeable_data_compression_page(tdrive, buffer+offset, min_len);
+			offset += min_len;
+		}
+		avail += sizeof(struct data_compression_page);
+	}
+
+	if (page_code == ALL_PAGES || page_code == MEDIUM_PARTITION_PAGE) {
+
+		min_len = min_t(int, sizeof(struct medium_partition_page), allocation_length - offset); 
+		if (min_len > 0) {
+			min_len = copy_changeable_medium_partition_page(tdrive, buffer+offset, min_len);
+			offset += min_len;
+		}
+		avail += tdrive->partition_page.page_length + 2;
+	}
+
+	*start_offset = offset;
+	return avail;
 }
 
 static int
@@ -3075,8 +3153,9 @@ tdrive_cmd_mode_sense10(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 			avail += mode_sense_default_values(tdrive, ctio->data_ptr, allocation_length, dbd, page_code, sub_page_code, &offset);
 			break;
 		case MODE_SENSE_SAVED_VALUES:
-			avail += mode_sense_saved_values(tdrive, ctio->data_ptr, allocation_length, dbd, page_code, sub_page_code, &offset);
-			break;
+			ctio_free_data(ctio);
+			ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, SAVING_PARAMETERS_NOT_SUPPORTED_ASC, SAVING_PARAMETERS_NOT_SUPPORTED_ASCQ);
+			return 0;
 	}
 
 	header->mode_data_length = htobe16(avail - offsetof(struct mode_parameter_header10, medium_type));

@@ -127,7 +127,8 @@ struct device_configuration_page {
 	uint16_t write_delay_time;
 	uint8_t rew; /* Data buffer recovery, rew, rbo etc */
 	uint8_t gap_size; /* Interblock gap size */
-	uint32_t buffer_size_at_early_warning; /* Buffer size to reduce, includes eod defined, eeg etc */
+	uint8_t sew;
+	uint8_t buffer_size_at_early_warning[3]; /* Buffer size to reduce, includes eod defined, eeg etc */
 	uint8_t select_data_compression_algorithm;
 	uint8_t asocwp; /* Associated write protect, persistent, permanent */
 } __attribute__ ((__packed__));

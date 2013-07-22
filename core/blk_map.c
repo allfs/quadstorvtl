@@ -406,8 +406,6 @@ __blk_map_free_all(struct blkmap_list *map_list)
 
 	while ((map = TAILQ_FIRST(map_list)) != NULL) {
 		TAILQ_REMOVE(map_list, map, m_list);
-		if (atomic_read(&map->refs) > 1)
-			debug_warn("map refs %d\n", atomic_read(&map->refs));
 		blk_map_put(map);
 	}
 }
