@@ -156,10 +156,12 @@ struct tl_blkdevinfo {
 	/* The next four fields are filled up on start up */
 	uint32_t bid;
 	uint32_t group_id;
+	uint32_t db_group_id;
 	struct physdisk disk;
 	char devname[256];
 	dev_t b_dev;
 	int offline;
+	int ismaster;
 	TAILQ_ENTRY(tl_blkdevinfo) g_entry;
 	struct group_info *group;
 	struct vlist vol_list;

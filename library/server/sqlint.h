@@ -21,7 +21,7 @@
 
 #include "pgsql.h"
 
-PGconn *sql_add_blkdev(struct physdisk *disk, uint32_t bid);
+PGconn *sql_add_blkdev(struct physdisk *disk, uint32_t bid, uint32_t group_id);
 int sql_delete_blkdev(struct tl_blkdevinfo *binfo);
 int sql_add_vcartridge(PGconn *conn, struct vcartridge *vinfo);
 int sql_delete_vcartridge(PGconn *conn, int tl_id, uint32_t tape_id);
@@ -55,4 +55,5 @@ int sql_delete_fc_rule(struct fc_rule *fc_rule);
 int sql_delete_vtl_fc_rules(int tl_id);
 int sql_clear_slot_configuration(PGconn *conn, int tl_id);
 int sql_update_element_address(PGconn *conn, int tl_id, int tid, int eaddress);
+int sql_update_blkdev_group_id(uint32_t bid, uint32_t group_id);
 #endif

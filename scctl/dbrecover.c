@@ -506,7 +506,7 @@ check_disk(struct physdisk *disk, int formaster)
 		return 0;
 	}
 
-	conn = sql_add_blkdev(disk, raw_bint.bid);
+	conn = sql_add_blkdev(disk, raw_bint.bid, group_info->group_id);
 	if (!conn) {
 		fprintf(stdout, "Failed to update disk information for %s", disk->info.devname);
 		exit(1);

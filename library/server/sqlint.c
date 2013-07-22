@@ -92,8 +92,19 @@ int sql_delete_all_tl_drives(int tl_id)
 
 }
 
+int
+sql_update_blkdev_group_id(uint32_t bid, uint32_t group_id)
+{
+	char sqlcmd[256];
+	int error;
+
+	sprintf(sqlcmd, "UPDATE PHYSSTOR SET GROUPID='%u' WHERE BID='%u'", group_id, bid);
+	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
+	return error;
+}
+
 PGconn *
-sql_add_blkdev(struct physdisk *disk, uint32_t bid)
+sql_add_blkdev(struct physdisk *disk, uint32_t bid, uint32_t group_id)
 {
 	char *sqlcmd = NULL;
 	int cmdlen;
@@ -173,11 +184,11 @@ sql_add_blkdev(struct physdisk *disk, uint32_t bid)
 	}
 
 	if (!bid) {
-		snprintf(sqlcmd, cmdlen, "INSERT INTO PHYSSTOR (VENDOR, PRODUCT, IDFLAGS, T10ID, NAAID, EUI64ID, UNKNOWNID, ISRAID, RAIDDEV, PID) VALUES ('%.8s', '%.16s', '%u', '%s', '%s', '%s', '%s', '%d', '%s', '%d')", device->vendor, device->product, device->idflags, t10esc, naaesc, euiesc, unesc, disk->raiddisk, disk->raiddisk ? device->devname : "", disk->partid);
+		snprintf(sqlcmd, cmdlen, "INSERT INTO PHYSSTOR (VENDOR, PRODUCT, IDFLAGS, T10ID, NAAID, EUI64ID, UNKNOWNID, ISRAID, RAIDDEV, PID, GROUPID) VALUES ('%.8s', '%.16s', '%u', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%u')", device->vendor, device->product, device->idflags, t10esc, naaesc, euiesc, unesc, disk->raiddisk, disk->raiddisk ? device->devname : "", disk->partid, group_id);
 		bid = pgsql_exec_query3(conn, sqlcmd, 1, &error, "PHYSSTOR", "BID");
 	}
 	else {
-		snprintf(sqlcmd, cmdlen, "INSERT INTO PHYSSTOR (BID, VENDOR, PRODUCT, IDFLAGS, T10ID, NAAID, EUI64ID, UNKNOWNID, ISRAID, RAIDDEV, PID) VALUES ('%u', '%.8s', '%.16s', '%u', '%s', '%s', '%s', '%s', '%d', '%s', '%d')", bid, device->vendor, device->product, device->idflags, t10esc, naaesc, euiesc, unesc, disk->raiddisk, disk->raiddisk ? device->devname : "", disk->partid);
+		snprintf(sqlcmd, cmdlen, "INSERT INTO PHYSSTOR (BID, VENDOR, PRODUCT, IDFLAGS, T10ID, NAAID, EUI64ID, UNKNOWNID, ISRAID, RAIDDEV, PID) VALUES ('%u', '%.8s', '%.16s', '%u', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%u')", bid, device->vendor, device->product, device->idflags, t10esc, naaesc, euiesc, unesc, disk->raiddisk, disk->raiddisk ? device->devname : "", disk->partid, group_id);
 		pgsql_exec_query3(conn, sqlcmd, 0, &error, NULL, NULL);
 	}
 
@@ -683,7 +694,7 @@ sql_query_blkdevs(struct tl_blkdevinfo *bdev_list[])
 	int i;
 	struct tl_blkdevinfo *binfo;
 
-	snprintf(sqlcmd, sizeof(sqlcmd), "SELECT BID,VENDOR,PRODUCT,IDFLAGS,T10ID::bytea,NAAID::bytea,EUI64ID::bytea,UNKNOWNID::bytea,PID,ISRAID,RAIDDEV FROM PHYSSTOR");
+	snprintf(sqlcmd, sizeof(sqlcmd), "SELECT BID,VENDOR,PRODUCT,IDFLAGS,T10ID::bytea,NAAID::bytea,EUI64ID::bytea,UNKNOWNID::bytea,PID,ISRAID,RAIDDEV,GROUPID FROM PHYSSTOR");
 
 	res = pgsql_exec_query(sqlcmd, &conn);
 	if (res == NULL)
@@ -716,6 +727,8 @@ sql_query_blkdevs(struct tl_blkdevinfo *bdev_list[])
 		{
 			strcpy(device->devname, PQgetvalue(res, i, 10));
 		}
+		binfo->group_id = strtoull(PQgetvalue(res, i, 0), NULL, 11);
+		binfo->db_group_id = binfo->group_id;
 		if (PQgetlength(res, i, 1) != 8)
 		{
 			DEBUG_ERR("Got invalid length for vendor %d\n", PQgetlength(res, i, 1));

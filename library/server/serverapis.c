@@ -74,6 +74,18 @@ target_name_valid(char *name)
 	return 1;
 }
 
+static struct tl_blkdevinfo *
+group_get_master(struct group_info *group_info)
+{
+	struct tl_blkdevinfo *blkdev;
+
+	TAILQ_FOREACH(blkdev, &group_info->bdev_list, g_entry) {
+		if (blkdev->ismaster)
+			return blkdev;
+	}
+	return NULL;
+}
+
 void
 bdev_group_insert(struct group_info *group_info, struct tl_blkdevinfo *blkdev)
 {
@@ -957,6 +969,7 @@ load_blkdev(struct tl_blkdevinfo *blkdev)
 
 	bdev_group_insert(group_info, blkdev);
 
+	blkdev->ismaster = binfo.ismaster; 
 	if (binfo.ismaster)
 		sql_query_volumes(blkdev);
 
@@ -2665,13 +2678,31 @@ is_quadstor_vdisk(uint8_t *vendor, uint8_t *product)
 }
 
 static int
+group_has_disks(struct group_info *group_info)
+{
+	struct tl_blkdevinfo *blkdev;
+	int i;
+
+	for (i = 1; i < TL_MAX_DISKS; i++) {
+		blkdev = bdev_list[i];
+		if (!blkdev)
+			continue;
+		if (blkdev->offline && blkdev->db_group_id == group_info->group_id)
+			return 1;
+		if (!blkdev->offline && blkdev->group_id == group_info->group_id)
+			return 1;
+	}
+	return 0;
+}
+
+static int
 tl_server_add_disk(struct tl_comm *comm, struct tl_msg *msg)
 {
 	struct group_info *group_info;
 	uint32_t group_id;
 	struct physdisk *disk;
 	int retval;
-	struct tl_blkdevinfo *blkdev;
+	struct tl_blkdevinfo *blkdev, *master;
 	char errmsg[256];
 	struct bdev_info binfo;
 	PGconn *conn;
@@ -2685,6 +2716,17 @@ tl_server_add_disk(struct tl_comm *comm, struct tl_msg *msg)
 	group_info = find_group(group_id);
 	if (!group_info) {
 		snprintf(errmsg, sizeof(errmsg), "Cannot find pool with id %u\n", group_id);
+		goto senderr;
+	}
+
+	master = group_get_master(group_info);
+	if (master && master->offline) {
+		snprintf(errmsg, sizeof(errmsg), "Cannot add disk when pool %s master disk is offline\n", group_info->name);
+		goto senderr;
+	}
+
+	if (!master && group_has_disks(group_info)) {
+		snprintf(errmsg, sizeof(errmsg), "Cannot add disk when pool %s master disk is offline\n", group_info->name);
 		goto senderr;
 	}
 
@@ -2721,7 +2763,7 @@ tl_server_add_disk(struct tl_comm *comm, struct tl_msg *msg)
 	memcpy(&blkdev->disk, disk, offsetof(struct physdisk, q_entry));
 	strcpy(blkdev->devname, disk->info.devname);
 
-	conn = sql_add_blkdev(&blkdev->disk, blkdev->bid);
+	conn = sql_add_blkdev(&blkdev->disk, blkdev->bid, group_id);
 	if (!conn) {
 		snprintf(errmsg, sizeof(errmsg), "Adding disk to database failed\n");
 		free(blkdev);
@@ -2744,6 +2786,7 @@ tl_server_add_disk(struct tl_comm *comm, struct tl_msg *msg)
 		goto err;
 	}
 
+	blkdev->ismaster = binfo.ismaster;
 	bdev_add(group_info, blkdev);
 	msg->msg_resp = MSG_RESP_OK;
 	tl_server_msg_success(comm, msg);
@@ -3317,6 +3360,28 @@ check_drive_compression(void)
 		enable_drive_compression = 1;
 }
 
+static int
+tl_server_fix_group_ids(void)
+{
+	struct tl_blkdevinfo *blkdev;
+	int i, retval;
+
+	for (i = 1; i < TL_MAX_DISKS; i++) {
+		blkdev = bdev_list[i];
+		if (!blkdev)
+			continue;
+		if (blkdev->offline)
+			continue;
+		if (blkdev->db_group_id == blkdev->group_id)
+			continue;
+		retval = sql_update_blkdev_group_id(blkdev->bid, blkdev->group_id);
+		if (retval != 0)
+			return retval;
+	}
+
+	return 0;
+}
+
 void
 tl_server_load(void)
 {
@@ -3366,6 +3431,12 @@ tl_server_load(void)
 	retval = tl_server_process_lists();
 	if (retval != 0) {
 		DEBUG_ERR_SERVER("Processing device lists failed");
+		exit(EXIT_FAILURE);
+	}
+
+	retval = tl_server_fix_group_ids();
+	if (retval != 0) {
+		DEBUG_ERR_SERVER("Cannot fix group ids\n");
 		exit(EXIT_FAILURE);
 	}
 
