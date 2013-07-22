@@ -2798,17 +2798,37 @@ tdrive_cmd_mode_select10(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 }
 
 static void
+copy_changeable_rw_error_recovery_page(struct tdrive *tdrive, uint8_t *buffer, int min_len)
+{
+	struct rw_error_recovery_page page;
+
+	bzero(&page, sizeof(page));
+	page.page_code = READ_WRITE_ERROR_RECOVERY_PAGE;
+	page.page_length = sizeof(struct rw_error_recovery_page) - offsetof(struct rw_error_recovery_page, dcr);
+	memcpy(buffer, &page, min_len);
+}
+
+static void
 copy_current_rw_error_recovery_page(struct tdrive *tdrive, uint8_t *buffer, int min_len)
 {
 	memcpy(buffer, &tdrive->rw_recovery_page, min_len);
-	return;
+}
+
+static void
+copy_changeable_disconnect_reconnect_page(struct tdrive *tdrive, uint8_t *buffer, int min_len)
+{
+	struct disconnect_reconnect_page page;
+
+	bzero(&page, sizeof(page));
+	page.page_code = DISCONNECT_RECONNECT_PAGE;
+	page.page_length = sizeof(struct disconnect_reconnect_page) - offsetof(struct disconnect_reconnect_page, buffer_full_ratio);
+	memcpy(buffer, &page, min_len);
 }
 
 static void
 copy_current_disconnect_reconnect_page(struct tdrive *tdrive, uint8_t *buffer, int min_len)
 {
 	memcpy(buffer, &tdrive->disreconn_page, min_len);
-	return;
 }
 
 struct control_mode_page control_mode_page = {
@@ -2816,6 +2836,17 @@ struct control_mode_page control_mode_page = {
 	.page_length = 0x0A,
 	.tas = 0x40,
 };
+
+static void
+copy_changeable_control_mode_page(struct tdrive *tdrive, uint8_t *buffer, int min_len)
+{
+	struct control_mode_page page;
+
+	bzero(&page, sizeof(page));
+	page.page_code = CONTROL_MODE_PAGE;
+	page.page_length = 0x0A,
+	memcpy(buffer, &page, min_len);
+}
 
 static void
 copy_current_control_mode_page(struct tdrive *tdrive, uint8_t *buffer, int min_len)
@@ -2828,6 +2859,18 @@ struct control_mode_dp_page control_mode_dp_page = {
 	.sub_page_code = CONTROL_MODE_DATA_PROTECTION_PAGE,
 	.lbp_info_length = 0x04,
 };
+
+static void
+copy_changeable_control_mode_dp_page(struct tdrive *tdrive, uint8_t *buffer, int min_len)
+{
+	struct control_mode_dp_page page;
+
+	bzero(&page, sizeof(page));
+	page.page_code = CONTROL_MODE_PAGE;
+	page.sub_page_code = CONTROL_MODE_DATA_PROTECTION_PAGE;
+	page.page_length = htobe16(0x1C),
+	memcpy(buffer, &page, min_len);
+}
 
 static void
 copy_current_control_mode_dp_page(struct tdrive *tdrive, uint8_t *buffer, int min_len)
@@ -2860,6 +2903,18 @@ copy_current_device_configuration_page(struct tdrive *tdrive, uint8_t *buffer, i
 	else
 		tdrive->configuration_page.active_partition = 0;
 	memcpy(buffer, &tdrive->configuration_page, min_len);
+}
+
+static void
+copy_changeable_device_configuration_ext_page(struct tdrive *tdrive, uint8_t *buffer, int min_len)
+{
+	struct device_configuration_ext_page page;
+
+	bzero(&page, sizeof(page));
+	page.page_code = DEVICE_CONFIGURATION_PAGE;
+	page.sub_page_code = DEVICE_CONFIGURATION_EXTENSION_PAGE;
+	page.page_length = htobe16(0x1C);
+	memcpy(buffer, &page, min_len);
 }
 
 static void
@@ -3031,6 +3086,46 @@ mode_sense_changeable_values(struct tdrive *tdrive, uint8_t *buffer, uint16_t al
 
 	bzero(buffer, allocation_length);
 
+	if (page_code == ALL_PAGES || page_code == READ_WRITE_ERROR_RECOVERY_PAGE)
+	{
+		min_len = min_t(int, sizeof(struct rw_error_recovery_page), allocation_length - offset);
+		if (min_len > 0)
+		{
+			copy_changeable_rw_error_recovery_page(tdrive, buffer+offset, min_len);
+			offset += min_len;
+		}
+		avail += sizeof(struct rw_error_recovery_page);
+	}
+	if (page_code == ALL_PAGES || page_code == DISCONNECT_RECONNECT_PAGE)
+	{
+		min_len = min_t(int, sizeof(struct disconnect_reconnect_page), allocation_length - offset); 
+		if (min_len > 0)
+		{
+			copy_changeable_disconnect_reconnect_page(tdrive, buffer+offset, min_len);
+			offset += min_len;
+		}
+		avail += sizeof(struct disconnect_reconnect_page);
+	}
+
+	if (page_code == ALL_PAGES || page_code == CONTROL_MODE_PAGE)
+	{
+		if (!sub_page_code) {
+			min_len = min_t(int, sizeof(struct control_mode_page), allocation_length - offset); 
+			if (min_len > 0) {
+				copy_changeable_control_mode_page(tdrive, buffer+offset, min_len);
+				offset += min_len;
+			}
+			avail += sizeof(struct control_mode_page);
+		}
+		else if (sub_page_code == CONTROL_MODE_DATA_PROTECTION_PAGE) {
+			min_len = min_t(int, sizeof(struct control_mode_dp_page), allocation_length - offset); 
+			if (min_len > 0) {
+				copy_changeable_control_mode_dp_page(tdrive, buffer+offset, min_len);
+				offset += min_len;
+			}
+			avail += sizeof(struct control_mode_dp_page);
+		}
+	}
 	if (page_code == ALL_PAGES || page_code == DEVICE_CONFIGURATION_PAGE) {
 		if (!sub_page_code) {
 			min_len = min_t(int, sizeof(struct device_configuration_page), allocation_length - offset); 
@@ -3039,6 +3134,14 @@ mode_sense_changeable_values(struct tdrive *tdrive, uint8_t *buffer, uint16_t al
 				offset += min_len;
 			}
 			avail += sizeof(struct device_configuration_page);
+		}
+		else if (sub_page_code == DEVICE_CONFIGURATION_EXTENSION_PAGE) {
+			min_len = min_t(int, sizeof(struct device_configuration_ext_page), allocation_length - offset); 
+			if (min_len > 0) {
+				copy_changeable_device_configuration_ext_page(tdrive, buffer+offset, min_len);
+				offset += min_len;
+			}
+			avail += sizeof(struct device_configuration_ext_page);
 		}
 	}
 
