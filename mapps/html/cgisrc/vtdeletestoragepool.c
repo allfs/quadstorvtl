@@ -23,6 +23,7 @@ int main()
 	llist entries;
 	char *tmp;
 	uint32_t group_id;
+	char reply[512], errmsg[512];
 	int retval;
 
 	read_cgi_input(&entries);
@@ -35,9 +36,11 @@ int main()
 	if (!group_id)
 		cgi_print_header_error_page("Invalid CGI parameters passed\n");
 
-	retval = tl_client_delete_group(group_id);
-	if (retval != 0)
-		cgi_print_header_error_page("Unable to delete the specified pool");
+	retval = tl_client_delete_group(group_id, reply);
+	if (retval != 0) {
+		snprintf(errmsg, sizeof(errmsg), "Unable to delete pool<br/>Message from server is:<br/>\"%s\"\n", reply);
+		cgi_print_header_error_page(errmsg);
+	}
 
 	cgi_redirect("vtliststoragepool.cgi");
 	return 0;

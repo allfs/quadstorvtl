@@ -3561,6 +3561,11 @@ tl_server_delete_group(struct tl_comm *comm, struct tl_msg *msg)
 		goto senderr;
 	}
 
+	if (!TAILQ_EMPTY(&group_info->bdev_list)) {
+		snprintf(errmsg, sizeof(errmsg), "Pool %s disk list not empty\n", group_info->name);
+		goto senderr;
+	}
+
 	strcpy(group_conf.name, group_info->name);
 	group_conf.group_id = group_info->group_id;
 	retval = tl_ioctl(TLTARGIOCDELETEGROUP, &group_conf);

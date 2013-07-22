@@ -28,7 +28,7 @@ int tl_client_set_iscsiconf(struct iscsiconf *iscsiconf, char *reply);
 int tl_client_list_disks(struct d_list *dlist, int msg_id);
 int tl_client_list_groups(struct group_list *group_list, int msg_id);
 int tl_client_add_group(char *groupname, int worm, char *reply);
-int tl_client_delete_group(uint32_t group_id);
+int tl_client_delete_group(uint32_t group_id, char *reply);
 int tl_client_rename_pool(uint32_t group_id, char *name, char *reply);
 
 int tl_client_load_conf(void);

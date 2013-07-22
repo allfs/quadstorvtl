@@ -213,7 +213,7 @@ tl_client_add_group(char *groupname, int worm, char *reply)
 }
 
 int
-tl_client_delete_group(uint32_t group_id)
+tl_client_delete_group(uint32_t group_id, char *reply)
 {
 	struct tl_msg msg;
 
@@ -226,7 +226,7 @@ tl_client_delete_group(uint32_t group_id)
 	sprintf(msg.msg_data, "group_id: %d\n", group_id);
 	msg.msg_len = strlen(msg.msg_data)+1;
 
-	return tl_client_send_msg(&msg, NULL);
+	return tl_client_send_msg(&msg, reply);
 }
 
 int
