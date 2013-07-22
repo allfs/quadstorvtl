@@ -191,10 +191,44 @@ mchanger_check_elements(struct mchanger_element_list *element_list, struct bdevi
 extern struct tdevice *tdevices[];
 
 static int
+tdrive_check_block(struct tdrive *tdrive, struct bdevint *bint)
+{
+	struct tape *tape;
+	int retval;
+
+	LIST_FOREACH(tape, &tdrive->media_list, t_list) {
+		retval = tape_check_block(tape, bint);
+		if (retval)
+			return retval;
+	}
+	return 0;
+}
+
+static int
+mchanger_check_block(struct mchanger *mchanger, struct bdevint *bint)
+{
+	int retval;
+
+	retval = mchanger_check_elements(&mchanger->selem_list, bint);
+	if (retval)
+		return retval;
+
+	retval = mchanger_check_elements(&mchanger->ielem_list, bint);
+	if (retval)
+		return retval;
+
+	retval = mchanger_check_elements(&mchanger->delem_list, bint);
+	if (retval)
+		return retval;
+
+	retval = mchanger_check_export_list(mchanger, bint);
+	return retval;
+}
+
+static int
 device_check_block(struct bdevint *bint)
 {
 	struct tdevice *device;
-	struct mchanger *mchanger;
 	int i;
 	int retval;
 
@@ -202,31 +236,15 @@ device_check_block(struct bdevint *bint)
 	{
 		device = tdevices[i];
 		if (!device)
-		{
-			continue;
-		}
-
-		if (device->type != T_CHANGER)
 			continue;
 
-		mchanger = (struct mchanger *)device;
+		if (device->type == T_CHANGER)
+			retval = mchanger_check_block((struct mchanger *)device, bint);
+		else
+			retval = tdrive_check_block((struct tdrive *)device, bint);
 
-		retval = mchanger_check_elements(&mchanger->selem_list, bint);
-		if (retval)
+		if (retval != 0)
 			return retval;
-
-		retval = mchanger_check_elements(&mchanger->ielem_list, bint);
-		if (retval)
-			return retval;
-
-		retval = mchanger_check_elements(&mchanger->delem_list, bint);
-		if (retval)
-			return retval;
-
-		retval = mchanger_check_export_list(mchanger, bint);
-		if (retval)
-			return retval;
-
 	}
 	return 0;
 }

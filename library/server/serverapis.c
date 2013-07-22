@@ -1023,10 +1023,32 @@ load_configured_devices(void)
 static int
 query_disk_check()
 {
+	struct tl_blkdevinfo *blkdev;
+	struct vdevice *vdevice;
+	struct vcartridge *vinfo;
 	char sqlcmd[64];
 	PGconn *conn;
 	PGresult *res;
 	int nrows, check, error = 0;
+	int i;
+
+	for (i = 1; i < TL_MAX_DISKS; i++) {
+		blkdev = bdev_list[i];
+		if (!blkdev)
+			continue;
+		if (blkdev->offline)
+			return 0;
+	}
+
+	for (i = 0; i < TL_MAX_DEVICES; i++) {
+		vdevice = device_list[i];
+		if (!vdevice)
+			continue;
+		TAILQ_FOREACH(vinfo, &vdevice->vol_list, q_entry) {
+			if (vinfo->loaderror)
+				return 0;
+		}
+	}
 
 	snprintf(sqlcmd, sizeof(sqlcmd), "SELECT DCHECK FROM SYSINFO");
 
