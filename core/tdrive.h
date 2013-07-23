@@ -144,6 +144,16 @@ struct device_configuration_ext_page {
 	uint8_t reserved[23];
 } __attribute__ ((__packed__));
 
+struct medium_configuration_page {
+	uint8_t page_code;
+	uint8_t page_length;
+	uint8_t wormm;
+	uint8_t reserved;
+	uint8_t worm_mode_label_restrictions;
+	uint8_t worm_mode_filemark_restrictions;
+	uint8_t reserved1[26];
+};
+	
 struct seqaccess_device_page {
 	/* counters are in bytes */
 	uint64_t writes_from_app;

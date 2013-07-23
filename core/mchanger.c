@@ -845,9 +845,9 @@ mchanger_evpd_inquiry_data(struct mchanger *mchanger, struct qsio_scsiio *ctio, 
 static int
 mchanger_standard_inquiry_data(struct mchanger *mchanger, struct qsio_scsiio *ctio, uint16_t allocation_length)
 {
-	uint8_t min_len;
+	uint16_t min_len;
 
-	min_len = min_t(uint8_t, allocation_length, sizeof(struct inquiry_data));
+	min_len = min_t(uint16_t, allocation_length, sizeof(struct inquiry_data));
 
 	/* As of now we return the STANDARD_INQUIRY_LEN */
 	ctio_allocate_buffer(ctio, min_len, Q_WAITOK);

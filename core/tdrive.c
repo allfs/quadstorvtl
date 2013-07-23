@@ -755,9 +755,9 @@ tdrive_evpd_inquiry_data(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint8_
 static int
 tdrive_standard_inquiry_data(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint16_t allocation_length)
 {
-	uint8_t min_len;
+	uint16_t min_len;
 
-	min_len = min_t(uint8_t, allocation_length, sizeof(struct inquiry_data));
+	min_len = min_t(uint16_t, allocation_length, sizeof(struct inquiry_data));
 	ctio_allocate_buffer(ctio, min_len, Q_WAITOK);
 	if (unlikely(!ctio->data_ptr))
 	{
@@ -2798,6 +2798,33 @@ tdrive_cmd_mode_select10(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 }
 
 static void
+copy_changeable_medium_configuration_page(struct tdrive *tdrive, uint8_t *buffer, int min_len)
+{
+	struct medium_configuration_page page;
+
+	bzero(&page, sizeof(page));
+	page.page_code = MEDIUM_CONFIGURATION_PAGE;
+	page.page_length = 0x1E;
+	memcpy(buffer, &page, min_len);
+}
+
+static void
+copy_current_medium_configuration_page(struct tdrive *tdrive, uint8_t *buffer, int min_len)
+{
+	struct medium_configuration_page page;
+
+	bzero(&page, sizeof(page));
+	page.page_code = MEDIUM_CONFIGURATION_PAGE;
+	page.page_length = 0x1E;
+	if (tdrive->tape) {
+		if (tdrive->tape->worm)
+			page.wormm = 0x01;
+		page.worm_mode_label_restrictions = 0x01;
+		page.worm_mode_filemark_restrictions = 0x02;
+	}
+}
+
+static void
 copy_changeable_rw_error_recovery_page(struct tdrive *tdrive, uint8_t *buffer, int min_len)
 {
 	struct rw_error_recovery_page page;
@@ -3034,6 +3061,15 @@ mode_sense_current_values(struct tdrive *tdrive, uint8_t *buffer, uint16_t alloc
 		}
 	}
 
+	if (page_code == ALL_PAGES || page_code == DATA_COMPRESSION_PAGE) {
+		min_len = min_t(int, sizeof(struct data_compression_page), allocation_length - offset); 
+		if (min_len > 0) {
+			copy_current_data_compression_page(tdrive, buffer+offset, min_len);
+			offset += min_len;
+		}
+		avail += sizeof(struct data_compression_page);
+	}
+
 	if (page_code == ALL_PAGES || page_code == DEVICE_CONFIGURATION_PAGE) {
 		if (!sub_page_code) {
 			min_len = min_t(int, sizeof(struct device_configuration_page), allocation_length - offset); 
@@ -3053,15 +3089,6 @@ mode_sense_current_values(struct tdrive *tdrive, uint8_t *buffer, uint16_t alloc
 		}
 	}
 
-	if (page_code == ALL_PAGES || page_code == DATA_COMPRESSION_PAGE) {
-		min_len = min_t(int, sizeof(struct data_compression_page), allocation_length - offset); 
-		if (min_len > 0) {
-			copy_current_data_compression_page(tdrive, buffer+offset, min_len);
-			offset += min_len;
-		}
-		avail += sizeof(struct data_compression_page);
-	}
-
 	if (page_code == ALL_PAGES || page_code == MEDIUM_PARTITION_PAGE) {
 
 		min_len = min_t(int, sizeof(struct medium_partition_page), allocation_length - offset); 
@@ -3071,6 +3098,16 @@ mode_sense_current_values(struct tdrive *tdrive, uint8_t *buffer, uint16_t alloc
 			offset += min_len;
 		}
 		avail += tdrive->partition_page.page_length + 2;
+	}
+
+	if (page_code == ALL_PAGES || page_code == MEDIUM_CONFIGURATION_PAGE) {
+
+		min_len = min_t(int, sizeof(struct medium_configuration_page), allocation_length - offset); 
+		if (min_len > 0) {
+			copy_current_medium_configuration_page(tdrive, buffer+offset, min_len);
+			offset += min_len;
+		}
+		avail += sizeof(struct medium_configuration_page);
 	}
 
 	*start_offset = offset;
@@ -3126,6 +3163,16 @@ mode_sense_changeable_values(struct tdrive *tdrive, uint8_t *buffer, uint16_t al
 			avail += sizeof(struct control_mode_dp_page);
 		}
 	}
+
+	if (page_code == ALL_PAGES || page_code == DATA_COMPRESSION_PAGE) {
+		min_len = min_t(int, sizeof(struct data_compression_page), allocation_length - offset); 
+		if (min_len > 0) {
+			copy_changeable_data_compression_page(tdrive, buffer+offset, min_len);
+			offset += min_len;
+		}
+		avail += sizeof(struct data_compression_page);
+	}
+
 	if (page_code == ALL_PAGES || page_code == DEVICE_CONFIGURATION_PAGE) {
 		if (!sub_page_code) {
 			min_len = min_t(int, sizeof(struct device_configuration_page), allocation_length - offset); 
@@ -3145,15 +3192,6 @@ mode_sense_changeable_values(struct tdrive *tdrive, uint8_t *buffer, uint16_t al
 		}
 	}
 
-	if (page_code == ALL_PAGES || page_code == DATA_COMPRESSION_PAGE) {
-		min_len = min_t(int, sizeof(struct data_compression_page), allocation_length - offset); 
-		if (min_len > 0) {
-			copy_changeable_data_compression_page(tdrive, buffer+offset, min_len);
-			offset += min_len;
-		}
-		avail += sizeof(struct data_compression_page);
-	}
-
 	if (page_code == ALL_PAGES || page_code == MEDIUM_PARTITION_PAGE) {
 
 		min_len = min_t(int, sizeof(struct medium_partition_page), allocation_length - offset); 
@@ -3162,6 +3200,16 @@ mode_sense_changeable_values(struct tdrive *tdrive, uint8_t *buffer, uint16_t al
 			offset += min_len;
 		}
 		avail += tdrive->partition_page.page_length + 2;
+	}
+
+	if (page_code == ALL_PAGES || page_code == MEDIUM_CONFIGURATION_PAGE) {
+
+		min_len = min_t(int, sizeof(struct medium_configuration_page), allocation_length - offset); 
+		if (min_len > 0) {
+			copy_changeable_medium_configuration_page(tdrive, buffer+offset, min_len);
+			offset += min_len;
+		}
+		avail += sizeof(struct medium_configuration_page);
 	}
 
 	*start_offset = offset;
