@@ -228,8 +228,10 @@ check_vtl_info(struct raw_tape *raw_tape, int testmode)
 	char errmsg[256];
 
 	vdevice = find_vdevice(vtl_info->tl_id, 0);
-	if (vdevice)
+	if (vdevice) {
+		vdevice->offline = 0;
 		return vdevice;
+	}
 
 	if (raw_tape->device_type == T_CHANGER) {
 		vdevice = add_vtl(vtl_info, testmode, errmsg);
@@ -247,6 +249,28 @@ check_vtl_info(struct raw_tape *raw_tape, int testmode)
 		}
 		return vdevice;
 	} 
+	return NULL;
+}
+
+static void
+mark_volumes_offline(struct vlist *vol_list)
+{
+	struct vcartridge *vinfo;
+
+	TAILQ_FOREACH(vinfo, vol_list, q_entry) {
+		vinfo->loaderror = 2;
+	}
+}
+
+static struct vcartridge *
+__find_volume(struct vlist *vol_list, int tl_id, uint32_t tape_id)
+{
+	struct vcartridge *vinfo;
+
+	TAILQ_FOREACH(vinfo, vol_list, q_entry) {
+		if (vinfo->tape_id == tape_id)
+			return vinfo;
+	}
 	return NULL;
 }
 
@@ -281,6 +305,8 @@ scan_vcartridges()
 			exit(1);
 		}
 
+		mark_volumes_offline(&blkdev->vol_list);
+
 		for (i = 0; i < MAX_VTAPES; i++) {
 			offset = VTAPES_OFFSET + (i * 4096);
 			retval = read_from_device(disk->info.devname, buf, sizeof(buf), offset);
@@ -297,9 +323,11 @@ scan_vcartridges()
 			if (!vdevice)
 				exit(1);
 
-			vcartridge = find_volume(vdevice->tl_id, raw_tape->tape_id);
-			if (vcartridge)
+			vcartridge = __find_volume(&blkdev->vol_list, vdevice->tl_id, raw_tape->tape_id);
+			if (vcartridge) {
+				vcartridge->loaderror = 0;
 				continue;
+			}
 
 			fprintf(stdout, "Adding VCartridge %s tape id %u\n", raw_tape->label, raw_tape->tape_id);
 			if (testmode)
@@ -397,6 +425,7 @@ __srv_disk_configured(struct physdisk *disk, struct group_info *group_info)
 			memcpy(&blkdev->disk, disk, offsetof(struct physdisk, q_entry));
 			blkdev->group = group_info;
 			blkdev->group_id = group_info->group_id;
+			blkdev->offline = 0;
 			TAILQ_INSERT_TAIL(&group_info->bdev_list, blkdev, g_entry);
 			return 1;
 		}
@@ -412,6 +441,7 @@ check_disk(struct physdisk *disk, int formaster)
 	struct group_info *group_info;
 	struct raw_bdevint raw_bint;
 	struct tl_blkdevinfo *blkdev;
+	char *master_str = formaster ? "Master " : "";
 	char msg[256];
 	int retval;
 
@@ -450,6 +480,7 @@ check_disk(struct physdisk *disk, int formaster)
 			exit(1);
 		}
 	}
+	group_info->offline = 0;
 
 	disk->group_flags = raw_bint.group_flags;
 	disk->group_id = raw_bint.group_id;
@@ -475,13 +506,13 @@ check_disk(struct physdisk *disk, int formaster)
 	}
 
 	if (raw_bint.flags & RID_SET) {
-		fprintf(stdout, "Adding Master Physical Disk  %s Vendor: %.8s Model: %.16s Serial Number: %.32s\n", disk->info.devname, disk->info.vendor, disk->info.product, disk->info.serialnumber);
+		fprintf(stdout, "Adding %sPhysical Disk  %s Vendor: %.8s Model: %.16s Serial Number: %.32s\n", master_str, disk->info.devname, disk->info.vendor, disk->info.product, disk->info.serialnumber);
 	}
 	else {
 		fprintf(stdout, "Vendor: %.8s\n", disk->info.vendor);
 		fprintf(stdout, "Model: %.16s\n", disk->info.product);
 		fprintf(stdout, "Serial Number: %.32s\n", disk->info.serialnumber);
-		sprintf(msg, "Add Master Physical Disk with path %s ? ", disk->info.devname);
+		sprintf(msg, "Add %sPhysical Disk with path %s ? ", master_str, disk->info.devname);
 		retval = prompt_user(msg);
 		if (retval != 1) {
 			disk->ignore = 1;
@@ -518,6 +549,159 @@ check_disk(struct physdisk *disk, int formaster)
 		exit(1);
 	}
 	return 0;
+}
+
+static void
+mark_vdevices_offline(void)
+{
+	struct vdevice *vdevice;
+	int i;
+
+	for (i = 0; i < TL_MAX_DEVICES; i++) {
+		vdevice = device_list[i];
+		if (!vdevice)
+			continue;
+		vdevice->offline = 2;
+	} 
+}
+
+static void
+mark_bdevs_offline(void)
+{
+	struct tl_blkdevinfo *blkdev;
+	int i;
+
+	for (i = 1; i < TL_MAX_DISKS; i++) {
+		blkdev = bdev_list[i];
+		if (!blkdev)
+			continue;
+		blkdev->offline = 2;
+	}
+}
+
+static void
+mark_pools_offline(void)
+{
+	struct group_info *group_info;
+	int i;
+
+	for (i = 1; i < TL_MAX_POOLS; i++) {
+		group_info = group_list[i];
+		if (!group_info)
+			continue;
+		group_info->offline = 2;
+	}
+}
+
+static void
+prune_volumes(struct vlist *vol_list)
+{
+	struct vcartridge *vinfo, *next;
+	PGconn *conn;
+
+	conn = pgsql_begin();
+	if (!conn)
+		return;
+
+	TAILQ_FOREACH_SAFE(vinfo, vol_list, q_entry, next) {
+		if (vinfo->loaderror != 2)
+			continue;
+		TAILQ_REMOVE(vol_list, vinfo, q_entry);
+		fprintf(stdout, "Removing vcartridge %s\n", vinfo->label);
+		if (testmode)
+			continue;
+		sql_delete_vcartridge(conn, vinfo->tl_id, vinfo->tape_id);
+	}
+	pgsql_commit(conn);
+}
+
+static void
+prune_bdev_volumes(void)
+{
+	struct tl_blkdevinfo *blkdev;
+	int i;
+
+	for (i = 1; i < TL_MAX_DISKS; i++) {
+		blkdev = bdev_list[i];
+		if (!blkdev)
+			continue;
+		prune_volumes(&blkdev->vol_list);
+	}
+}
+
+static void
+prune_disks(void)
+{
+	struct tl_blkdevinfo *blkdev;
+	struct physdisk *disk;
+	int i;
+
+	for (i = 1; i < TL_MAX_DISKS; i++) {
+		blkdev = bdev_list[i];
+		if (!blkdev)
+			continue;
+		if (blkdev->offline != 2)
+			continue;
+
+		disk = &blkdev->disk;
+		fprintf(stdout, "Removing physical Disk  %s Vendor: %.8s Model: %.16s Serial Number: %.32s\n", disk->info.devname, disk->info.vendor, disk->info.product, disk->info.serialnumber);
+		bdev_list[i] = NULL;
+		if (testmode) {
+			free(blkdev);
+			continue;
+		}
+		sql_delete_blkdev(blkdev);
+		free(blkdev);
+	}
+}
+
+static void
+prune_pools(void)
+{
+	struct group_info *group_info;
+	int i;
+
+	for (i = 1; i < TL_MAX_POOLS; i++) {
+		group_info = group_list[i];
+		if (!group_info)
+			continue;
+		if (group_info->offline != 2)
+			continue;
+		fprintf(stdout, "Removing storage pool %s\n", group_info->name);
+		group_list[i] = NULL;
+		if (testmode) {
+			free(group_info);
+			continue;
+		}
+		sql_delete_group(group_info->group_id);
+		free(group_info);
+	}
+}
+
+static void
+prune_devices(void)
+{
+	struct vdevice *vdevice;
+	int i;
+
+	for (i = 0; i < TL_MAX_DEVICES; i++) {
+		vdevice = device_list[i];
+		if (!vdevice)
+			continue;
+		if (vdevice->offline != 2)
+			continue;
+		if (vdevice->type == T_CHANGER)
+			fprintf(stdout, "Deleting VTL %s\n", vdevice->name);
+		else
+			fprintf(stdout, "Deleting VDrive %s\n", vdevice->name);
+		device_list[i] = NULL;
+		if (testmode) {
+			free_vdevice(vdevice);
+			continue;
+		}
+		sql_delete_vtl(vdevice->tl_id);
+		free_vdevice(vdevice);
+	}
 }
 
 int
@@ -578,6 +762,10 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
+	mark_bdevs_offline();
+	mark_pools_offline();
+	mark_vdevices_offline();
+
 	TAILQ_FOREACH(disk, &disk_list, q_entry) {
 		check_disk(disk, 1);
 	}
@@ -586,6 +774,13 @@ main(int argc, char *argv[])
 		check_disk(disk, 0);
 	}
 
+	prune_disks();
+	prune_pools();
+
 	scan_vcartridges();
+
+	prune_bdev_volumes();
+	prune_devices();
+
 	return 0;
 }

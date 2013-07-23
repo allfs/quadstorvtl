@@ -175,6 +175,7 @@ struct group_info {
 	uint32_t group_id;
 	int disks;
 	int worm;
+	int offline;
 	TAILQ_ENTRY(group_info) q_entry;
 	TAILQ_HEAD(, tl_blkdevinfo) bdev_list;
 };
