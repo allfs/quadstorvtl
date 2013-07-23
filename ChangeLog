@@ -2,6 +2,16 @@ Release 2.2.8
 	* Add support for VDrive statistics
 	* Reduce the amount of disk space used by metadata
 	* Fix for segmentation faults when running dbrecover
+	* MODE SENSE fixes for changeable values
+	* Return CHECK CONDITION for MODE SENSE saved values
+	* Move installation root from /quadstor to /quadstorvtl
+	* Clear tape metadata on deletion
+	* Fix medium partition mode page fdp, sdp and idp values. They are
+	  mutually exclusive
+	* Fix kernel panic in iSCSI module when a WRITE ATTRIBUTE command is
+	  received
+	* Issue SCSI UNMAP when blocks of disk are no longer used
+	* Ignore disks which are used by gmirror on FreeBSD
 
 Release 2.2.7
 	* Increase virtual adapter sg_tablesize. This allows for variable size
