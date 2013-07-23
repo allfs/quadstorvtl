@@ -44,13 +44,44 @@ tape_free_partitions(struct tape *tape, int free_alloc)
 	}	
 }
 
+static int
+__tape_write_metadata(struct tape *tape)
+{
+	int retval;
+
+	retval = qs_lib_bio_lba(tape->bint, tape->b_start, tape->metadata, QS_IO_WRITE, 0);
+	return retval;
+}
+
+static void 
+tape_write_csum(struct tape *tape)
+{
+	struct raw_tape *raw_tape = (struct raw_tape *)(vm_pg_address(tape->metadata));
+	uint16_t csum;
+
+	csum = net_calc_csum16(vm_pg_address(tape->metadata) + sizeof(uint16_t), LBA_SIZE - (sizeof(uint16_t)));
+	raw_tape->csum = csum;
+}
+
+int
+tape_write_metadata(struct tape *tape)
+{
+	tape_write_csum(tape);
+	return __tape_write_metadata(tape);
+}
+
 void
 tape_free(struct tape *tape, int free_alloc)
 {
 	tape_free_partitions(tape, free_alloc);
 
-	if (tape->metadata)
+	if (tape->metadata) {
+		if (free_alloc && tape->b_start) {
+			bzero(vm_pg_address(tape->metadata), LBA_SIZE);
+			__tape_write_metadata(tape);
+		}
 		vm_pg_free(tape->metadata);
+	}
 
 	uma_zfree(tape_cache, tape);
 }
@@ -164,26 +195,6 @@ tape_read_metadata(struct tape *tape)
 	return retval;
 }
 
-static void 
-tape_write_csum(struct tape *tape)
-{
-	struct raw_tape *raw_tape = (struct raw_tape *)(vm_pg_address(tape->metadata));
-	uint16_t csum;
-
-	csum = net_calc_csum16(vm_pg_address(tape->metadata) + sizeof(uint16_t), LBA_SIZE - (sizeof(uint16_t)));
-	raw_tape->csum = csum;
-}
-
-int
-tape_write_metadata(struct tape *tape)
-{
-	int retval;
-
-	tape_write_csum(tape);
-	retval = qs_lib_bio_lba(tape->bint, tape->b_start, tape->metadata, QS_IO_WRITE, 0);
-	return retval;
-}
-
 int
 tape_partition_count(struct tape *tape)
 {
@@ -276,6 +287,7 @@ tape_new(struct tdevice *tdevice, struct vcartridge *vinfo)
 	retval = tape_write_metadata(tape);
 	if (unlikely(retval != 0)) {
 		debug_warn("Failed to write tape metadata\n");
+		tape->b_start = 0;
 		tape_free(tape, 1);
 		return NULL;
 	}
