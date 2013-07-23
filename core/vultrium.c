@@ -476,14 +476,11 @@ tape_get_load_count(struct tape *tape)
 static uint16_t
 vultrium_performance_characteristics_log_sense(struct tdrive *tdrive, uint8_t *buffer, uint16_t buffer_length, uint16_t parameter_pointer)
 {
-	struct tape *tape;
 	struct scsi_log_page page;
-	int count, done, page_length = 0;
+	int done, page_length = 0;
 	int min_len;
 	uint8_t val8;
 
-	tape = tdrive->tape;
-	count = tape_partition_count(tape);
 	bzero(buffer, buffer_length);
 
 	bzero(&page, sizeof(page));
