@@ -3142,7 +3142,7 @@ tl_server_set_iscsiconf(struct tl_comm *comm, struct tl_msg *msg)
 
 	iscsiconf = &vdevice->iscsiconf;
 
-	if (newconf.iqn[0]) {
+	if (newconf.iqn[0] && strcmp(iscsiconf->iqn, newconf.iqn)) {
 		if (!iqn_name_valid(newconf.iqn)) {
 			snprintf(errmsg, sizeof(errmsg), "iqn %s is not valid\n", newconf.iqn);
 			goto senderr;
