@@ -727,7 +727,7 @@ sql_query_blkdevs(struct tl_blkdevinfo *bdev_list[])
 		{
 			strcpy(device->devname, PQgetvalue(res, i, 10));
 		}
-		binfo->group_id = strtoull(PQgetvalue(res, i, 0), NULL, 11);
+		binfo->group_id = strtoull(PQgetvalue(res, i, 11), NULL, 10);
 		binfo->db_group_id = binfo->group_id;
 		if (PQgetlength(res, i, 1) != 8)
 		{
