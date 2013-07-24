@@ -30,10 +30,12 @@ if [ "$os" = "FreeBSD" ]; then
 	su -l scdbuser -c '/quadstorvtl/pgsql/bin/pg_ctl start -w -D '/quadstorvtl/pgsql/data' -l /quadstorvtl/pgsql/pg.log'
 	su -l scdbuser -c '/quadstorvtl/pgsql/bin/createuser -s -d -r -l vtdbuser >> /tmp/qstorpgdbmove.log 2>&1'
 	su -l scdbuser -c '/quadstorvtl/pgsql/bin/psql -f /tmp/qstorpgdbmove.sql qsdb >> /tmp/qstorpgdbmove.log 2>&1'
+	su -l scdbuser -c '/quadstorvtl/pgsql/bin/psql -f /quadstorvtl/pgsql/share/qsdbpatch.sql qsdb >> /tmp/qstorpgdbmove.log 2>&1'
 else
 	$SU -l scdbuser -c '/quadstorvtl/pgsql/bin/pg_ctl start -w -D '/quadstorvtl/pgsql/data' -l /quadstorvtl/pgsql/pg.log'
 	$SU -l scdbuser -c '/quadstorvtl/pgsql/bin/createuser -s -d -r -l vtdbuser >> /tmp/qstorpgdbmove.log 2>&1'
 	$SU -l scdbuser -c '/quadstorvtl/pgsql/bin/psql -f /tmp/qstorpgdbmove.sql qsdb >> /tmp/qstorpgdbmove.log 2>&1'
+	$SU -l scdbuser -c '/quadstorvtl/pgsql/bin/psql -f /quadstorvtl/pgsql/share/qsdbpatch.sql qsdb >> /tmp/qstorpgdbmove.log 2>&1'
 fi
 /quadstorvtl/pgsql/etc/pgsql stop > /dev/null 2>&1
 chown -R vtdbuser:vtdbuser /quadstorvtl/pgsql/
