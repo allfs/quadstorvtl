@@ -620,7 +620,7 @@ tl_server_delete_vol_conf(struct tl_comm *comm, struct tl_msg *msg)
 		return -1;
 	}
 
-	if (tl_id < 0 || tl_id >= TL_MAX_DEVICES) {
+	if (tl_id < 0 || tl_id >= TL_MAX_DEVICES || !device_list[tl_id]) {
 		DEBUG_WARN("Invalid tl_id %d\n", tl_id);
 		tl_server_msg_invalid(comm, msg);
 		return -1;
@@ -1637,7 +1637,7 @@ tl_server_vtl_vol_info(struct tl_comm *comm, struct tl_msg *msg)
 		return -1;
 	}
 
-	if (tl_id  < 0 || tl_id >= TL_MAX_DEVICES)
+	if (tl_id  < 0 || tl_id >= TL_MAX_DEVICES || !device_list[tl_id])
 	{
 		DEBUG_ERR("Invalid tl_id %d\n", tl_id);
 		tl_server_msg_failure(comm, msg);
@@ -2089,7 +2089,7 @@ find_driveconf(int tl_id, uint32_t target_id)
 	struct vdevice *vdevice;
 	struct tdriveconf *dconf;
 
-	if (tl_id < 0 || tl_id >= TL_MAX_DEVICES)
+	if (tl_id < 0 || tl_id >= TL_MAX_DEVICES || !device_list[tl_id])
 	{
 		return NULL;
 	}
