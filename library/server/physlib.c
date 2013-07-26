@@ -1354,7 +1354,7 @@ tl_common_scan_zvol(struct d_list *tmp_disk_list)
 	int len;
 	char *tmp;
 
-	fp = popen("ls -1R /dev/zvol/", "r");
+	fp = popen("ls -1R /dev/zvol", "r");
 	if (!fp)
 		return -1;
 
@@ -1556,10 +1556,7 @@ tl_common_scan_raiddisk(struct d_list *tmp_disk_list)
 
 	fp = fopen("/proc/mdstat", "r");
 	if (!fp)
-	{
-		DEBUG_WARN_SERVER("Cannot open mdstat for reading\n");
 		return -1;
-	}
 
 	while (fgets(buf, sizeof(buf), fp) != NULL) {
 		if (!strchr(buf, ':'))

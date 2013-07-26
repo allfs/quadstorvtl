@@ -91,7 +91,7 @@ int disk_getsize(char *device, uint64_t *size)
 	err = disksize(fd, &nsectors);
 	if (err != 0)
 	{
-		DEBUG_ERR("Getting disksize for disk failed\n");
+		DEBUG_ERR("Getting disksize for disk %s failed\n", device);
 		close(fd);
 		return -1;
 	}
