@@ -56,7 +56,6 @@ static int delete_vdevice(struct vdevice *vdevice, int free_alloc);
 static int load_drive(struct vdevice *vdevice);
 static int load_vtl(struct vdevice *vdevice);
 static int check_blkdev_exists(char *devname);
-static int update_blkdev_info(struct tl_blkdevinfo *blkdev);
 
 extern struct d_list disk_list;
 struct mdaemon_info mdaemon_info;
@@ -232,12 +231,6 @@ sync_blkdev(struct tl_blkdevinfo *blkdev)
 		goto err;
 
 	strcpy(blkdev->devname, blkdev->disk.info.devname);
-	retval = update_blkdev_info(blkdev);
-	if (retval != 0)
-	{
-		DEBUG_ERR_SERVER("Updating blkdevinfo failed");
-		goto err;
-	}
 
 	return 0;
 err:
@@ -426,22 +419,6 @@ check_blkdev_exists(char *devname)
 }
 
 static int
-update_blkdev_info(struct tl_blkdevinfo *blkdev)
-{
-	dev_t b_dev;
-	char *devname = blkdev->devname;
-	int error = 0;
-
-	b_dev = get_device_id(devname, &error);
-	if (error < 0) {
-		DEBUG_ERR("Unable to get device id\n");
-		return -1;
-	}
-	blkdev->b_dev = b_dev;
-	return 0;
-}
-
-static int
 get_next_group_id(void)
 {
 	int i;
@@ -480,19 +457,11 @@ struct tl_blkdevinfo *
 blkdev_new(char *devname)
 {
 	struct tl_blkdevinfo *blkdev;
-	dev_t b_dev;
-	int error = 0;
 	int bid;
 
 	bid = get_next_bid();
 	if (!bid) {
 		DEBUG_ERR("Unable to get bid\n");
-		return NULL;
-	}
-
-	b_dev = get_device_id(devname, &error);
-	if (error < 0) {
-		DEBUG_ERR("Unable to get device id\n");
 		return NULL;
 	}
 
@@ -504,7 +473,6 @@ blkdev_new(char *devname)
 	}
 	memset(blkdev, 0, sizeof(struct tl_blkdevinfo));
 	TAILQ_INIT(&blkdev->vol_list);
-	blkdev->b_dev = b_dev;
 	blkdev->bid = bid;
 	return blkdev;
 }

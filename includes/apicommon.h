@@ -159,7 +159,6 @@ struct tl_blkdevinfo {
 	uint32_t db_group_id;
 	struct physdisk disk;
 	char devname[256];
-	dev_t b_dev;
 	int offline;
 	int ismaster;
 	TAILQ_ENTRY(tl_blkdevinfo) g_entry;
