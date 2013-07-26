@@ -1,5 +1,5 @@
 #!/bin/sh
-rm -f /quadstorvtl/core/quadstor-vtl-core-version
+rm -f /quadstorvtl/etc/quadstor-vtl-core-version
 rm -rf /quadstorvtl/sbin /quadstorvtl/share /quadstorvtl/src/others/
 rmdir --ignore-fail-on-non-empty /quadstorvtl/lib/modules > /dev/null 2>&1
 rmdir --ignore-fail-on-non-empty /quadstorvtl/lib > /dev/null 2>&1
