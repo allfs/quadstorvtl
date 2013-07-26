@@ -59,9 +59,11 @@ ignore_dev_list_free(void)
 }
 
 static int
-ignore_dev_add(char *devname)
+ignore_dev_add(char *devname, int checksymlink)
 {
 	struct ignore_dev *iter;
+	char *resolvepath;
+	struct stat stbuf;
 
 	if (strncmp(devname, "/dev", strlen("/dev")))
 		return 0;
@@ -80,6 +82,22 @@ ignore_dev_add(char *devname)
 	}
 	strcpy(iter->devname, devname);
 	TAILQ_INSERT_TAIL(&ignore_dev_list, iter, q_entry); 
+ 
+	if (!checksymlink)
+		return 0;
+
+	if (lstat(devname, &stbuf) < 0)
+		return 0;
+
+	if (!(S_ISLNK(stbuf.st_mode)))
+		return 0;
+
+	resolvepath = realpath((const char *)devname, NULL);
+	if (!resolvepath)
+		return 0;
+
+	ignore_dev_add(resolvepath, 0);
+	free(resolvepath);
 	return 0;
 }
 
@@ -329,7 +347,7 @@ build_zdev_list(void)
 		snprintf(devname, sizeof(devname), "/dev/%s", tmp);
 		if (stat(devname, &stbuf) < 0)
 			continue;
-		ignore_dev_add(devname);
+		ignore_dev_add(devname, 1);
 	}
 	pclose(fp);
 	return 0;
@@ -357,7 +375,7 @@ build_raid_list(void)
 		retval = sscanf(tmp, "%*s %*s %s", devname);
 		if (retval != 1)
 			continue;
-		ignore_dev_add(devname);
+		ignore_dev_add(devname, 1);
 	}
 	pclose(fp);
 	return 0;
@@ -388,7 +406,7 @@ build_gmirror_list(void)
 				continue;
 		}
 		snprintf(ignoredev, sizeof(ignoredev), "/dev/%s", devname);
-		ignore_dev_add(ignoredev);
+		ignore_dev_add(ignoredev, 1);
 	}
 	pclose(fp);
 	return 0;
@@ -411,7 +429,7 @@ build_swap_list(void)
 			continue;
 		if (strcmp(swapdev, "Device") == 0)
 			continue;
-		ignore_dev_add(swapdev);
+		ignore_dev_add(swapdev, 1);
 	}
 	pclose(fp);
 	return 0;
@@ -430,7 +448,7 @@ build_mount_list(void)
 		return 0;
 
 	for (ent = mntinfo; count--; ent++) {
-		ignore_dev_add(ent->f_mntfromname);
+		ignore_dev_add(ent->f_mntfromname, 1);
 	}
 	return 0;
 }
@@ -449,7 +467,7 @@ build_mddev(char *name)
 		*tmp = 0;
 
 	snprintf(devname, sizeof(devname), "/dev/%s", name);
-	ignore_dev_add(devname);
+	ignore_dev_add(devname, 1);
 	return 0;
 }
 static int
@@ -510,7 +528,7 @@ __build_mount_list(char *path)
 		return 0;
 
 	while ((ent = getmntent(fp))) {
-		ignore_dev_add(ent->mnt_fsname);
+		ignore_dev_add(ent->mnt_fsname, 1);
 	}
 	endmntent(fp);
 	return 0;
@@ -540,7 +558,7 @@ build_pvs(void)
 			continue;
 		if (strcmp(buf, "PV") == 0)
 			continue;
-		ignore_dev_add(devname);
+		ignore_dev_add(devname, 1);
 	}
 	pclose(fp);
 	return 0;
@@ -564,7 +582,7 @@ build_swap_list(void)
 			continue;
 		if (strcmp(buf, "Filename") == 0)
 			continue;
-		ignore_dev_add(swapdev);
+		ignore_dev_add(swapdev, 1);
 	}
 	fclose(fp);
 	return 0;
