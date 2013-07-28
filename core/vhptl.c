@@ -40,67 +40,6 @@ static void vhptl_init_inquiry_data(struct mchanger* mchanger)
 	return;
 }
 
-static int
-vhptl_device_identification(struct mchanger *mchanger, uint8_t *buffer, int length)
-{
-	return mchanger_device_identification(mchanger, buffer, length);
-}
-
-static int
-vhptl_serial_number(struct mchanger *mchanger, uint8_t *buffer, int length)
-{
-	return mchanger_serial_number(mchanger, buffer, length);
-}
-
-static int
-vhptl_evpd_inquiry(struct mchanger *mchanger, struct qsio_scsiio *ctio, uint8_t page_code, uint16_t allocation_length)
-{
-	int retval;
-
-	ctio_allocate_buffer(ctio, allocation_length, Q_WAITOK);
-	if (!ctio->data_ptr)
-	{
-		return -1;
-	}
-
-	bzero(ctio->data_ptr, allocation_length);
-
-	switch (page_code)
-	{
-		case UNIT_SERIAL_NUMBER_PAGE:
-			retval = vhptl_serial_number(mchanger, ctio->data_ptr, allocation_length);
-			if (retval < 0)
-			{
-				goto err;
-			}
-			ctio->dxfer_len = retval;
-			break;
-		case DEVICE_IDENTIFICATION_PAGE:
-			retval = vhptl_device_identification(mchanger, ctio->data_ptr, allocation_length);
-			if (retval < 0)
-			{
-				goto err;
-			}
-			ctio->dxfer_len = retval;
-			break;
-		case VITAL_PRODUCT_DATA_PAGE:
-			retval = mchanger_copy_vital_product_page_info(mchanger, ctio->data_ptr, allocation_length);
-			if (retval < 0)
-			{
-				goto err;
-			}
-			ctio->dxfer_len = retval;
-			break;
-		default:
-			goto err;
-	}
-	return 0;
-err:
-	ctio_free_data(ctio);
-	ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);
-	return 0;
-}
-
 void
 vhptl_init_handlers(struct mchanger *mchanger)
 {
@@ -110,12 +49,6 @@ vhptl_init_handlers(struct mchanger *mchanger)
 	uint8_t serial_as_avoltag = 0;
 
 	handlers->init_inquiry_data = vhptl_init_inquiry_data;
-	handlers->evpd_inquiry = vhptl_evpd_inquiry;
-	mchanger->evpd_info.num_pages = 0x03;
-	mchanger->evpd_info.page_code[0] = VITAL_PRODUCT_DATA_PAGE;
-	mchanger->evpd_info.page_code[1] = DEVICE_IDENTIFICATION_PAGE;
-	mchanger->evpd_info.page_code[2] = UNIT_SERIAL_NUMBER_PAGE;
-	mchanger->supports_evpd = 1;
 
 	switch (mchanger->make)
 	{
@@ -149,6 +82,4 @@ vhptl_init_handlers(struct mchanger *mchanger)
 
 	mchanger->serial_as_avoltag = serial_as_avoltag;
 	device_init_unit_identifier(&mchanger->unit_identifier, vendor_id, product_id, mchanger->serial_len);
-	mchanger->supports_devid = 1;
-	return;
 }

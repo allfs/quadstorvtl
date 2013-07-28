@@ -292,8 +292,6 @@ struct tdrive {
 	struct disconnect_reconnect_page disreconn_page;
 	struct rw_error_recovery_page rw_recovery_page; 
 
-	uint8_t supports_evpd;
-	uint8_t supports_devid; /* Support Device Identifiers, everthing should */
 	uint8_t erase_from_bot; /* Set if this tape erases the entire medium on receiving an erase command */
 	uint8_t add_sense_len;
 	uint8_t serial_len;

@@ -192,8 +192,6 @@ struct mchanger {
 	struct element_address_assignment_page assignment_page;
 	struct transport_geometry_descriptor_page geometry_page;
 	struct device_capabilities_page devcap_page;
-	uint8_t supports_evpd;
-	uint8_t supports_devid;
 	uint8_t serial_len;
 	uint8_t serial_as_avoltag;
 	struct logical_unit_identifier unit_identifier;

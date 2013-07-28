@@ -21,13 +21,6 @@
 #include "vendor.h"
 #include "vdevdefs.h"
 
-
-static int
-vibmtl_device_identification(struct mchanger *mchanger, uint8_t *buffer, int length)
-{
-	return mchanger_device_identification(mchanger, buffer, length);
-}
-
 static int
 ibm_serial_number(struct mchanger *mchanger, uint8_t *buffer, int length)
 {
@@ -78,48 +71,16 @@ vibmtl_evpd_inquiry(struct mchanger *mchanger, struct qsio_scsiio *ctio, uint8_t
 {
 	int retval;
 
-	ctio_allocate_buffer(ctio, allocation_length, Q_WAITOK);
-	if (!ctio->data_ptr)
-	{
-		return -1;
+	switch (page_code) {
+	case UNIT_SERIAL_NUMBER_PAGE:
+		retval = vibmtl_serial_number(mchanger, ctio->data_ptr, allocation_length);
+		break;
+	default:
+		ctio_free_data(ctio);
+		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);
+		retval = 0;
 	}
-
-	bzero(ctio->data_ptr, allocation_length);
-
-	switch (page_code)
-	{
-		case UNIT_SERIAL_NUMBER_PAGE:
-			retval = vibmtl_serial_number(mchanger, ctio->data_ptr, allocation_length);
-			if (retval < 0)
-			{
-				goto err;
-			}
-			ctio->dxfer_len = retval;
-			break;
-		case DEVICE_IDENTIFICATION_PAGE:
-			retval = vibmtl_device_identification(mchanger, ctio->data_ptr, allocation_length);
-			if (retval < 0)
-			{
-				goto err;
-			}
-			ctio->dxfer_len = retval;
-			break;
-		case VITAL_PRODUCT_DATA_PAGE:
-			retval = mchanger_copy_vital_product_page_info(mchanger, ctio->data_ptr, allocation_length);
-			if (retval < 0)
-			{
-				goto err;
-			}
-			ctio->dxfer_len = retval;
-			break;
-		default:
-			goto err;
-	}
-	return 0;
-err:
-	ctio_free_data(ctio);
-	ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);
-	return 0;
+	return retval;
 }
 
 static void vibmtl_init_inquiry_data(struct mchanger* mchanger)
@@ -188,11 +149,6 @@ vibmtl_init_handlers(struct mchanger *mchanger)
 
 	handlers->init_inquiry_data = vibmtl_init_inquiry_data;
 	handlers->evpd_inquiry = vibmtl_evpd_inquiry;
-	mchanger->evpd_info.num_pages = 0x03;
-	mchanger->evpd_info.page_code[0] = VITAL_PRODUCT_DATA_PAGE;
-	mchanger->evpd_info.page_code[1] = DEVICE_IDENTIFICATION_PAGE;
-	mchanger->evpd_info.page_code[2] = UNIT_SERIAL_NUMBER_PAGE;
-	mchanger->supports_evpd = 1;
 
 	switch (mchanger->make)
 	{
@@ -212,7 +168,4 @@ vibmtl_init_handlers(struct mchanger *mchanger)
 			debug_check(1);
 			return;
 	}
-
-	mchanger->supports_devid = 1;
-	return;
 }

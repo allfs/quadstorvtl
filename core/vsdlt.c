@@ -367,10 +367,9 @@ vsdlt_init_handlers(struct tdrive *tdrive)
 	tdrive->add_sense_len = sizeof(struct sdlt_specific_sense);
 	tdrive->evpd_info.num_pages = 0x04;
 	tdrive->evpd_info.page_code[0] = VITAL_PRODUCT_DATA_PAGE;
-	tdrive->evpd_info.page_code[1] = DEVICE_IDENTIFICATION_PAGE;
-	tdrive->evpd_info.page_code[2] = UNIT_SERIAL_NUMBER_PAGE;
+	tdrive->evpd_info.page_code[1] = UNIT_SERIAL_NUMBER_PAGE;
+	tdrive->evpd_info.page_code[2] = DEVICE_IDENTIFICATION_PAGE;
 	tdrive->evpd_info.page_code[3] = EXTENDED_INQUIRY_VPD_PAGE;
-	tdrive->supports_evpd = 1;
 
 	tdrive->log_info.num_pages = 0x01; 
 	tdrive->log_info.page_code[0] = 0x00;
@@ -418,7 +417,6 @@ vsdlt_init_handlers(struct tdrive *tdrive)
 	}
 
 	device_init_unit_identifier(&tdrive->unit_identifier, vendor_id, product_id, tdrive->serial_len);
-	tdrive->supports_devid = 1;
 	tdrive->erase_from_bot = 1;
 
 	vsdlt_init_density_support_descriptors(tdrive);

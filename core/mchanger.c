@@ -780,6 +780,11 @@ mchanger_init_handlers(struct mchanger *mchanger)
 static int
 mchanger_initialize_pages(struct mchanger *mchanger)
 {
+	mchanger->evpd_info.num_pages = 0x03;
+	mchanger->evpd_info.page_code[0] = VITAL_PRODUCT_DATA_PAGE;
+	mchanger->evpd_info.page_code[1] = UNIT_SERIAL_NUMBER_PAGE;
+	mchanger->evpd_info.page_code[2] = DEVICE_IDENTIFICATION_PAGE;
+
 	mchanger_init_handlers(mchanger);
 	if (mchanger->handlers.init_inquiry_data)
 		(*mchanger->handlers.init_inquiry_data)(mchanger);
@@ -838,8 +843,33 @@ mchanger_cmd_report_luns(struct mchanger *mchanger, struct qsio_scsiio *ctio)
 static int
 mchanger_evpd_inquiry_data(struct mchanger *mchanger, struct qsio_scsiio *ctio, uint8_t page_code, uint16_t allocation_length)
 {
-	/* We would be coming here on edvc here */
-	return (*mchanger->handlers.evpd_inquiry)(mchanger, ctio, page_code, allocation_length);
+	int retval;
+
+	ctio_allocate_buffer(ctio, allocation_length, Q_WAITOK);
+	if (!ctio->data_ptr)
+		return -1;
+	bzero(ctio->data_ptr, allocation_length);
+
+	switch (page_code) {
+	case VITAL_PRODUCT_DATA_PAGE:
+		retval = mchanger_copy_vital_product_page_info(mchanger, ctio->data_ptr, allocation_length);
+		break;
+	case UNIT_SERIAL_NUMBER_PAGE:
+		if (mchanger->handlers.evpd_inquiry)
+			retval = (*mchanger->handlers.evpd_inquiry)(mchanger, ctio, page_code, allocation_length);
+		else
+			retval = mchanger_serial_number(mchanger, ctio->data_ptr, allocation_length);
+		break;
+	case DEVICE_IDENTIFICATION_PAGE:
+		retval = mchanger_device_identification(mchanger, ctio->data_ptr, allocation_length);
+		break;
+	default:
+		ctio_free_data(ctio);
+		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);
+		retval = 0;
+	}
+	ctio->dxfer_len = retval;
+	return retval;
 }
 
 static int
@@ -870,12 +900,6 @@ mchanger_cmd_inquiry(struct mchanger *mchanger, struct qsio_scsiio *ctio)
 	uint8_t evpd, page_code;
 
 	evpd = READ_BIT(cdb[1], 0);
-
-	if (evpd && !mchanger->supports_evpd)
-	{
-		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);  
-		return 0;
-	}
 
 	page_code = cdb[2];
 	allocation_length = be16toh(*(uint16_t *)(&cdb[3]));

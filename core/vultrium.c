@@ -940,11 +940,10 @@ vultrium_init_handlers(struct tdrive *tdrive)
 	tdrive->evpd_info.num_pages = 0x06;
 	tdrive->evpd_info.page_code[0] = VITAL_PRODUCT_DATA_PAGE;
 	tdrive->evpd_info.page_code[1] = FIRMWARE_DESIGNATION_PAGE;
-	tdrive->evpd_info.page_code[2] = DEVICE_IDENTIFICATION_PAGE;
-	tdrive->evpd_info.page_code[3] = UNIT_SERIAL_NUMBER_PAGE;
+	tdrive->evpd_info.page_code[2] = UNIT_SERIAL_NUMBER_PAGE;
+	tdrive->evpd_info.page_code[3] = DEVICE_IDENTIFICATION_PAGE;
 	tdrive->evpd_info.page_code[4] = EXTENDED_INQUIRY_VPD_PAGE;
 	tdrive->evpd_info.page_code[5] = DRIVE_COMPONENT_REVISION_PAGE;
-	tdrive->supports_evpd = 1;
 
 	tdrive->log_info.num_pages = 0x04;
 	tdrive->log_info.page_code[0] = 0x00;
@@ -1016,7 +1015,6 @@ vultrium_init_handlers(struct tdrive *tdrive)
 	}
 
 	device_init_unit_identifier(&tdrive->unit_identifier, vendor_id, product_id, tdrive->serial_len);
-	tdrive->supports_devid = 1;
 	vultrium_init_density_support_descriptors(tdrive);
 	vultrium_unload_tape(tdrive);
 	return;

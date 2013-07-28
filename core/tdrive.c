@@ -730,10 +730,6 @@ tdrive_copy_extended_inquiry_vpd_page(struct qsio_scsiio *ctio, uint16_t allocat
 	uint16_t min_len;
 
 	min_len = min_t(uint16_t, allocation_length, sizeof(extended_inquiry));
-
-	ctio_allocate_buffer(ctio, allocation_length, Q_NOWAIT);
-	if (!ctio->data_ptr)
-		return -1;
 	memcpy(ctio->data_ptr, &extended_inquiry, min_len);
 	return min_len;
 }
@@ -742,6 +738,11 @@ static int
 tdrive_evpd_inquiry_data(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint8_t page_code, uint16_t allocation_length)
 {
 	int retval;
+
+	ctio_allocate_buffer(ctio, allocation_length, Q_WAITOK);
+	if (!ctio->data_ptr)
+		return -1;
+	bzero(ctio->data_ptr, allocation_length);
 
 	switch (page_code) {
 	case VITAL_PRODUCT_DATA_PAGE:
@@ -765,8 +766,7 @@ tdrive_evpd_inquiry_data(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint8_
 			retval = 0;
 		}
 	}
-	if (retval >= 0)
-		ctio->dxfer_len = retval;
+	ctio->dxfer_len = retval;
 	return retval;
 }
 
@@ -796,14 +796,6 @@ tdrive_cmd_inquiry(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	uint8_t evpd, page_code;
 
 	evpd = READ_BIT(cdb[1], 0);
-
-	/* For now we return CHECK_CONDITION */
-	if (evpd && !tdrive->supports_evpd)
-	{
-		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);  
-		return 0;
-	}
-
 	page_code = cdb[2];
 	allocation_length = be16toh(*(uint16_t *)(&cdb[3]));
 
