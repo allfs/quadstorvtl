@@ -1911,6 +1911,7 @@ tdrive_cmd_read_position(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	if (unlikely(!ctio->data_ptr))
 		return -1;
 
+	tdrive_empty_write_queue(tdrive);
 	tape_cmd_read_position(tdrive->tape, ctio, service_action);
 	/* send the ccb */
 	return 0;
