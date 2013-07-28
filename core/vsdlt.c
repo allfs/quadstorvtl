@@ -24,18 +24,6 @@
 #define DRIVE_DENSITY_110GB_MASK  0xA0
 #define DRIVE_DENSITY_160GB_MASK  0xB0
 
-static int
-vsdlt_device_identification(struct tdrive *tdrive, uint8_t *buffer, int length)
-{
-	return tdrive_device_identification(tdrive, buffer, length);
-}
-
-static int
-vsdlt_serial_number(struct tdrive *tdrive, uint8_t *buffer, int length)
-{
-	return tdrive_serial_number(tdrive, buffer, length);
-}
-
 static void
 vsdlt_init_inquiry_data(struct tdrive *tdrive)
 {
@@ -54,80 +42,6 @@ vsdlt_init_inquiry_data(struct tdrive *tdrive)
 	memcpy(&inquiry->vendor_id, tdrive->unit_identifier.vendor_id, 8);
 	memcpy(&inquiry->product_id, tdrive->unit_identifier.product_id, 16);
 	memcpy(&inquiry->revision_level, PRODUCT_REVISION_QUADSTOR, strlen(PRODUCT_REVISION_QUADSTOR));
-}
-
-static int
-vsdlt_vendor_specific_page2_vpd(struct tdrive *tdrive, uint8_t *buffer, uint16_t allocation_length)
-{
-	struct vendor_specific_page *page;
-
-	bzero(buffer, allocation_length);
-	page = (struct vendor_specific_page *)(buffer);
-	page->device_type = T_SEQUENTIAL; /* peripheral qualifier */
-	page->page_code = VENDOR_SPECIFIC_PAGE2;
-	page->page_length = allocation_length - sizeof(struct vendor_specific_page);
-	return allocation_length;
-}
-
-static int
-vsdlt_evpd_inquiry(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint8_t page_code, uint16_t allocation_length)
-{
-	uint16_t max_allocation_length;
-	int retval;
-
-	max_allocation_length = max_t(uint16_t, 64, allocation_length);
-	ctio_allocate_buffer(ctio, max_allocation_length, Q_WAITOK);
-	if (unlikely(!ctio->data_ptr))
-		return -1;
-
-	bzero(ctio->data_ptr, ctio->dxfer_len);
-
-	switch (page_code)
-	{
-		case UNIT_SERIAL_NUMBER_PAGE:
-			retval = vsdlt_serial_number(tdrive, ctio->data_ptr, allocation_length);
-			if (unlikely(retval < 0))
-			{
-				goto err;
-			}
-
-			ctio->dxfer_len = retval;
-			break;
-		case DEVICE_IDENTIFICATION_PAGE:
-			retval = vsdlt_device_identification(tdrive, ctio->data_ptr, allocation_length);
-			if (unlikely(retval < 0))
-			{
-				goto err;
-			}
-
-			ctio->dxfer_len = retval;
-			break;
-		case VITAL_PRODUCT_DATA_PAGE:
-			retval = tdrive_copy_vital_product_page_info(tdrive, ctio->data_ptr, allocation_length);
-			if (unlikely(retval < 0))
-			{
-				goto err;
-			}
-
-			ctio->dxfer_len = retval;
-			break;
-		case VENDOR_SPECIFIC_PAGE2:
-			retval = vsdlt_vendor_specific_page2_vpd(tdrive, ctio->data_ptr, allocation_length);
-			if (unlikely(retval < 0))
-			{
-				goto err;
-			}
-
-			ctio->dxfer_len = retval;
-			break;
-		default:
-			goto err;
-	}
-	return 0;
-err:
-	ctio_free_data(ctio);
-	ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);
-	return 0;
 }
 
 static void
@@ -445,17 +359,17 @@ vsdlt_init_handlers(struct tdrive *tdrive)
 	char *product_id, *vendor_id;
 
 	handlers->init_inquiry_data = vsdlt_init_inquiry_data;
-	handlers->evpd_inquiry = vsdlt_evpd_inquiry;
 	handlers->load_tape = vsdlt_load_tape;
 	handlers->unload_tape = vsdlt_unload_tape;
 	handlers->additional_request_sense = vsdlt_request_sense;
 	handlers->valid_medium = vsdlt_valid_medium;
 
 	tdrive->add_sense_len = sizeof(struct sdlt_specific_sense);
-	tdrive->evpd_info.num_pages = 0x03; /* Five pages supported */
+	tdrive->evpd_info.num_pages = 0x04;
 	tdrive->evpd_info.page_code[0] = VITAL_PRODUCT_DATA_PAGE;
 	tdrive->evpd_info.page_code[1] = DEVICE_IDENTIFICATION_PAGE;
 	tdrive->evpd_info.page_code[2] = UNIT_SERIAL_NUMBER_PAGE;
+	tdrive->evpd_info.page_code[3] = EXTENDED_INQUIRY_VPD_PAGE;
 	tdrive->supports_evpd = 1;
 
 	tdrive->log_info.num_pages = 0x01; 

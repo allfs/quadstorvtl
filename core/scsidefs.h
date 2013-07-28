@@ -176,9 +176,14 @@ struct mode_parameter_block_descriptor {
 	uint8_t block_length[3];
 } __attribute__ ((__packed__));
 
+struct read_buffer_descriptor {
+	uint8_t offset_boundary;
+	uint8_t buffer_capacity[3]; /* Includes offset */
+} __attribute__ ((__packed__));
+
 struct read_buffer_header {
 	uint32_t buffer_capacity; /* Includes reserved byte */
-};
+} __attribute__ ((__packed__));
 
 struct receive_diagnostic_header {
 	uint8_t page_code;

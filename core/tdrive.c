@@ -741,15 +741,33 @@ tdrive_copy_extended_inquiry_vpd_page(struct qsio_scsiio *ctio, uint16_t allocat
 static int
 tdrive_evpd_inquiry_data(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint8_t page_code, uint16_t allocation_length)
 {
+	int retval;
+
 	switch (page_code) {
-		case EXTENDED_INQUIRY_VPD_PAGE:
-			ctio->dxfer_len = tdrive_copy_extended_inquiry_vpd_page(ctio, allocation_length);
-			break;
-		default:
-			return (*tdrive->handlers.evpd_inquiry)(tdrive, ctio, page_code, allocation_length);
-			break;
+	case VITAL_PRODUCT_DATA_PAGE:
+		retval = tdrive_copy_vital_product_page_info(tdrive, ctio->data_ptr, allocation_length);
+		break;
+	case UNIT_SERIAL_NUMBER_PAGE:
+		retval = tdrive_serial_number(tdrive, ctio->data_ptr, allocation_length);
+		break;
+	case DEVICE_IDENTIFICATION_PAGE:
+		retval = tdrive_device_identification(tdrive, ctio->data_ptr, allocation_length);
+		break;
+	case EXTENDED_INQUIRY_VPD_PAGE:
+		retval = tdrive_copy_extended_inquiry_vpd_page(ctio, allocation_length);
+		break;
+	default:
+		if (tdrive->handlers.evpd_inquiry)
+			retval = (*tdrive->handlers.evpd_inquiry)(tdrive, ctio, page_code, allocation_length);
+		else {
+			ctio_free_data(ctio);
+			ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);
+			retval = 0;
+		}
 	}
-	return 0;
+	if (retval >= 0)
+		ctio->dxfer_len = retval;
+	return retval;
 }
 
 static int
@@ -1919,6 +1937,10 @@ density_code_match(int density_code, int sdensity_code, int vol_type)
 			return (density_code == DENSITY_ULTRIUM_3);
 		case VOL_TYPE_LTO_4:
 			return (density_code == DENSITY_ULTRIUM_4);
+		case VOL_TYPE_LTO_5:
+			return (density_code == DENSITY_ULTRIUM_5);
+		case VOL_TYPE_LTO_6:
+			return (density_code == DENSITY_ULTRIUM_6);
 		case VOL_TYPE_DLT_4:
 			return (density_code == DENSITY_DLT_4_DEFAULT);
 		case VOL_TYPE_VSTAPE:
@@ -3601,22 +3623,87 @@ tdrive_cmd_receive_diagnostic_results(struct tdrive *tdrive, struct qsio_scsiio 
 	return 0;
 }
 
+#define RB_MODE_HEADER_DATA	0x00
+#define RB_MODE_DATA		0x02
+#define RB_MODE_DESCRIPTOR	0x03
+
+#define RB_BUFFER_ID_VPD		0x03
+
+static void
+read_buffer_data(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint8_t buffer_id, uint32_t buffer_offset, int send_header)
+{
+	struct read_buffer_header header;
+	uint8_t *buffer = ctio->data_ptr;
+	int avail = ctio->dxfer_len;
+	int min_len;
+	int capacity = 0;
+	int done = 0;
+
+	if (send_header)
+		done += sizeof(header);
+
+	switch (buffer_id) {
+	case RB_BUFFER_ID_VPD:
+		capacity = tdrive->unit_identifier.identifier_length + sizeof(struct device_identifier);
+		min_len = min_t(int, capacity, avail - done);
+		if (min_len > 0)
+			memcpy(buffer+done, &tdrive->unit_identifier, min_len);
+		break;
+	}
+	header.buffer_capacity = htobe32(capacity);
+	min_len = min_t(int, avail, sizeof(header));
+	memcpy(buffer, &header, min_len);
+}
+
+static void
+read_buffer_descriptor(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint8_t buffer_id)
+{
+	struct read_buffer_descriptor desc;
+	int capacity = 0;
+	int min_len;
+
+	bzero(&desc, sizeof(desc));
+	switch (buffer_id) {
+	case RB_BUFFER_ID_VPD:
+		capacity = tdrive->unit_identifier.identifier_length + sizeof(struct device_identifier);
+		break;
+	}
+	desc.buffer_capacity[0] = (capacity >> 16) & 0xFF;
+	desc.buffer_capacity[1] = (capacity >> 8) & 0xFF;
+	desc.buffer_capacity[2] = (capacity) & 0xFF;
+	min_len = min_t(int, ctio->dxfer_len, sizeof(desc));
+	memcpy(ctio->data_ptr, &desc, min_len);
+	ctio->dxfer_len = min_len;
+}
+
 static int
 tdrive_cmd_read_buffer(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 {
 	uint8_t *cdb = ctio->cdb;
-	uint32_t allocation_length;
-	int min_len;
+	uint32_t allocation_length, buffer_offset;
+	uint8_t buffer_id, mode;
+	int header = 0;
 
+	buffer_id = cdb[2];
+	mode = cdb[1] & 0x1F;
+	buffer_offset = READ_24(cdb[3], cdb[4], cdb[5]);
 	allocation_length = READ_24(cdb[6], cdb[7], cdb[8]);
-	min_len = min_t(int, sizeof(struct read_buffer_header), allocation_length);
-	if (!min_len)
-		return 0;
 
-	ctio_allocate_buffer(ctio, min_len, Q_WAITOK);
+	ctio_allocate_buffer(ctio, allocation_length, Q_WAITOK);
 	if (unlikely(!ctio->data_ptr))
 		return -1;
+
 	bzero(ctio->data_ptr, ctio->dxfer_len);
+	switch (mode) {
+	case RB_MODE_HEADER_DATA:
+		header = 1;
+	case RB_MODE_DATA:
+		read_buffer_data(tdrive, ctio, buffer_id, buffer_offset, header);
+		break;
+	case RB_MODE_DESCRIPTOR:
+		read_buffer_descriptor(tdrive, ctio, buffer_id);
+		break;
+	}
 	return 0;
 }
 

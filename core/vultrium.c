@@ -24,29 +24,88 @@
 #include "tape.h"
 #include "tape_partition.h"
 
-static int
-vultrium_device_identification(struct tdrive *tdrive, uint8_t *buffer, int length)
+static inline int
+is_hp_drive(struct tdrive *tdrive)
 {
-	return tdrive_device_identification(tdrive, buffer, length);
+	switch (tdrive->make) {
+		case DRIVE_TYPE_VHP_ULT232:
+		case DRIVE_TYPE_VHP_ULT448:
+		case DRIVE_TYPE_VHP_ULT460:
+		case DRIVE_TYPE_VHP_ULT960:
+		case DRIVE_TYPE_VHP_ULT1840:
+			return 1;
+	}
+	return 0;
 }
 
+struct drive_component_revision_page {
+	uint8_t device_type;
+	uint8_t page_code;
+	uint8_t reserved;
+	uint8_t page_length;
+	uint8_t code_name[12];
+	uint8_t time[7];
+	uint8_t date[8];
+	uint8_t platform[12];
+} __attribute__ ((__packed__));
+
 static int
-vultrium_serial_number(struct tdrive *tdrive, uint8_t *buffer, int length)
+vultrium_drive_component_revision_page(struct tdrive *tdrive, uint8_t *buffer, uint16_t allocation_length)
 {
-	return tdrive_serial_number(tdrive, buffer, length);
+	struct drive_component_revision_page page;
+	int min_len;
+
+	bzero(&page, sizeof(page));
+	page.device_type = T_SEQUENTIAL;
+	page.page_code = DRIVE_COMPONENT_REVISION_PAGE;
+	page.page_length = 0x27;
+
+	strcpy(page.time, "000000");
+	memcpy(page.date, "20130501", strlen("20130501"));
+	sys_memset(page.platform, ' ', 12);
+
+	min_len = min_t(int, sizeof(page), allocation_length);
+	memcpy(buffer, &page, min_len);
+	return min_len;
 }
 
-static int
-vultrium_vendor_specific_page2_vpd(struct tdrive *tdrive, uint8_t *buffer, uint16_t allocation_length)
-{
-	struct vendor_specific_page *page;
+struct firmware_designation_page {
+	uint8_t device_type;
+	uint8_t page_code;
+	uint8_t reserved;
+	uint8_t page_length;
+	uint8_t ascii_length;
+	uint8_t reserved1[3];
+	uint32_t load_id;
+	uint8_t firmware_revision_level[4];
+	uint32_t ptf_number;
+	uint32_t patch_number;
+	uint8_t ru_name[8];
+	uint8_t library_sequence_number[4];
+} __attribute__ ((__packed__));
 
-	bzero(buffer, allocation_length);
-	page = (struct vendor_specific_page *)(buffer);
-	page->device_type = T_SEQUENTIAL; /* peripheral qualifier */
-	page->page_code = VENDOR_SPECIFIC_PAGE2;
-	page->page_length = allocation_length - sizeof(struct vendor_specific_page);
-	return allocation_length;
+static int
+vultrium_firmware_designation_page(struct tdrive *tdrive, uint8_t *buffer, uint16_t allocation_length)
+{
+	struct firmware_designation_page page;
+	int min_len;
+	char *revision;
+
+	bzero(&page, sizeof(page));
+	page.device_type = T_SEQUENTIAL; /* peripheral qualifier */
+	page.page_code = FIRMWARE_DESIGNATION_PAGE;
+	page.page_length = 0x21;
+
+	if (is_hp_drive(tdrive))
+		revision = PRODUCT_REVISION_QUADSTOR;
+	else
+		revision = PRODUCT_REVISION_IBM_LTFS;
+	memcpy(page.firmware_revision_level, revision, 4);
+	sys_memset(page.library_sequence_number, ' ', 4);
+
+	min_len = min_t(int, sizeof(page), allocation_length);
+	memcpy(buffer, &page, min_len);
+	return min_len;
 }
 
 static int
@@ -62,66 +121,21 @@ vultrium_evpd_inquiry(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint8_t p
 
 	bzero(ctio->data_ptr, ctio->dxfer_len);
 
-	switch (page_code)
-	{
-		case UNIT_SERIAL_NUMBER_PAGE:
-			retval = vultrium_serial_number(tdrive, ctio->data_ptr, allocation_length);
-			if (unlikely(retval < 0))
-			{
-				goto err;
-			}
-
-			ctio->dxfer_len = retval;
-			break;
-		case DEVICE_IDENTIFICATION_PAGE:
-			retval = vultrium_device_identification(tdrive, ctio->data_ptr, allocation_length);
-			if (unlikely(retval < 0))
-			{
-				goto err;
-			}
-
-			ctio->dxfer_len = retval;
-			break;
-		case VITAL_PRODUCT_DATA_PAGE:
-			retval = tdrive_copy_vital_product_page_info(tdrive, ctio->data_ptr, allocation_length);
-			if (unlikely(retval < 0))
-			{
-				goto err;
-			}
-
-			ctio->dxfer_len = retval;
-			break;
-		case VENDOR_SPECIFIC_PAGE2:
-			retval = vultrium_vendor_specific_page2_vpd(tdrive, ctio->data_ptr, allocation_length);
-			if (unlikely(retval < 0))
-			{
-				goto err;
-			}
-
-			ctio->dxfer_len = retval;
-			break;
-		default:
-			goto err;
+	switch (page_code) {
+	case FIRMWARE_DESIGNATION_PAGE:
+		retval = vultrium_firmware_designation_page(tdrive, ctio->data_ptr, allocation_length);
+		break;
+	case DRIVE_COMPONENT_REVISION_PAGE:
+		retval = vultrium_drive_component_revision_page(tdrive, ctio->data_ptr, allocation_length);
+		break;
+	default:
+		ctio_free_data(ctio);
+		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);
+		retval = 0;
+		break;
 	}
-	return 0;
-err:
-	ctio_free_data(ctio);
-	ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);
-	return 0;
-}
 
-static inline int
-is_hp_drive(struct tdrive *tdrive)
-{
-	switch (tdrive->make) {
-		case DRIVE_TYPE_VHP_ULT232:
-		case DRIVE_TYPE_VHP_ULT448:
-		case DRIVE_TYPE_VHP_ULT460:
-		case DRIVE_TYPE_VHP_ULT960:
-		case DRIVE_TYPE_VHP_ULT1840:
-			return 1;
-	}
-	return 0;
+	return retval;
 }
 
 static void
@@ -923,10 +937,13 @@ vultrium_init_handlers(struct tdrive *tdrive)
 	handlers->additional_log_sense = vultrium_log_sense;
 	handlers->valid_medium = vultrium_valid_medium;
 
-	tdrive->evpd_info.num_pages = 0x03;
+	tdrive->evpd_info.num_pages = 0x06;
 	tdrive->evpd_info.page_code[0] = VITAL_PRODUCT_DATA_PAGE;
-	tdrive->evpd_info.page_code[1] = DEVICE_IDENTIFICATION_PAGE;
-	tdrive->evpd_info.page_code[2] = UNIT_SERIAL_NUMBER_PAGE;
+	tdrive->evpd_info.page_code[1] = FIRMWARE_DESIGNATION_PAGE;
+	tdrive->evpd_info.page_code[2] = DEVICE_IDENTIFICATION_PAGE;
+	tdrive->evpd_info.page_code[3] = UNIT_SERIAL_NUMBER_PAGE;
+	tdrive->evpd_info.page_code[4] = EXTENDED_INQUIRY_VPD_PAGE;
+	tdrive->evpd_info.page_code[5] = DRIVE_COMPONENT_REVISION_PAGE;
 	tdrive->supports_evpd = 1;
 
 	tdrive->log_info.num_pages = 0x04;
