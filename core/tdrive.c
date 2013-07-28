@@ -767,7 +767,7 @@ tdrive_evpd_inquiry_data(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint8_
 		}
 	}
 	ctio->dxfer_len = retval;
-	return retval;
+	return 0;
 }
 
 static int

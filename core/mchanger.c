@@ -869,7 +869,7 @@ mchanger_evpd_inquiry_data(struct mchanger *mchanger, struct qsio_scsiio *ctio, 
 		retval = 0;
 	}
 	ctio->dxfer_len = retval;
-	return retval;
+	return 0;
 }
 
 static int
