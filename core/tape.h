@@ -94,4 +94,5 @@ is_v2_tape(struct tape *tape)
 	return (tape->flags & TAPE_FLAGS_V2);
 }
 
+int is_lto_tape(struct tape *tape);
 #endif

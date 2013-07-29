@@ -1575,7 +1575,7 @@ tape_partition_write_mam(struct tape_partition *partition)
 }
 
 
-static int
+int
 is_lto_tape(struct tape *tape)
 {
 	switch (tape->make) {

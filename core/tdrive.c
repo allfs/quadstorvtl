@@ -1948,21 +1948,132 @@ density_code_match(int density_code, int sdensity_code, int vol_type)
 	return 0;
 }
 
+static void
+__tdrive_report_medium_descriptors(struct tdrive *tdrive, uint8_t *buffer, int allocation_length, int *ret_byte_count, int *ret_done, uint8_t media)
+{
+	struct medium_descriptor medium_desc;
+	struct tape *tape = tdrive->tape;
+	char *description;
+	int done = *ret_done;
+	int worm = tape->worm;
+	int min_len;
+	uint16_t medium_length = 0;
+	uint8_t density = 0;
+
+	bzero(&medium_desc, sizeof(medium_desc));
+	if (worm)
+		medium_desc.medium_type = 0x01;
+	medium_desc.descriptor_length = htobe16(0x34);
+	medium_desc.media_width = htobe16(127);
+	sys_memset(medium_desc.medium_type_name, ' ', 8);
+	sys_memset(medium_desc.description, ' ', 8);
+	memcpy(medium_desc.assigning_organization, tdrive->inquiry.vendor_id, 8);
+	if (!worm)
+		memcpy(medium_desc.medium_type_name, "Data", strlen("Data"));
+	else
+		memcpy(medium_desc.medium_type_name, "WORM", strlen("WORM"));
+
+	switch (tape->make) {
+	case VOL_TYPE_LTO_1:
+		density = DENSITY_ULTRIUM_1;
+		medium_length = 609;
+		if (!worm)
+			description = "Ultrium 1 Data Tape";
+		else
+			description = "Ultrium 1 WORM Tape";
+		break;
+	case VOL_TYPE_LTO_2:
+		density = DENSITY_ULTRIUM_2;
+		medium_length = 609;
+		if (!worm)
+			description = "Ultrium 2 Data Tape";
+		else
+			description = "Ultrium 2 WORM Tape";
+		break;
+	case VOL_TYPE_LTO_3:
+		density = DENSITY_ULTRIUM_3;
+		medium_length = 680;
+		if (!worm)
+			description = "Ultrium 3 Data Tape";
+		else
+			description = "Ultrium 3 WORM Tape";
+		break;
+	case VOL_TYPE_LTO_4:
+		density = DENSITY_ULTRIUM_4;
+		medium_length = 820;
+		if (!worm)
+			description = "Ultrium 4 Data Tape";
+		else
+			description = "Ultrium 4 WORM Tape";
+		break;
+	case VOL_TYPE_LTO_5:
+		density = DENSITY_ULTRIUM_5;
+		medium_length = 846;
+		if (!worm)
+			description = "Ultrium 5 Data Tape";
+		else
+			description = "Ultrium 5 WORM Tape";
+		break;
+	case VOL_TYPE_LTO_6:
+		density = DENSITY_ULTRIUM_6;
+		medium_length = 846;
+		if (!worm)
+			description = "Ultrium 6 Data Tape";
+		else
+			description = "Ultrium 6 WORM Tape";
+		break;
+	}
+	medium_desc.primary_density_code = density;
+	medium_desc.media_length = htobe16(medium_length);
+	memcpy(medium_desc.description, description, strlen(description));
+
+	min_len = min_t(int, allocation_length, sizeof(medium_desc));
+	memcpy(buffer, &medium_desc, min_len);
+	done += min_len;
+	*ret_done = done;
+	*ret_byte_count = sizeof(medium_desc);
+}
+
+static void
+__tdrive_report_density_descriptors(struct tdrive *tdrive, uint8_t *buffer, int allocation_length, int *ret_byte_count, int *ret_done, uint8_t media)
+{
+	struct density_descriptor *desc;
+	int done = *ret_done, byte_count = 0;
+	int min_len;
+
+	SLIST_FOREACH(desc, &tdrive->density_list, d_list) {
+		if (media && (density_code_match(desc->pdensity_code, desc->sdensity_code, tdrive->tape->make) == 0))
+			continue;
+
+		byte_count += 52;
+		if (done < allocation_length) {
+			min_len = min_t(int, 52, (allocation_length - done));
+
+			memcpy(buffer, desc, min_len);
+			buffer += min_len;
+			done += min_len;
+		}
+
+		if (media)
+			break;
+	}
+	*ret_done = done;
+	*ret_byte_count = byte_count;
+}
+
 static int
 tdrive_cmd_report_density_support(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 {
 	uint8_t *cdb = ctio->cdb;
-	uint8_t media;
+	uint8_t media, medium_type;
 	uint16_t allocation_length;
 	uint8_t *buffer;
-	uint16_t done = 0;
-	uint16_t byte_count = 0;
-	struct density_descriptor *desc;
-	int min_len;
-	uint16_t desc_length = offsetof(struct density_descriptor, d_list);
+	int done = 0;
+	int byte_count = 0;
 	struct density_header *header;
 
 	media = READ_BIT(cdb[1], 0);
+	medium_type = READ_BIT(cdb[1], 1);
 	allocation_length = be16toh(*(uint16_t *)(&cdb[7]));
 
 	if (allocation_length < sizeof(struct density_header))
@@ -1982,28 +2093,14 @@ tdrive_cmd_report_density_support(struct tdrive *tdrive, struct qsio_scsiio *cti
 	done += sizeof(struct density_header);
 	buffer += sizeof(struct density_header);
 
-	SLIST_FOREACH(desc, &tdrive->density_list, d_list) {
-		if (media && (density_code_match(desc->pdensity_code, desc->sdensity_code, tdrive->tape->make) == 0))
-			continue;
-
-		byte_count += desc_length;
-		if (done < allocation_length) {
-			min_len = min_t(int, desc_length, (allocation_length - done));
-
-			memcpy(buffer, desc, min_len);
-			buffer += min_len;
-			done += min_len;
-		}
-
-		if (media)
-			break;
-	}
-
+	if (!medium_type || !is_lto_tape(tdrive->tape))
+		__tdrive_report_density_descriptors(tdrive, buffer, allocation_length, &byte_count, &done, media);
+	else
+		__tdrive_report_medium_descriptors(tdrive, buffer, allocation_length, &byte_count, &done, media);
+ 
 	header = (struct density_header *)(ctio->data_ptr);
 	if (byte_count)
-	{
 		byte_count += 2;
-	}
 
 	header->avail_len = htobe16(byte_count);
 	ctio->dxfer_len = done;
@@ -3676,13 +3773,16 @@ tdrive_cmd_read_buffer(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	uint32_t allocation_length, buffer_offset;
 	uint8_t buffer_id, mode;
 	int header = 0;
+	int max_buffer_len = 512; /* For now we only support VPD */
+	int min_len;
 
 	buffer_id = cdb[2];
 	mode = cdb[1] & 0x1F;
 	buffer_offset = READ_24(cdb[3], cdb[4], cdb[5]);
 	allocation_length = READ_24(cdb[6], cdb[7], cdb[8]);
 
-	ctio_allocate_buffer(ctio, allocation_length, Q_WAITOK);
+	min_len = min_t(int, allocation_length, max_buffer_len);
+	ctio_allocate_buffer(ctio, min_len, Q_WAITOK);
 	if (unlikely(!ctio->data_ptr))
 		return -1;
 

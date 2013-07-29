@@ -157,6 +157,12 @@ vultrium_unload_tape(struct tdrive *tdrive)
 		case DRIVE_TYPE_VIBM_3580ULT4:
 			density = DENSITY_ULTRIUM_4;
 			break;
+		case DRIVE_TYPE_VIBM_3580ULT5:
+			density = DENSITY_ULTRIUM_5;
+			break;
+		case DRIVE_TYPE_VIBM_3580ULT6:
+			density = DENSITY_ULTRIUM_6;
+			break;
 	}
 	tdrive->block_descriptor.density_code = density;
 }

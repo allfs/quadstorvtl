@@ -253,6 +253,21 @@ struct density_header {
 	uint16_t rsvd;
 } __attribute__ ((__packed__));
 
+struct medium_descriptor {
+	uint8_t medium_type;
+	uint8_t reserved;
+	uint16_t descriptor_length;
+	uint8_t density_codes;
+	uint8_t primary_density_code;
+	uint8_t reserved1[8];
+	uint16_t media_width;
+	uint16_t media_length;
+	uint8_t reserved2[2];
+	uint8_t assigning_organization[8];
+	uint8_t medium_type_name[8];
+	uint8_t description[20];
+} __attribute__ ((__packed__));
+
 struct density_descriptor {
 	uint8_t pdensity_code;
 	uint8_t sdensity_code;
