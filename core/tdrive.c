@@ -635,6 +635,8 @@ tdrive_rewind_on_unload(struct tdrive *tdrive)
 		case DRIVE_TYPE_VIBM_3580ULT2:
 		case DRIVE_TYPE_VIBM_3580ULT3:
 		case DRIVE_TYPE_VIBM_3580ULT4:
+		case DRIVE_TYPE_VIBM_3580ULT5:
+		case DRIVE_TYPE_VIBM_3580ULT6:
 			return 0;
 		default:
 			return 1;
@@ -1218,6 +1220,23 @@ get_fixed_partition_size(struct tape *tape, int pnum)
 	return 0;
 }
 
+static uint64_t
+tape_custom_size_adjust(struct tape *tape, uint64_t size)
+{
+	uint64_t default_size;
+	uint64_t custom_size;
+	uint64_t tape_size;
+	
+	default_size = get_vol_size_default(tape->make);
+	if (!default_size || default_size == tape->size)
+		return size;
+	tape_size = (tape->size >> 30);
+	custom_size = ((size * tape_size) / default_size);
+	if (custom_size > size)
+		return size;
+	return custom_size;
+}
+
 static int
 tdrive_cmd_format_medium(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 {
@@ -1291,6 +1310,7 @@ skip_fill_check:
 			if (val1 > 38)
 				val1 = 38;
 			psize1 = min_size * val1;
+			psize1 = tape_custom_size_adjust(tape, psize1);
 			psize1 = align_size(psize1, BINT_UNIT_SIZE);
 			if (psize1 > tape->set_size) {
 				ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, PARAMETER_VALUE_INVALID_ASC, PARAMETER_VALUE_INVALID_ASCQ);  
@@ -1303,6 +1323,7 @@ skip_fill_check:
 			if (val0 > 38)
 				val0 = 38;
 			psize0 = min_size * val0;
+			psize0 = tape_custom_size_adjust(tape, psize0);
 			psize0 = align_size(psize0, BINT_UNIT_SIZE);
 			if (psize0 > tape->set_size) {
 				ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, PARAMETER_VALUE_INVALID_ASC, PARAMETER_VALUE_INVALID_ASCQ);  
@@ -1312,6 +1333,7 @@ skip_fill_check:
 			psize1 = align_size(psize1, BINT_UNIT_SIZE);
 		}
 
+		min_size = tape_custom_size_adjust(tape, min_size);
 		if (psize0 < min_size || psize1 < min_size) {
 			ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, PARAMETER_VALUE_INVALID_ASC, PARAMETER_VALUE_INVALID_ASCQ);  
 			return 0;

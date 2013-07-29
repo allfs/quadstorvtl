@@ -763,6 +763,7 @@ check_max_vcart_size(void)
 	int tmp_size;
 
 	buf[0] = 0;
+	max_vcart_size = 0;
 	get_config_value(QUADSTOR_CONFIG_FILE, "MaxVCartSize", buf);
 	if (buf[0]) {
 		tmp_size = atoi(buf);
@@ -1225,53 +1226,10 @@ tl_server_load_conf(struct tl_comm *comm, struct tl_msg *msg)
 uint64_t
 get_size_spec(int voltype)
 {
-	uint64_t size_in_gb = 0;
-
 	if (max_vcart_size)
 		return (max_vcart_size * 1024 * 1024 * 1024);
 
-	switch (voltype) {
-	case VOL_TYPE_LTO_1:
-		size_in_gb = SIZE_LTO_1_TAPE;
-		break;
-	case VOL_TYPE_LTO_2:
-		size_in_gb = SIZE_LTO_2_TAPE;
-		break;
-	case VOL_TYPE_LTO_3:
-		size_in_gb = SIZE_LTO_3_TAPE;
-		break;
-	case VOL_TYPE_LTO_4:
-		size_in_gb = SIZE_LTO_4_TAPE;
-		break;
-	case VOL_TYPE_LTO_5:
-		size_in_gb = SIZE_LTO_5_TAPE;
-		break;
-	case VOL_TYPE_LTO_6:
-		size_in_gb = SIZE_LTO_6_TAPE;
-		break;
-	case VOL_TYPE_SDLT_1:
-		size_in_gb = SIZE_SDLT_1_TAPE;
-		break;
-	case VOL_TYPE_SDLT_2:
-		size_in_gb = SIZE_SDLT_2_TAPE;
-		break;
-	case VOL_TYPE_SDLT_3:
-		size_in_gb = SIZE_SDLT_3_TAPE;
-		break;
-	case VOL_TYPE_VSTAPE:
-		size_in_gb = SIZE_VSTAPE_TAPE;
-		break;
-	case VOL_TYPE_DLT_4:
-		size_in_gb = SIZE_DLT4_TAPE;
-		break;
-	default:
-		break;
-	}
-
-	if (!size_in_gb)
-		return 0;
-
-	return (size_in_gb * 1024 * 1024 * 1024);
+	return get_vol_size_default(voltype);
 }
 
 int

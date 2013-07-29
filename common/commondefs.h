@@ -519,4 +519,53 @@ enum {
 	MEDIA_STATUS_DIAGNOSTICS = 0x100,
 };
 
+static inline uint64_t
+get_vol_size_default(int voltype)
+{
+	uint64_t size_in_gb = 0;
+
+	switch (voltype) {
+	case VOL_TYPE_LTO_1:
+		size_in_gb = SIZE_LTO_1_TAPE;
+		break;
+	case VOL_TYPE_LTO_2:
+		size_in_gb = SIZE_LTO_2_TAPE;
+		break;
+	case VOL_TYPE_LTO_3:
+		size_in_gb = SIZE_LTO_3_TAPE;
+		break;
+	case VOL_TYPE_LTO_4:
+		size_in_gb = SIZE_LTO_4_TAPE;
+		break;
+	case VOL_TYPE_LTO_5:
+		size_in_gb = SIZE_LTO_5_TAPE;
+		break;
+	case VOL_TYPE_LTO_6:
+		size_in_gb = SIZE_LTO_6_TAPE;
+		break;
+	case VOL_TYPE_SDLT_1:
+		size_in_gb = SIZE_SDLT_1_TAPE;
+		break;
+	case VOL_TYPE_SDLT_2:
+		size_in_gb = SIZE_SDLT_2_TAPE;
+		break;
+	case VOL_TYPE_SDLT_3:
+		size_in_gb = SIZE_SDLT_3_TAPE;
+		break;
+	case VOL_TYPE_VSTAPE:
+		size_in_gb = SIZE_VSTAPE_TAPE;
+		break;
+	case VOL_TYPE_DLT_4:
+		size_in_gb = SIZE_DLT4_TAPE;
+		break;
+	default:
+		break;
+	}
+
+	if (!size_in_gb)
+		return 0;
+
+	return (size_in_gb * 1024 * 1024 * 1024);
+}
+
 #endif /* COMMONDEFS_H_ */
