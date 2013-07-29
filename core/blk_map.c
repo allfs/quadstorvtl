@@ -1065,6 +1065,7 @@ blk_map_read(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_
 	uint32_t data_blocks = 0;
 	int error = 0, i;
 	uint32_t read_size;
+	int todo;
 	int pg_idx, entry_idx;
 	struct blk_entry *read_entry;
 	struct blk_map *read_map;
@@ -1117,6 +1118,7 @@ blk_map_read(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_
 	debug_check(!read_entry);	
 	pg_idx = 0;
 
+	todo = read_size;
 	while (read_entry) {
 		if (!entry_is_data_block(read_entry) || read_entry == partition->cur_map->c_entry)
 			break;
@@ -1137,6 +1139,9 @@ blk_map_read(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_
 		blk_entry_free_data(read_entry);
 		debug_check(pg_idx > pglist_cnt);
 		if (pg_idx == pglist_cnt)
+			break;
+		todo -= read_entry->block_size;
+		if (todo <= 0)
 			break;
 		read_entry = blk_entry_read_next(read_entry, &read_map, 0, 0);
 		debug_check(!read_entry);
