@@ -1234,6 +1234,7 @@ tape_custom_size_adjust(struct tape *tape, uint64_t size)
 	custom_size = ((size * tape_size) / default_size);
 	if (custom_size > size)
 		return size;
+	custom_size = max_t(uint64_t, custom_size, (1U << 30));
 	return custom_size;
 }
 
