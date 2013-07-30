@@ -2165,6 +2165,9 @@ tdrive_cmd_space(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 		count = TWOS_COMPLEMENT(count);
 	}
 
+	if (!count && code != SPACE_CODE_END_OF_DATA)
+		return 0;
+
 	switch (code) {
 	case SPACE_CODE_BLOCKS:
 		break;
@@ -2194,6 +2197,9 @@ tdrive_cmd_space(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	if (count < 0)
 		count = -(count); /* todo is always returned positive */
 
+	if (todo < 0)
+		todo = -(todo);
+
 	switch (retval) {
 	case MEDIA_ERROR:
 		ctio_construct_sense(ctio, 
@@ -2204,22 +2210,22 @@ tdrive_cmd_space(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	case SETMARK_ENCOUNTERED:
 		tdrive_construct_setmark_sense(tdrive,
 			ctio, 1 /* fake fixed */,
-			count, todo, 0 /* dont care */, 0);
+			count, (count - todo), 0 /* dont care */, 0);
 		break;
 	case FILEMARK_ENCOUNTERED:
 		tdrive_construct_filemark_sense(tdrive,
 			ctio, 1 /* fake fixed */,
-			count, todo, 0 /* dont care */, 0);
+			count, (count - todo), 0 /* dont care */, 0);
 		break;	
 	case BOM_REACHED:
 		tdrive_construct_bomp_sense(tdrive,
 			ctio, 1 /* fake fixed */,
-			count, todo, 0 /* dont care */);
+			count, (count - todo), 0 /* dont care */);
 		break;
 	case EOD_REACHED:
 		tdrive_construct_eod_sense(tdrive,
 			ctio, 1 /* fake fixed */,
-			count, todo, 0 /* dont care */, 0);
+			count, (count - todo), 0 /* dont care */, 0);
 		break;
 	default:
 		debug_check(1);
