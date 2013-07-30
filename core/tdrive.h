@@ -447,4 +447,10 @@ void tdrive_cbs_disable(struct tdrive *tdrive);
 void tdrive_cbs_remove(struct tdrive *tdrive);
 void tdrive_init_tape_metadata(struct tdevice *tdevice, struct tape *tape);
 
+static inline int
+tdrive_tape_loaded(struct tdrive *tdrive)
+{
+	return (atomic_test_bit(TDRIVE_FLAGS_TAPE_LOADED, &tdrive->flags));
+}
+
 #endif /* TDRIVE_H_ */

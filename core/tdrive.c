@@ -852,8 +852,8 @@ tdrive_cmd_test_unit_ready(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 		}
 		else
 		{
-			asc = LOGICAL_UNIT_IS_IN_PROCESS_OF_BECOMING_READY_ASC;
-			ascq = LOGICAL_UNIT_IS_IN_PROCESS_OF_BECOMING_READY_ASCQ;
+			asc = MEDIUM_NOT_PRESENT_LOADABLE_ASC;
+			ascq = MEDIUM_NOT_PRESENT_LOADABLE_ASCQ;
 		}
 
 		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_NOT_READY, 0, asc, ascq);
@@ -2956,7 +2956,7 @@ copy_current_medium_configuration_page(struct tdrive *tdrive, uint8_t *buffer, i
 	bzero(&page, sizeof(page));
 	page.page_code = MEDIUM_CONFIGURATION_PAGE;
 	page.page_length = 0x1E;
-	if (tdrive->tape) {
+	if (tdrive->tape && tdrive_tape_loaded(tdrive)) {
 		if (tdrive->tape->worm)
 			page.wormm = 0x01;
 		page.worm_mode_label_restrictions = 0x01;
@@ -3065,7 +3065,7 @@ copy_current_device_configuration_page(struct tdrive *tdrive, uint8_t *buffer, i
 	struct tape *tape;
 
 	tape = tdrive->tape;
-	if (tape)
+	if (tape && tdrive_tape_loaded(tdrive))
 		tdrive->configuration_page.active_partition = tape->cur_partition->partition_id;
 	else
 		tdrive->configuration_page.active_partition = 0;
@@ -3450,10 +3450,8 @@ tdrive_cmd_mode_sense10(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	}
 
 	header->mode_data_length = htobe16(avail - offsetof(struct mode_parameter_header10, medium_type));
-	if (tdrive->tape)
-	{
+	if (tdrive->tape && tdrive_tape_loaded(tdrive))
 		header->medium_type = tdrive->mode_header.medium_type;
-	}
 	header->device_specific_parameter = tdrive->mode_header.wp;
 	ctio->dxfer_len = offset;
 	return 0;
@@ -3526,7 +3524,7 @@ tdrive_cmd_mode_sense6(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	}
 
 	header->mode_data_length = avail - offsetof(struct mode_parameter_header6, medium_type);
-	if (tdrive->tape)
+	if (tdrive->tape && tdrive_tape_loaded(tdrive))
 		header->medium_type = tdrive->mode_header.medium_type;
 	header->device_specific_parameter = tdrive->mode_header.wp;
 	ctio->dxfer_len = offset;
@@ -4107,12 +4105,12 @@ tdrive_proc_cmd(void *drive, void *iop)
 		if (!tdrive->tape) {
 			asc = MEDIUM_NOT_PRESENT_ASC;
 			ascq = MEDIUM_NOT_PRESENT_ASCQ;
-		} else if (!atomic_test_bit(TDRIVE_FLAGS_TAPE_LOADED, &tdrive->flags)) {
-			asc = LOGICAL_UNIT_NOT_READY_INTIALIZING_COMMAND_REQUIRED_ASC;
-			ascq = LOGICAL_UNIT_NOT_READY_INTIALIZING_COMMAND_REQUIRED_ASCQ;
 		} else if (media_valid != 0) {
 			asc = INCOMPATIBLE_MEDIUM_INSTALLED_ASC;
 			ascq = INCOMPATIBLE_MEDIUM_INSTALLED_ASCQ;
+		} else if (!atomic_test_bit(TDRIVE_FLAGS_TAPE_LOADED, &tdrive->flags)) {
+			asc = MEDIUM_NOT_PRESENT_LOADABLE_ASC;
+			asc = MEDIUM_NOT_PRESENT_LOADABLE_ASCQ;
 		} else {
 			asc = LOGICAL_UNIT_IS_IN_PROCESS_OF_BECOMING_READY_ASC;
 			ascq = LOGICAL_UNIT_IS_IN_PROCESS_OF_BECOMING_READY_ASCQ;

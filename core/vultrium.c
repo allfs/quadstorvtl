@@ -528,11 +528,14 @@ vultrium_volume_statistics_log_sense(struct tdrive *tdrive, uint8_t *buffer, uin
 	uint32_t val32;
 	uint64_t val64;
 
-	tape = tdrive->tape;
-	count = tape_partition_count(tape);
+	bzero(&page, sizeof(page));
 	bzero(buffer, buffer_length);
 
-	bzero(&page, sizeof(page));
+	tape = tdrive->tape;
+	if (!tape)
+		goto out;
+	count = tape_partition_count(tape);
+
 	page.page_code = VOLUME_STATISTICS_LOG_PAGE;
 	done = min_t(int, sizeof(page), buffer_length);
 
@@ -581,6 +584,7 @@ vultrium_volume_statistics_log_sense(struct tdrive *tdrive, uint8_t *buffer, uin
 
 	WRITE_LOG_PARTITION32(tape, parameter_pointer, buffer, buffer_length, done, page_length, 0x204, count, log_value_partition_remaining);
 
+out:
 	page.page_length = htobe16(page_length);
 	min_len = min_t(int, sizeof(page), buffer_length);
 	memcpy(buffer, &page, min_len);
@@ -602,7 +606,6 @@ vultrium_tape_capacity_log_sense(struct tdrive *tdrive, uint8_t *buffer, uint16_
 	page.page_code = TAPE_CAPACITY_LOG_PAGE;
 	done = min_t(int, sizeof(page), buffer_length);
 
-	/* tdrive->tape should never be null here */
 	tape = tdrive->tape;
 	if (unlikely(!tape))
 		goto out;
