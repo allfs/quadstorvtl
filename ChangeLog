@@ -1,3 +1,10 @@
+Release 2.2.9
+	* Fix for ITDT ltfs physical tape copy
+	* Fix Information value returned in sense for a SPACE command
+	* READ POSITION fixes
+	* Fixes for ignoring mounted disks which are symbolic links
+	* Allow LTFS formatting for custom sized vcartridges 
+
 Release 2.2.8
 	* Add support for VDrive statistics
 	* Reduce the amount of disk space used by metadata
