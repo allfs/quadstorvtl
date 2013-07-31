@@ -1350,6 +1350,27 @@ tape_partition_free_alloc(struct tape_partition *partition, int ignore_errors)
 }
 
 void
+tape_partition_invalidate_pointers(struct tape_partition *partition)
+{
+	blk_map_free_all(partition);
+	map_lookup_free_all(partition);
+	tmap_list_free_all(&partition->meta_tmap_list);
+	tmap_list_free_all(&partition->data_tmap_list);
+	debug_check(partition->cached_data);
+	partition->cached_data = 0;
+	debug_check(partition->cached_blocks);
+	partition->cached_blocks = 0;
+	debug_check(atomic_read(&partition->pending_size));
+	atomic_set(&partition->pending_size, 0);
+	debug_check(atomic_read(&partition->pending_writes));
+	atomic_set(&partition->pending_writes, 0);
+	bzero(&partition->dsegment, sizeof(partition->dsegment));
+	bzero(&partition->msegment, sizeof(partition->msegment));
+	partition->cur_map = NULL;
+	atomic_set_bit(PARTITION_LOOKUP_SEGMENTS, &partition->flags);
+}
+
+void
 tape_partition_free(struct tape_partition *partition, int free_alloc)
 {
 	if (free_alloc) {
@@ -1357,10 +1378,7 @@ tape_partition_free(struct tape_partition *partition, int free_alloc)
 		tape_partition_free_tmaps_block(partition);
 	}
 	debug_info("free alloc %d, partition used %llu\n", free_alloc, (unsigned long long)partition->used);
-	blk_map_free_all(partition);
-	map_lookup_free_all(partition);
-	tmap_list_free_all(&partition->meta_tmap_list);
-	tmap_list_free_all(&partition->data_tmap_list);
+	tape_partition_invalidate_pointers(partition);
 	if (partition->mam_data)
 		vm_pg_free(partition->mam_data);
 	uma_zfree(tape_partition_cache, partition);

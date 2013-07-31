@@ -39,7 +39,7 @@ struct tcache {
 	SLIST_ENTRY(tcache) t_list;
 };
 
-#define TCACHE_MAX_SIZE	(64 * 1024)
+#define TCACHE_MAX_SIZE	(512 * 1024)
 
 SLIST_HEAD(tcache_list, tcache);
 

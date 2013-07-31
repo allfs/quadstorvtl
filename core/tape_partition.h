@@ -337,6 +337,7 @@ int mam_attr_length_valid(struct read_attribute *attr, struct mam_attribute *mam
 void mam_attr_set_length(struct read_attribute *attr, struct mam_attribute *mam_attr);
 void tape_update_volume_change_reference(struct tape *tape);
 void tape_partition_update_mam(struct tape_partition *partition, uint16_t first_attribute);
+void tape_partition_invalidate_pointers(struct tape_partition *partition);
 
 static inline int
 tmap_skip_segment(struct tape_partition *partition, int tmap_id, int tmap_segment_id, int type)

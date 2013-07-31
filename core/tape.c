@@ -402,6 +402,7 @@ tape_format_default(struct tape *tape, uint64_t set_size, int set_tape_size)
 	if (retval != 0)
 		return -1;
 
+	tape_partition_invalidate_pointers(partition);
 	retval = tape_partition_set_size(partition, set_size, set_tape_size);
 	return retval;
 }

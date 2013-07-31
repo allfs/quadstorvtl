@@ -1253,6 +1253,7 @@ tdrive_cmd_format_medium(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	int fill_to_max = 0;
 	int num_partitions, partition_units;
 
+	tdrive_wait_for_write_queue(tdrive);
 	if (tape->worm) {
 		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_DATA_PROTECT, 0, WORM_MEDIUM_OVERWRITE_ATTEMPTED_ASC, WORM_MEDIUM_OVERWRITE_ATTEMPTED_ASCQ);
 		return 0;

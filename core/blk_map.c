@@ -1336,6 +1336,10 @@ blk_map_setup_writes(struct blk_map *map)
 	map->pending_pglist_cnt = 0;
 	while ((tcache = SLIST_FIRST(&tcache_list)) != NULL) {
 		SLIST_REMOVE_HEAD(&tcache_list, t_list);
+		if (!atomic_read(&tcache->bio_remain)) {
+			tcache_put(tcache);
+			continue;
+		}
 		tcache_entry_rw(tcache, QS_IO_WRITE);
 		SLIST_INSERT_HEAD(&map->tcache_list, tcache, t_list);
 	}
@@ -1816,14 +1820,14 @@ blk_map_write(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32
  
 	retval = blk_map_overwrite_check(partition->cur_map);
 	if (unlikely(retval != 0)) {
-		debug_warn("Overwrite check failed\n");
+		debug_warn("Overwrite check failed with retval %d\n", retval);
 		ctio_free_data(ctio);
 		return retval;
 	}
 
 	retval = tape_partition_lookup_segments(partition);
 	if (unlikely(retval != 0)) {
-		debug_warn("Lookup segments failed\n");
+		debug_warn("Lookup segments failed with retval %d\n", retval);
 		ctio_free_data(ctio);
 		return retval;
 	}
