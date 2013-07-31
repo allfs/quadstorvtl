@@ -23,6 +23,7 @@
 #include "blk_map.h"
 
 uint64_t reclaimed;
+uint64_t restored;
 
 static struct bintindex *
 bint_get_check_index(struct bdevint *bint, int index_id, int alloc)
@@ -75,6 +76,9 @@ check_block(struct bdevint *bint, uint64_t block, uint32_t bid)
 	}
 
 	bmap = (uint8_t *)(vm_pg_address(index->metadata));
+	if (bmap[entry_id] & (1 << (uint8_t)pos_id)) {
+		debug_warn("Multiple refs index bid %u block %llu index_id %llu entry_id %d pos id %d\n", bid, (unsigned long long)block, (unsigned long long)index_id, entry_id, pos_id);
+	}
 	bmap[entry_id] |= (1 << (uint8_t)pos_id);
 	return 0;
 }
@@ -268,7 +272,8 @@ bint_index_check(struct bdevint *bint, int index_id)
 	uint8_t *bmap, *check_bmap;
 	int i, bmap_entries;
 	int retval, need_sync = 0;
-	int freed_blocks = 0;
+	uint64_t freed_blocks = 0;
+	uint64_t alloced_blocks = 0;
 	int index_used, check_used;
 	struct bintindex *index;
 	struct bintindex *check_index;
@@ -300,11 +305,13 @@ bint_index_check(struct bdevint *bint, int index_id)
 		if (val == check_val)
 			continue;
 
-		debug_warn("index id %llu val %u check_val %u\n", (unsigned long long)index_id, val, check_val);
+		debug_warn("index id %llu val %u check_val %u check_used %u index_used %u \n", (unsigned long long)index_id, val, check_val, check_used, index_used);
 		index_used = get_alloced_blocks(val);
 		check_used = get_alloced_blocks(check_val);
-		debug_check(check_used >= index_used);
-		freed_blocks += (index_used - check_used);
+		if (check_used > index_used)
+			alloced_blocks += (check_used - index_used);
+		else
+			freed_blocks += (index_used - check_used);
 	       	bmap[i] = check_val;
 		need_sync = 1;
 	}
@@ -321,8 +328,11 @@ bint_index_check(struct bdevint *bint, int index_id)
 	if (unlikely(retval < 0)) {
 		return -1;
 	}
+
 	reclaimed += freed_blocks;
 	bint_incr_free(bint, (freed_blocks << BINT_UNIT_SHIFT));
+	restored += alloced_blocks;
+	bint_decr_free(bint, (alloced_blocks << BINT_UNIT_SHIFT));
 	return 0;
 }
 
@@ -359,7 +369,11 @@ bdev_check_disks(void)
 		if (!bint)
 			continue;
 		reclaimed = 0;
+		restored = 0;
 		bint_check(bint);
+		if (restored) {
+			debug_warn("For bint %u restored %llu units\n", bint->bid, (unsigned long long)(restored));
+		}
 		if (reclaimed) {
 			debug_warn("For bint %u reclaimed back %llu units\n", bint->bid, (unsigned long long)(reclaimed));
 		}

@@ -79,7 +79,7 @@ bdev_remove_from_alloc_list(struct bdevint *bint)
 	bint_unlock(bint);
 }
 
-static inline void 
+void 
 bint_decr_free(struct bdevint *bint, uint64_t used)
 {
 	atomic64_sub(used, &bint->free);
