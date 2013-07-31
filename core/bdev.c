@@ -1160,24 +1160,6 @@ bdev_get_block(struct bdevint *bint, struct bdevint **ret_bint, uint64_t *b_end)
 	return ret;
 }
 
-struct bdevint *
-bdev_alloc_first(struct bdevgroup *group, uint64_t *b_start, uint64_t *b_end)
-{
-	struct bdevint *bint;
-	uint64_t ret;
-
-	bint = bint_get_eligible(group, BINT_UNIT_SIZE);
-	if (!bint)
-		return NULL;
-
-	ret = __bint_get_block(bint, b_end);
-	if (!ret)
-		return NULL;
-
-	*b_start = ret;
-	return bint;
-}
-
 int
 bdev_release_block(struct bdevint *bint, uint64_t block)
 {

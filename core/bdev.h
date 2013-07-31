@@ -200,7 +200,6 @@ int bdev_get_info(struct bdev_info *binfo);
 int bdev_unmap_config(struct bdev_info *binfo);
 int bdev_release_block(struct bdevint *bint, uint64_t block);
 uint64_t bdev_get_block(struct bdevint *bint, struct bdevint **ret, uint64_t *b_end);
-struct bdevint *bdev_alloc_first(struct bdevgroup *group, uint64_t *b_start, uint64_t *b_end);
 void bdev_finalize(void);
 void bint_incr_free(struct bdevint *bint, uint64_t freed);
 struct bintindex * bint_get_index(struct bdevint *bint, int index_id);
