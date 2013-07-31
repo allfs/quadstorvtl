@@ -1,7 +1,7 @@
-%define libvers 2.2.9
+%define libvers 2.2.10
 Summary: QuadStor Virtual Tape Library
 Name: quadstor-vtl-core 
-Version: 2.2.9
+Version: 2.2.10
 Release: sles11sp1
 Source0: %{name}-%{version}.tar.gz
 License: None 
@@ -106,7 +106,7 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 	/usr/sbin/setsebool -P httpd_enable_cgi 1 > /dev/null 2>&1
 
 	mkdir -p /quadstorvtl/etc
-	echo "2.2.9 for SLES 11 SP1" > /quadstorvtl/etc/quadstor-vtl-core-version
+	echo "2.2.10 for SLES 11 SP1" > /quadstorvtl/etc/quadstor-vtl-core-version
 
 	if [ ! -f /quadstor/etc/quadstor-core-version ]; then
 		cp -f /srv/www/htdocs/vtindex.html /srv/www/htdocs/index.html

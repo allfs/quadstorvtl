@@ -1,7 +1,7 @@
-%define libvers 2.2.9
+%define libvers 2.2.10
 Summary: QuadStor Virtual Tape Library
 Name: quadstor-vtl-core 
-Version: 2.2.9
+Version: 2.2.10
 Release: rhel5
 Source0: %{name}-%{version}.tar.gz
 License: None 
@@ -105,7 +105,7 @@ cd $RPM_BUILD_ROOT/quadstorvtl/lib && ln -fs libtlmsg.so.%{libvers} libtlmsg.so
 	/usr/sbin/setsebool -P httpd_enable_cgi 1 > /dev/null 2>&1
 
 	mkdir -p /quadstorvtl/etc
-	echo "2.2.9 for RHEL/CentOS 5.x" > /quadstorvtl/etc/quadstor-vtl-core-version
+	echo "2.2.10 for RHEL/CentOS 5.x" > /quadstorvtl/etc/quadstor-vtl-core-version
 
 	if [ ! -f /quadstor/etc/quadstor-core-version ]; then
 		cp -f /var/www/html/vtindex.html /var/www/html/index.html

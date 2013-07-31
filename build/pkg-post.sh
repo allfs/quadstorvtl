@@ -42,7 +42,7 @@ mkdir -p $htdocs/quadstorvtl
 cp -fr /quadstorvtl/httpd/www/quadstorvtl/* $htdocs/quadstorvtl/
 cp -f /quadstorvtl/httpd/cgi-bin/* $cgibin/
 mkdir -p /quadstorvtl/etc
-echo "2.2.9 for FreeBSD 9.0" > /quadstorvtl/etc/quadstor-vtl-core-version
+echo "2.2.10 for FreeBSD 9.0" > /quadstorvtl/etc/quadstor-vtl-core-version
 
 if [ ! -f /quadstor/etc/quadstor-core-version ]; then
 	cp -f $htdocs/vtindex.html $htdocs/index.html
