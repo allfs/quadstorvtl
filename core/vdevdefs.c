@@ -305,7 +305,7 @@ get_device(uint32_t fc_bus)
 
 	mtx_lock(tdevice_lookup_lock);
 	tdevice = tdevices[bus];
-	if (!tdevice) {
+	if (!tdevice || (target_id && tdevice->type != T_CHANGER)) {
 		mtx_unlock(tdevice_lookup_lock);
 		return NULL;
 	}
