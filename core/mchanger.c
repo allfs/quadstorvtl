@@ -844,11 +844,13 @@ static int
 mchanger_evpd_inquiry_data(struct mchanger *mchanger, struct qsio_scsiio *ctio, uint8_t page_code, uint16_t allocation_length)
 {
 	int retval;
+	uint16_t max_allocation_length;
 
-	ctio_allocate_buffer(ctio, allocation_length, Q_WAITOK);
+	max_allocation_length = max_t(uint16_t, 64, allocation_length);
+	ctio_allocate_buffer(ctio, max_allocation_length, Q_WAITOK);
 	if (!ctio->data_ptr)
 		return -1;
-	bzero(ctio->data_ptr, allocation_length);
+	bzero(ctio->data_ptr, ctio->dxfer_len);
 
 	switch (page_code) {
 	case VITAL_PRODUCT_DATA_PAGE:
