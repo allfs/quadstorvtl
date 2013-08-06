@@ -418,7 +418,7 @@ static int write_data(struct iscsi_conn *conn)
 #ifdef LINUX
 	sendpage = sock->ops->sendpage ? : sock_no_sendpage;
 #endif
-	flags = MSG_DONTWAIT;
+	flags = MSG_DONTWAIT | MSG_NOSIGNAL;
 
 	while (1) {
 		sendsize = PAGE_CACHE_SIZE - offset;

@@ -885,7 +885,7 @@ void iscsi_cmnd_send_pdu(struct iscsi_conn *conn, struct iscsi_cmnd *cmnd)
 }
 
 static int 
-read_ctio_skip_data(struct iscsi_conn *conn)
+read_ctio_skip_data(struct iscsi_conn *conn, int *ret_done)
 {
 	__u8 *buffer;
 	struct msghdr msg;
@@ -894,7 +894,7 @@ read_ctio_skip_data(struct iscsi_conn *conn)
 	mm_segment_t oldfs;
 #else
 	struct uio uio;
-	int flags = MSG_WAITALL;
+	int flags = MSG_DONTWAIT | MSG_NOSIGNAL;
 #endif
 	int res;
 
@@ -904,7 +904,7 @@ read_ctio_skip_data(struct iscsi_conn *conn)
 	msg.msg_iovlen = 1;
 	msg.msg_control = NULL;
 	msg.msg_controllen = 0;
-	msg.msg_flags = MSG_WAITALL;
+	msg.msg_flags = MSG_DONTWAIT | MSG_NOSIGNAL;
 
 
 	while (conn->read_size)
@@ -924,7 +924,7 @@ read_ctio_skip_data(struct iscsi_conn *conn)
 #ifdef LINUX
 		oldfs = get_fs();
 		set_fs(get_ds());
-		res = sock_recvmsg(conn->sock, &msg, iov[0].iov_len, MSG_WAITALL);
+		res = sock_recvmsg(conn->sock, &msg, iov[0].iov_len, MSG_DONTWAIT | MSG_NOSIGNAL);
 		set_fs(oldfs);
 #else
 		uio_fill(&uio, iov, 1, min, UIO_READ);
@@ -932,12 +932,20 @@ read_ctio_skip_data(struct iscsi_conn *conn)
 		map_result(&res, &uio, min, 1);
 #endif
 		free(buffer, M_IET);
-		if (res != min) {
-			DEBUG_WARN("read_ctio_skip_data: read %d failed asked %d\n", res, min);
+		if (res <= 0) {
+			switch (res) {
+			case -EAGAIN:
+			case -ERESTARTSYS:
+				return 0;
+			default:
+				break;
+			}
+			DEBUG_WARN_NEW("read %d failed asked %d\n", res, min);
 			return -1;
 		}
 		conn->read_size -= res;
 		conn->read_offset += res;
+		*(ret_done) += res;
 	}
 	return 0;
 }
@@ -1035,6 +1043,9 @@ int do_recv_ctio(struct iscsi_conn *conn, int state)
 	int flags = MSG_DONTWAIT | MSG_NOSIGNAL;
 #endif
 
+	if (conn->read_offset >= ctio->dxfer_len && conn->read_size)
+		goto skip_data;
+
 	if (ctio->pglist_cnt)
 	{
 		done = do_recv_pglist(conn);
@@ -1058,11 +1069,11 @@ int do_recv_ctio(struct iscsi_conn *conn, int state)
 			msg.msg_iovlen = 1;
 			msg.msg_control = NULL;
 			msg.msg_controllen = 0;
-			msg.msg_flags = MSG_DONTWAIT;
+			msg.msg_flags = MSG_DONTWAIT | MSG_NOSIGNAL;
 
 			oldfs = get_fs();
 			set_fs(get_ds());
-			done = sock_recvmsg(conn->sock, &msg, iov[0].iov_len, MSG_DONTWAIT);
+			done = sock_recvmsg(conn->sock, &msg, iov[0].iov_len, MSG_DONTWAIT | MSG_NOSIGNAL);
 			set_fs(oldfs);
 #else
 			uio_fill(&uio, iov, 1, iov_len, UIO_READ);
@@ -1088,28 +1099,26 @@ int do_recv_ctio(struct iscsi_conn *conn, int state)
 		}
 	}
 
-	if (conn->read_offset == ctio->dxfer_len && conn->read_size)
+skip_data:
+	if (conn->read_offset >= ctio->dxfer_len && conn->read_size)
 	{
 		int retval;
-		__u32 diff = conn->read_size;
+		int skip_done = 0;
 
-		retval = read_ctio_skip_data(conn);
+		retval = read_ctio_skip_data(conn, &skip_done);
 		if (retval != 0) {
 			DEBUG_WARN("do_recv_ctio: reading trailing bytes failed\n");
 			(*icbs.ctio_free_data)(conn->read_ctio);
 			conn->read_ctio = NULL;
 			conn_close(conn);
-			return done;
+			return retval; 
 		}
-		done += diff;
+		done += skip_done;
 	}
 
 
 	if (!conn->read_size)
 		conn->read_state = state;
-
-	if (conn->read_offset >= ctio->dxfer_len)
-		conn->read_cmnd->r2t_length = 0;
 
 	return done;
 }
@@ -1212,7 +1221,7 @@ int do_send_ctio(struct iscsi_conn *conn, int state)
 	msg.msg_iovlen = 1;
 	msg.msg_control = NULL;
 	msg.msg_controllen = 0;
-	msg.msg_flags = MSG_DONTWAIT;
+	msg.msg_flags = MSG_DONTWAIT | MSG_NOSIGNAL;
 #endif
 
 	if (rsp_hdr->cmd_status == SAM_STAT_CHECK_CONDITION)
@@ -1275,7 +1284,7 @@ again:
 				min = pgtmp->pg_len - pg_offset;
 
 #ifdef LINUX
-			flags = MSG_DONTWAIT;
+			flags = MSG_DONTWAIT | MSG_NOSIGNAL;
 			if (i != write_cmnd->end_pg_idx)
 			{
 				flags |= MSG_MORE;	
