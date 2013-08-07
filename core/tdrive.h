@@ -362,6 +362,9 @@ ctio_write_length(struct qsio_scsiio *ctio, struct tdevice *tdevice, uint32_t *b
 	uint8_t fixed;
 	uint32_t transfer_length;
 
+	if (tdevice->type != T_SEQUENTIAL)
+		return -1;
+
 	switch (cdb[0]) {
 		case WRITE_6:
 			fixed = READ_BIT(cdb[1], 0);
