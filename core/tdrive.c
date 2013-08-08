@@ -824,6 +824,9 @@ tdrive_cmd_inquiry(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 		return 0;
 	}
 
+	if (!allocation_length)
+		return 0;
+
 	if (!evpd)
 		retval = tdrive_standard_inquiry_data(tdrive, ctio, allocation_length);
 	else

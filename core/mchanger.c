@@ -912,6 +912,9 @@ mchanger_cmd_inquiry(struct mchanger *mchanger, struct qsio_scsiio *ctio)
 		return 0;
 	}
 
+	if (!allocation_length)
+		return 0;
+
 	if (!evpd)
 		retval = mchanger_standard_inquiry_data(mchanger, ctio, allocation_length);
 	else
