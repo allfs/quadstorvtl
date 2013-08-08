@@ -543,6 +543,39 @@ build_mount_list(void)
 }
 
 static int
+build_multipath(void)
+{
+	char buf[512];
+	char tdevname[256];
+	char devname[264];
+	FILE *fp;
+	char *tmp;
+
+	fp = popen("multipath -ll", "r");
+	if (!fp)
+		return 0;
+
+	while (fgets(buf, sizeof(buf), fp) != NULL) {
+		if (strncmp(buf, "size=", strlen("size=")) == 0)
+			continue;
+		if (buf[0] != '|' && buf[0] != '`' && buf[0] != ' ')
+			continue;
+		if (strstr(buf, "policy="))
+			continue;
+		tmp = strstr(buf, "`- ");
+		if (!tmp)
+			continue;
+		tmp += 3;
+		if (sscanf(tmp, "%*d:%*d:%*d:%*d %s ", tdevname) != 1)
+			continue;
+		snprintf(devname, sizeof(devname), "/dev/%s", tdevname);
+		ignore_dev_add(devname, 1);
+	}
+	pclose(fp);
+	return 0;
+}
+
+static int
 build_pvs(void)
 {
 	char buf[512];
@@ -562,7 +595,6 @@ build_pvs(void)
 	}
 	pclose(fp);
 	return 0;
-
 }
 
 static int
@@ -1488,6 +1520,44 @@ tl_common_scan_raiddisk(struct d_list *tmp_disk_list)
 }
 #else 
 int
+tl_common_scan_multipath(struct d_list *tmp_disk_list)
+{
+	char buf[512];
+	char tdevname[256];
+	char devname[264];
+	int id;
+	FILE *fp;
+	char *tmp;
+
+	fp = popen("multipath -ll", "r");
+	if (!fp)
+		return 0;
+
+	while (fgets(buf, sizeof(buf), fp) != NULL) {
+		if (strncmp(buf, "size=", strlen("size=")) == 0)
+			continue;
+		if (buf[0] == '|' || buf[0] == '`' || buf[0] == ' ')
+			continue;
+		if (strncmp(buf, "mpath", strlen("mpath")) == 0) {
+			if (sscanf(buf, "%s", tdevname) != 1)
+				continue;
+			snprintf(devname, sizeof(devname), "/dev/mapper/%s", tdevname);
+		} else {
+			tmp = strstr(buf, "dm-");
+			if (!tmp)
+				continue;
+			if (sscanf(tmp, "dm-%d ", &id) != 1)
+				continue;
+			snprintf(devname, sizeof(devname), "/dev/dm-%d", id);
+		}
+		add_disk(devname, "DM", "MULTIPATH", NULL, 0, tmp_disk_list, 1, 1, 0, NULL, 0);
+	}
+	pclose(fp);
+	return 0;
+
+}
+
+int
 tl_common_scan_lvs(struct d_list *tmp_disk_list)
 {
 	FILE *fp;
@@ -1748,6 +1818,7 @@ tl_common_scan_physdisk(void)
 	build_swap_list();
 	build_mount_list();
 #ifdef LINUX
+	build_multipath();
 	build_pvs();
 #else
 	build_gmirror_list();
@@ -1767,6 +1838,7 @@ tl_common_scan_physdisk(void)
 #else
 	tl_common_scan_controller("/dev/cciss", "HP", "Smart Array", "c[0-9].*d[0-9].*", &tmp_disk_list);
 	tl_common_scan_lvs(&tmp_disk_list);
+	tl_common_scan_multipath(&tmp_disk_list);
 #endif
 	tl_common_scan_zvol(&tmp_disk_list);
 
