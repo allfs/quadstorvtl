@@ -737,6 +737,18 @@ tdrive_copy_extended_inquiry_vpd_page(struct qsio_scsiio *ctio, uint16_t allocat
 }
 
 static int
+tdrive_vendor_specific_page2(struct qsio_scsiio *ctio, uint16_t allocation_length)
+{
+	struct vendor_specific_page *page;
+
+	page = (struct vendor_specific_page *)(ctio->data_ptr);
+	page->device_type = T_SEQUENTIAL; /* peripheral qualifier */
+	page->page_code = VENDOR_SPECIFIC_PAGE2;
+	page->page_length = allocation_length - sizeof(struct vendor_specific_page);
+	return allocation_length; 
+}
+
+static int
 tdrive_evpd_inquiry_data(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint8_t page_code, uint16_t allocation_length)
 {
 	int retval;
@@ -760,6 +772,9 @@ tdrive_evpd_inquiry_data(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint8_
 		break;
 	case EXTENDED_INQUIRY_VPD_PAGE:
 		retval = tdrive_copy_extended_inquiry_vpd_page(ctio, allocation_length);
+		break;
+	case VENDOR_SPECIFIC_PAGE2:
+		retval = tdrive_vendor_specific_page2(ctio, allocation_length);
 		break;
 	default:
 		if (tdrive->handlers.evpd_inquiry)
