@@ -1,5 +1,5 @@
 Package: quadstor-vtl-core
-Version: 2.2.10 
+Version: 2.2.11 
 Section: base
 Priority: optional
 Architecture: amd64 

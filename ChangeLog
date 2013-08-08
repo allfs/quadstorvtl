@@ -1,3 +1,8 @@
+Release 2.2.11
+	* Add back vendor specific page
+	* Fix kernel panic over FC when standalone VDrives are configured
+	* Fix for sock read failures when MSG_WAITALL is specified
+
 Release 2.2.10
 	* Fix for possible infinite wait for IO completion
 	* Fix for reformatting of multi partition vcartridges
