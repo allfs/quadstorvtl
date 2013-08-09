@@ -939,7 +939,6 @@ static inline int test_tgt_sess_count(struct qla_tgt *tgt)
 	return res;
 }
 
-#if 0
 /* Called by tcm_qla2xxx configfs code */
 void qlt_stop_phase1(struct qla_tgt *tgt)
 {
@@ -963,7 +962,9 @@ void qlt_stop_phase1(struct qla_tgt *tgt)
 	mutex_lock(&ha->tgt.tgt_mutex);
 	spin_lock_irqsave(&ha->hardware_lock, flags);
 	tgt->tgt_stop = 1;
+#if 0
 	qlt_clear_tgt_db(tgt, true);
+#endif
 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
 	mutex_unlock(&ha->tgt.tgt_mutex);
 
@@ -1028,17 +1029,15 @@ void qlt_stop_phase2(struct qla_tgt *tgt)
 	    tgt);
 }
 EXPORT_SYMBOL(qlt_stop_phase2);
-#endif
 
 /* Called from qlt_remove_target() -> qla2x00_remove_one() */
 static void qlt_release(struct qla_tgt *tgt)
 {
 	struct qla_hw_data *ha = tgt->ha;
 
-#if 0
+	qlt_stop_phase1(tgt);
 	if ((ha->tgt.qla_tgt != NULL) && !tgt->tgt_stopped)
 		qlt_stop_phase2(tgt);
-#endif
 
 	ha->tgt.qla_tgt = NULL;
 
@@ -2574,25 +2573,6 @@ static void qlt_do_ctio_completion(struct scsi_qla_host *vha, uint32_t handle,
 	}
 
 	ha->tgt.tgt_ops->free_cmd(cmd);
-}
-
-/* ha->hardware_lock supposed to be held on entry */
-/* called via callback from qla2xxx */
-void qlt_ctio_completion(struct scsi_qla_host *vha, uint32_t handle)
-{
-	struct qla_hw_data *ha = vha->hw;
-	struct qla_tgt *tgt = ha->tgt.qla_tgt;
-
-	if (likely(tgt == NULL)) {
-		ql_dbg(ql_dbg_tgt, vha, 0xe021,
-		    "CTIO, but target mode not enabled"
-		    " (ha %d %p handle %#x)", vha->vp_idx, ha, handle);
-		return;
-	}
-
-	tgt->irq_cmd_count++;
-	qlt_do_ctio_completion(vha, handle, CTIO_SUCCESS, NULL);
-	tgt->irq_cmd_count--;
 }
 
 static inline int qlt_get_fcp_task_attr(struct scsi_qla_host *vha,
