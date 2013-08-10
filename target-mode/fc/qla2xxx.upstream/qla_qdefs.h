@@ -58,7 +58,7 @@ extern struct qla_tgt_func_tmpl qla_sc_template;
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 0, 0)
 #define alloc_workqueue(nm, a, b)	create_workqueue(nm)
-#if (defined(RHEL_MAJOR) && RHEL_MAJOR == 6 && RHEL_MINOR < 4)
+#if (defined(RHEL_MAJOR) && RHEL_MAJOR == 6 && RHEL_MINOR < 3)
 #define usleep_range(x, y)		msleep((x)/1000)
 #define for_each_set_bit(bit, addr, size) for_each_bit(bit, addr, size)
 #endif
