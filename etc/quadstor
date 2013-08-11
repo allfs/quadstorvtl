@@ -16,6 +16,35 @@ stop_cmd="quadstorvtl_stop"
 status_cmd="quadstorvtl_status"
 rcvar=`set_rcvar`
 
+unload_module() {
+	/sbin/kldunload $1 > /dev/null 2>&1
+	modpresent=`/sbin/kldstat | grep $1`
+	tries="0"
+	while [ "$modpresent" != "" ]; do
+		sleep .1
+		/sbin/kldunload $1 > /dev/null 2>&1
+		if [ "$tries" = "50" ]; then
+			break
+		fi
+		tries=`expr $tries + 1`
+		modpresent=`/sbin/kldstat | grep $1`
+	done
+}
+
+kill_prog() {
+	pkill -f $1
+	progpid=`quadstorvtl/bin/pidof $1 2> /dev/null`
+	tries="0"
+	while [ "$progpid" != "" ]; do
+		sleep .1
+		if [ "$tries" = "50" ]; then
+			break
+		fi
+		tries=`expr $tries + 1`
+		progpid=`quadstorvtl/bin/pidof $1 2> /dev/null`
+	done
+}
+
 quadstorvtl_stop() {
 	if [ -f /quadstorvtl/quadstor.lock ]; then
 		echo "Waiting 60 seconds for lock"
@@ -24,22 +53,20 @@ quadstorvtl_stop() {
 
 	touch /quadstorvtl/quadstor.lock
 
-	if [ -f /quadstorvtl/etc/iscsit ]; then
-		/quadstorvtl/etc/iscsit stop > /dev/null 2>&1
-	fi
+	/quadstorvtl/bin/ietadm --op delete >/dev/null 2>/dev/null
+	kill_prog "/quadstorvtl/sbin/ietd"
 
 	echo -n $"Stopping $prog: "
 	/quadstorvtl/bin/scctl -u > /dev/null 2>&1
-	sleep 4 
 
-	pkill vtmdaemon
+	kill_prog "/quadstorvtl/sbin/vtmdaemon"
 	rm -f /quadstorvtl/.vtmdaemon
 
 	/quadstorvtl/pgsql/etc/pgsql stop
 
-	/sbin/kldunload iscsit > /dev/null 2>&1
-	/sbin/kldunload vtldev > /dev/null 2>&1
-	/sbin/kldunload vtlcore > /dev/null 2>&1
+	unload_module "iscsit"
+	unload_module "vtldev"
+	unload_module "vtlcore"
 	rm -f /tmp/.quadstortl.* > /dev/null 2>&1
 	rm -f /quadstorvtl/quadstor.lock
 }
@@ -70,14 +97,10 @@ quadstorvtl_start() {
 	touch /quadstorvtl/quadstor.lock
 	if [ -f /tmp/.s.PGSQL.9989 -o -f /tmp/.s.PGSQL.9989.lock ]; then
 		/quadstorvtl/pgsql/etc/pgsql stop > /dev/null 2>&1
-		sleep 1
-		rm -f /tmp/.s.PGSQL.9989*
-		sleep 1
 	fi
 
 	/quadstorvtl/pgsql/etc/pgsql start
 	check_error "Cannot start database"
-	sleep 10 
 
 	/sbin/kldload /quadstorvtl/lib/modules/vtlcore.ko > /dev/null 2>&1
 	check_error "Failed to insert core module"
@@ -85,21 +108,18 @@ quadstorvtl_start() {
 	/sbin/kldload /quadstorvtl/lib/modules/vtldev.ko > /dev/null 2>&1 
 	check_error "Failed to insert vtldev module"
 
-	if [ -f /quadstorvtl/lib/modules/iscsit.ko ]; then
-		/sbin/kldload /quadstorvtl/lib/modules/iscsit.ko > /dev/null 2>&1
-		check_error "Failed to insert iscsi target module"
-	fi
+	/sbin/kldload /quadstorvtl/lib/modules/iscsit.ko > /dev/null 2>&1
+	check_error "Failed to insert iscsi target module"
 
-	pkill vtmdaemon
+	daemon /quadstorvtl/sbin/ietd
+
 	export PATH=$PATH:/quadstorvtl/bin
+	rm -f /quadstorvtl/.vtmdaemon
 	/quadstorvtl/sbin/vtmdaemon > /dev/null 2>&1
 	check_error "Cannot start master daemon"
 
-	if [ -f /quadstorvtl/lib/modules/iscsit.ko ]; then
-		/quadstorvtl/etc/iscsit start
-	fi
+	sleep 5
 
-	sleep 10 
 	/quadstorvtl/bin/scctl -l > /dev/null 2>&1
 	rm -f /quadstorvtl/quadstor.lock
 }

@@ -45,7 +45,6 @@ install -m 755 -d $DEBIAN_ROOT/quadstorvtl/etc/iet/
 install -m 644 /quadstorvtl/quadstor/target-mode/iscsi/etc/targets.allow $DEBIAN_ROOT/quadstorvtl/etc/iet/targets.allow.sample
 install -m 644 /quadstorvtl/quadstor/target-mode/iscsi/etc/initiators.allow $DEBIAN_ROOT/quadstorvtl/etc/iet/initiators.allow.sample
 install -m 644 /quadstorvtl/quadstor/target-mode/iscsi/etc/ietd.conf $DEBIAN_ROOT/quadstorvtl/etc/iet/ietd.conf.sample
-install -m 755 /quadstorvtl/quadstor/target-mode/iscsi/etc/initd/initd.redhat $DEBIAN_ROOT/quadstorvtl/etc/initd.iscsi
 
 install -m 755 -d $DEBIAN_ROOT/quadstorvtl/src/target-mode/fc/common
 install -m 644 /quadstorvtl/quadstor/target-mode/fc/common/fccommon.c $DEBIAN_ROOT/quadstorvtl/src/target-mode/fc/common/

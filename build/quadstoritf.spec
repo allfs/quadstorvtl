@@ -51,7 +51,6 @@ mkdir -p $RPM_BUILD_ROOT/quadstorvtl/etc/iet/
 install -m 755 /quadstorvtl/quadstor/target-mode/iscsi/etc/targets.allow $RPM_BUILD_ROOT/quadstorvtl/etc/iet/targets.allow.sample
 install -m 755 /quadstorvtl/quadstor/target-mode/iscsi/etc/initiators.allow $RPM_BUILD_ROOT/quadstorvtl/etc/iet/initiators.allow.sample
 install -m 755 /quadstorvtl/quadstor/target-mode/iscsi/etc/ietd.conf $RPM_BUILD_ROOT/quadstorvtl/etc/iet/ietd.conf.sample
-install -m 744 /quadstorvtl/quadstor/target-mode/iscsi/etc/initd/initd.redhat $RPM_BUILD_ROOT/quadstorvtl/etc/initd.iscsi
 
 mkdir -p $RPM_BUILD_ROOT/quadstorvtl/src/target-mode/fc/common
 install -m 744 /quadstorvtl/quadstor/target-mode/fc/common/fccommon.c $RPM_BUILD_ROOT/quadstorvtl/src/target-mode/fc/common/
@@ -81,7 +80,7 @@ install -m 755 /quadstorvtl/quadstor/scripts/qlauninst $RPM_BUILD_ROOT/quadstorv
 	echo "2.2.11 for RHEL/CentOS 5.x" > /quadstorvtl/etc/quadstor-vtl-itf-version
 	echo "Building required kernel modules"
 	echo "Running /quadstorvtl/bin/builditf"
-	sleep 5
+	sleep 2
 	/quadstorvtl/bin/builditf
 
 %preun
@@ -123,7 +122,6 @@ install -m 755 /quadstorvtl/quadstor/scripts/qlauninst $RPM_BUILD_ROOT/quadstorv
 /quadstorvtl/etc/iet/ietd.conf.sample
 /quadstorvtl/etc/iet/initiators.allow.sample
 /quadstorvtl/etc/iet/targets.allow.sample
-/quadstorvtl/etc/initd.iscsi
 /quadstorvtl/bin/builditf
 /quadstorvtl/bin/qlainst
 /quadstorvtl/bin/qlauninst

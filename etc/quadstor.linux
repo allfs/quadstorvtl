@@ -16,8 +16,10 @@
 # Description:			Start/Stop QUADStor VTL services
 ### END INIT INFO
 
-if [ -f /etc/rc.d/init.d/functions ]; then
-. /etc/rc.d/init.d/functions
+if [ -f /etc/init.d/functions ] ; then
+  . /etc/init.d/functions
+elif [ -f /etc/rc.d/init.d/functions ] ; then
+  . /etc/rc.d/init.d/functions
 fi
 
 prog=quadstorvtl
@@ -36,6 +38,41 @@ PIDOF="/sbin/pidof"
 if [ ! -f /sbin/pidof ]; then
 	PIDOF="/bin/pidof"
 fi
+
+DAEMON_CMD="daemon"
+if [ -f /sbin/start-stop-daemon ]; then
+        DAEMON_CMD="/sbin/start-stop-daemon --start --quiet --exec"
+fi
+
+unload_module() {
+	/sbin/rmmod $1 > /dev/null 2>&1
+	modpresent=`/sbin/lsmod | grep $1`
+	tries="0"
+	while [ "$modpresent" != "" ]; do
+		sleep .1
+		/sbin/rmmod $1 > /dev/null 2>&1
+		if [ "$tries" = "50" ]; then
+			break
+		fi
+		tries=`expr $tries + 1`
+		modpresent=`/sbin/lsmod | grep $1`
+	done
+}
+
+kill_prog() {
+	pkill -f $1
+	progpid=`$PIDOF $1 2> /dev/null`
+	tries="0"
+	while [ "$progpid" != "" ]; do
+		sleep .1
+		if [ "$tries" = "50" ]; then
+			break
+		fi
+		tries=`expr $tries + 1`
+		progpid=`$PIDOF $1 2> /dev/null`
+	done
+}
+
 start() {
 
 	vtmdaemonpid=`$PIDOF /quadstorvtl/sbin/vtmdaemon 2> /dev/null`
@@ -67,14 +104,10 @@ start() {
 
 	if [ -f /tmp/.s.PGSQL.9989 -o -f /tmp/.s.PGSQL.9989.lock ]; then
 		/quadstorvtl/pgsql/etc/pgsql stop > /dev/null 2>&1
-		sleep 1
-		rm -f /tmp/.s.PGSQL.9989*
-		sleep 1
 	fi
 
 	/quadstorvtl/pgsql/etc/pgsql start
 	check_error "Cannot start database"
-	sleep 10 
 
 	/sbin/modprobe -q scsi_mod > /dev/null 2>&1
 	/sbin/modprobe -q sg > /dev/null 2>&1
@@ -97,15 +130,15 @@ start() {
 	/sbin/insmod /quadstorvtl/lib/modules/$kvers/iscsit.ko > /dev/null 2>&1
 	check_error "Failed to insert iscsi target module"
 
-	pkill vtmdaemon
+	$DAEMON_CMD /quadstorvtl/sbin/ietd
+
 	export PATH=$PATH:/quadstorvtl/bin:/sbin:/usr/sbin
 	rm -f /quadstorvtl/.vtmdaemon
 	/quadstorvtl/sbin/vtmdaemon > /dev/null 2>&1
 	check_error "Cannot start master daemon"
 
-	/quadstorvtl/etc/initd.iscsi start
+	sleep 5 
 
-	sleep 10 
 	/quadstorvtl/bin/scctl -l > /dev/null 2>&1
 
 	if [ -d /var/lock/subsys ]; then
@@ -115,20 +148,19 @@ start() {
 
 stop() {
 	echo -n $"Stopping $prog: "
-	/quadstorvtl/etc/initd.iscsi stop > /dev/null 2>&1
+	/quadstorvtl/bin/ietadm --op delete >/dev/null 2>/dev/null
+	kill_prog "/quadstorvtl/sbin/ietd"
 
 	/quadstorvtl/bin/scctl -u > /dev/null 2>&1
-	sleep 10 
 
-	pkill vtmdaemon
+	kill_prog "/quadstorvtl/sbin/vtmdaemon"
 	rm -f /quadstorvtl/.vtmdaemon
 
 	/quadstorvtl/pgsql/etc/pgsql stop
 
-	/sbin/rmmod iscsit > /dev/null 2>&1
-	/sbin/rmmod vtldev > /dev/null 2>&1
-	sleep 2
-	/sbin/rmmod vtlcore > /dev/null 2>&1
+	unload_module "iscsit"
+	unload_module "vtldev"
+	unload_module "vtlcore"
 	rm -f /tmp/.quadstortl.* > /dev/null 2>&1
 	rm -f /var/lock/subsys/quadstorvtl
 }

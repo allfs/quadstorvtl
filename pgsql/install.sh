@@ -40,15 +40,5 @@ mkdir -p $DESTDIR/quadstorvtl/pgsql/data
 
 rm -rf $DESTDIR/quadstorvtl/pgsql/etc
 mkdir -p $DESTDIR/quadstorvtl/pgsql/etc
-if [ "$os" = "FreeBSD" ]; then
-	cp etc/pgsql $DESTDIR/quadstorvtl/pgsql/etc/pgsql
-elif [ -f /etc/debian_version ];then
-	cp etc/pgsql $DESTDIR/quadstorvtl/pgsql/etc/pgsql
-elif [ -f /etc/SuSE-release ];then
-	cp etc/pgsql $DESTDIR/quadstorvtl/pgsql/etc/pgsql
-elif [ -f /etc/redhat-release ]; then
-	cp etc/pgsql.linux $DESTDIR/quadstorvtl/pgsql/etc/pgsql
-else
-	cp etc/pgsql $DESTDIR/quadstorvtl/pgsql/etc/pgsql
-fi
+cp etc/pgsql $DESTDIR/quadstorvtl/pgsql/etc/pgsql
 chmod +x $DESTDIR/quadstorvtl/pgsql/etc/pgsql

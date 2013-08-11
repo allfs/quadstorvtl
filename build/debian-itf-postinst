@@ -17,5 +17,5 @@ echo "2.2.11 for Debian" > /quadstorvtl/etc/quadstor-vtl-itf-version
 
 echo "Building required kernel modules"
 echo "Running /quadstorvtl/bin/builditf"
-sleep 5
+sleep 2
 /quadstorvtl/bin/builditf
