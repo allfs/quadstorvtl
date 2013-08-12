@@ -13,7 +13,7 @@ fi
 if [ ! -f /quadstorvtl/etc/iet/ietd.conf ]; then
 	cp /quadstorvtl/etc/iet/ietd.conf.sample /quadstorvtl/etc/iet/ietd.conf
 fi
-echo "2.2.11 for Debian" > /quadstorvtl/etc/quadstor-vtl-itf-version
+echo "2.2.12 for Debian" > /quadstorvtl/etc/quadstor-vtl-itf-version
 
 echo "Building required kernel modules"
 echo "Running /quadstorvtl/bin/builditf"

@@ -1,6 +1,6 @@
 Summary: QuadStor Virtual Tape Library
 Name: quadstor-vtl-itf
-Version: 2.2.11
+Version: 2.2.12
 Release: sles11sp1
 Source0: %{name}-%{version}.tar.gz
 License: None 
@@ -77,7 +77,7 @@ install -m 755 /quadstorvtl/quadstor/scripts/qlauninst $RPM_BUILD_ROOT/quadstorv
 	if [ ! -f /quadstorvtl/etc/iet/ietd.conf ]; then
 		cp /quadstorvtl/etc/iet/ietd.conf.sample /quadstorvtl/etc/iet/ietd.conf
 	fi
-	echo "2.2.11 for SLES 11 SP1" > /quadstorvtl/etc/quadstor-vtl-itf-version
+	echo "2.2.12 for SLES 11 SP1" > /quadstorvtl/etc/quadstor-vtl-itf-version
 
 	echo "Building required kernel modules"
 	echo "Running /quadstorvtl/bin/builditf"

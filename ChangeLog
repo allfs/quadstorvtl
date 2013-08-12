@@ -1,3 +1,8 @@
+Release 2.2.12
+	* Fibre channel fixes and merge with upstream
+	* Faster startup and shutdown
+	* Allow configuring multipath devices on linux
+
 Release 2.2.11
 	* Add back vendor specific page
 	* Fix kernel panic over FC when standalone VDrives are configured
