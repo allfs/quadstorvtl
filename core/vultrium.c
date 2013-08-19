@@ -500,7 +500,7 @@ vultrium_performance_characteristics_log_sense(struct tdrive *tdrive, uint8_t *b
 	done = min_t(int, sizeof(page), buffer_length);
 
 	val8 = 1;
-	WRITE_LOG_COUNTER32(parameter_pointer, buffer, buffer_length, done, page_length, 0x0001, val8);
+	WRITE_LOG_COUNTER8(parameter_pointer, buffer, buffer_length, done, page_length, 0x0001, val8);
 
 	page.page_length = htobe16(page_length);
 	min_len = min_t(int, sizeof(page), buffer_length);
@@ -535,7 +535,7 @@ vultrium_volume_statistics_log_sense(struct tdrive *tdrive, uint8_t *buffer, uin
 	WRITE_LOG_COUNTER32(parameter_pointer, buffer, buffer_length, done, page_length, 0x0001, val32);
 
 	val64 = tape_get_datasets_written(tape);
-	WRITE_LOG_COUNTER32(parameter_pointer, buffer, buffer_length, done, page_length, 0x0002, val64);
+	WRITE_LOG_COUNTER64(parameter_pointer, buffer, buffer_length, done, page_length, 0x0002, val64);
 
 	val32 = 0;
 	WRITE_LOG_COUNTER32(parameter_pointer, buffer, buffer_length, done, page_length, 0x0003, val32);
