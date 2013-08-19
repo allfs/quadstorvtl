@@ -618,7 +618,7 @@ blk_map_locate_file(struct blk_map *map, uint64_t block_address)
 		f_ids_start++;
 	}
 	map->c_entry = NULL;
-	return BLANK_CHECK_ENCOUNTERED;
+	return EOD_REACHED;
 }
 
 int
@@ -639,7 +639,7 @@ blk_map_locate(struct blk_map *map, uint64_t block_address)
 	if (entry && (block_address == (entry->lid_start + 1)))
 		return 0;
 	else
-		return BLANK_CHECK_ENCOUNTERED;
+		return EOD_REACHED;
 }
 
 void

@@ -1001,7 +1001,7 @@ tape_partition_locate(struct tape_partition *partition, uint64_t block_address, 
 		if (!block_address)
 			return 0;
 		else
-			return BLANK_CHECK_ENCOUNTERED;
+			return EOD_REACHED;
 	}
 
 	switch (locate_type) {
@@ -1126,7 +1126,7 @@ tape_partition_space(struct tape_partition *partition, uint8_t code, int *count)
 		if (*count < 0)
 			return BOM_REACHED;
 		else
-			return BLANK_CHECK_ENCOUNTERED;
+			return EOD_REACHED;
 	}
 
 	if (code == SPACE_CODE_END_OF_DATA)

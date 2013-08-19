@@ -1024,7 +1024,7 @@ __tdrive_cmd_locate(struct tdrive *tdrive, struct qsio_scsiio *ctio, uint64_t bl
 		return 0; /* Always check for retval == 0 first */
 
 	switch (retval) {
-	case BLANK_CHECK_ENCOUNTERED:
+	case EOD_REACHED:
 		ctio_construct_sense(ctio, SSD_CURRENT_ERROR,
 				SSD_KEY_BLANK_CHECK, 0,
 				EOD_DETECTED_ASC, EOD_DETECTED_ASCQ);
