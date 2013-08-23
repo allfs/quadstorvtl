@@ -100,9 +100,21 @@ int event_send(u32 tid, u64 sid, u32 cid, u32 state, int atomic)
 	return err;
 }
 
+
 int event_init(void)
 {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,6,0))
+struct netlink_kernel_cfg cfg = {
+	.groups = 1,
+	.input = event_recv_skb,
+};
+#endif
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,7,0))
+	nl = netlink_kernel_create(&init_net, NETLINK_IET, &cfg);
+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(3,6,0))
+	nl = netlink_kernel_create(&init_net, NETLINK_IET, THIS_MODULE, &cfg);
+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
 	nl = netlink_kernel_create(&init_net, NETLINK_IET, 1, event_recv_skb, NULL, THIS_MODULE);
 #elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23))
 	nl = netlink_kernel_create(NETLINK_IET, 1, event_recv, NULL, THIS_MODULE);

@@ -19,6 +19,7 @@
 #include <linuxdefs.h>
 #include <exportdefs.h>
 #include <missingdefs.h>
+#include <scsi/scsi_device.h>
 #include <scsi/scsi_transport_fc.h>
 #include "fcq.h"
 #include "qla_sc.h"

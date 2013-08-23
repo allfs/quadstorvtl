@@ -43,6 +43,7 @@
 #include <rdma/ib_sa.h>
 #include <rdma/ib_cm.h>
 
+#include <scsi/scsi_cmnd.h>
 #include <scsi/srp.h>
 #include <linuxdefs.h>
 #include <exportdefs.h>

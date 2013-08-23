@@ -23,6 +23,7 @@
 #include <exportdefs.h>
 #include <missingdefs.h>
 #include <scsi/scsi_cmnd.h>
+#include <scsi/scsi_device.h>
 #include <scsi/scsi_transport_fc.h>
 #include "ib_srpt.h"
 

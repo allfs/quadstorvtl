@@ -19,7 +19,6 @@
 #include <linuxdefs.h>
 #include <exportdefs.h>
 #include <missingdefs.h>
-#include <scsi/scsi_cmnd.h>
 #include "ib_srpt.h"
 #include "ib_sc.h"
 #include "qla_sc.h"

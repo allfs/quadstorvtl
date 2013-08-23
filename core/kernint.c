@@ -131,23 +131,23 @@ exit_caches(void)
 {
 	debug_print("free tape_cache\n");
 	if (tape_cache)
-		__uma_zdestroy("tape cache", tape_cache);
+		__uma_zdestroy("tape_cache", tape_cache);
 
 	debug_print("free tape_partition_cache\n");
 	if (tape_partition_cache)
-		__uma_zdestroy("tape_partition cache", tape_partition_cache);
+		__uma_zdestroy("tape_partition_cache", tape_partition_cache);
 
 	debug_print("free bentry_cache\n");
 	if (bentry_cache)
-		__uma_zdestroy("bentry cache", bentry_cache);
+		__uma_zdestroy("bentry_cache", bentry_cache);
 
 	debug_print("free bmap_cache\n");
 	if (bmap_cache)
-		__uma_zdestroy("bmap cache", bmap_cache);
+		__uma_zdestroy("bmap_cache", bmap_cache);
 
 	debug_print("free map_lookup_cache\n");
 	if (map_lookup_cache)
-		__uma_zdestroy("map_lookup cache", map_lookup_cache);
+		__uma_zdestroy("map_lookup_cache", map_lookup_cache);
 
 	debug_print("free tcache_cache\n");
 	if (tcache_cache)
@@ -206,39 +206,39 @@ do {							\
 static int
 init_caches(void)
 {
-	CREATE_CACHE(tape_cache, "tape cache", sizeof(struct tape));
+	CREATE_CACHE(tape_cache, "tape_cache", sizeof(struct tape));
 	if (!tape_cache) {
-		debug_warn("Cannot create tape cache\n");
+		debug_warn("Cannot create tape_cache\n");
 		return -1;
 	}
 
-	CREATE_CACHE(tape_partition_cache, "tape_partition cache", sizeof(struct tape_partition));
+	CREATE_CACHE(tape_partition_cache, "tape_partition_cache", sizeof(struct tape_partition));
 	if (!tape_partition_cache) {
-		debug_warn("Cannot create tape_partition cache\n");
+		debug_warn("Cannot create tape_partition_cache\n");
 		return -1;
 	}
 
-	CREATE_CACHE(bentry_cache, "bentry cache", sizeof(struct blk_entry));
+	CREATE_CACHE(bentry_cache, "bentry_cache", sizeof(struct blk_entry));
 	if (!bentry_cache) {
-		debug_warn("Cannot create bentry cache\n");
+		debug_warn("Cannot create bentry_cache\n");
 		return -1;
 	}
 
-	CREATE_CACHE(bmap_cache, "bmap cache", sizeof(struct blk_map));
+	CREATE_CACHE(bmap_cache, "bmap_cache", sizeof(struct blk_map));
 	if (!bmap_cache) {
-		debug_warn("Cannot create bmap cache\n");
+		debug_warn("Cannot create bmap_cache\n");
 		return -1;
 	}
 
-	CREATE_CACHE(map_lookup_cache, "map lookup cache", sizeof(struct map_lookup));
+	CREATE_CACHE(map_lookup_cache, "map_lookup_cache", sizeof(struct map_lookup));
 	if (!map_lookup_cache) {
-		debug_warn("Cannot create map_lookup cache\n");
+		debug_warn("Cannot create map_lookup_cache\n");
 		return -1;
 	}
 
 	CREATE_CACHE(tcache_cache, "vt_qs_tcache", sizeof(struct tcache));
 	if (!tcache_cache) {
-		debug_warn("Cannot create tcache cache\n");
+		debug_warn("Cannot create tcache_cache\n");
 		return -1;
 	}
 
@@ -254,7 +254,7 @@ init_caches(void)
 
 	CREATE_CACHE(ctio_cache, "vt_ctio_cache", sizeof(struct qsio_scsiio));
 	if (!ctio_cache) {
-		debug_warn("Cannot create ctio cache\n");
+		debug_warn("Cannot create ctio_cache\n");
 		return -1;
 	}
 
@@ -265,7 +265,7 @@ init_caches(void)
 
 	CREATE_CACHE(pgdata_cache, "vt_pgdata_cache", sizeof(struct pgdata));
 	if (!pgdata_cache) {
-		debug_warn("Cannot create pgdata cache\n");
+		debug_warn("Cannot create pgdata_cache\n");
 		return -1;
 	}
 

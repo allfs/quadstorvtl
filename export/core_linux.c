@@ -1120,8 +1120,15 @@ thread_start(struct tpriv *tpriv)
 	if (current->io_context)
 		put_io_context(current->io_context);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0))
 	if (!(current->io_context = ioc_task_link(tpriv->data)))
 		tpriv->data = get_io_context(GFP_KERNEL, -1);
+#else
+	if (!tpriv->data)
+		tpriv->data = get_task_io_context(current, GFP_KERNEL, -1);
+	ioc_task_link(tpriv->data);
+	current->io_context = tpriv->data;
+#endif
 
 }
 
