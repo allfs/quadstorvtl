@@ -92,7 +92,7 @@ int main()
 		cgi_print_header_error_page("Insufficent CGI parameters. VSlots not specified");
 	}
 
-	strcpy(tempfile, "/tmp/.quadstoradvtlpst.XXXXXX");
+	strcpy(tempfile, MSKTEMP_PREFIX);
 	fd = mkstemp(tempfile);
 	if (fd == -1)
 	{

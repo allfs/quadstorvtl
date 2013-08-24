@@ -67,7 +67,7 @@ quadstorvtl_stop() {
 	unload_module "iscsit"
 	unload_module "vtldev"
 	unload_module "vtlcore"
-	rm -f /tmp/.quadstortl.* > /dev/null 2>&1
+	rm -f /quadstorvtl/tmp/.quadstortl.* > /dev/null 2>&1
 	rm -f /quadstorvtl/quadstor.lock
 }
 
@@ -94,6 +94,8 @@ quadstorvtl_start() {
 	
         echo -n $"Starting $prog: "
 
+	mkdir -p /quadstorvtl/tmp
+	chmod 777 /quadstorvtl/tmp
 	touch /quadstorvtl/quadstor.lock
 	if [ -f /tmp/.s.PGSQL.9989 -o -f /tmp/.s.PGSQL.9989.lock ]; then
 		/quadstorvtl/pgsql/etc/pgsql stop > /dev/null 2>&1

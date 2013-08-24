@@ -305,4 +305,6 @@ get_element_type_str(int type)
 		return "Unknown";
 	} 
 }
+
+#define MSKTEMP_PREFIX	"/quadstorvtl/tmp/.quadstortl.XXXXXX"
 #endif /* API_COMMON_H_ */

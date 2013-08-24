@@ -34,7 +34,7 @@ int main()
 	struct tdriveconf *driveconf;
 	char *cols[] = {"{ key: 'Name', sortable: true}", "{ key: 'Type', sortable: true}", "{ key: 'View', allowHTML: true }", NULL};
 
-	strcpy(tempfile, "/tmp/.quadstorlstvdr.XXXXXX");
+	strcpy(tempfile, MSKTEMP_PREFIX);
 	fd = mkstemp(tempfile);
 	if (fd == -1)
 		cgi_print_header_error_page("Internal processing error\n");

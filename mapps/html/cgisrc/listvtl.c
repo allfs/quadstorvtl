@@ -34,7 +34,7 @@ int main()
 	struct vtlconf *vtlconf;
 	char *cols[] = {"{ key: 'Name', sortable: true}", "{ key: 'Type', sortable: true}", "{ key: 'View', allowHTML: true }", NULL};
 
-	strcpy(tempfile, "/tmp/.quadstorlstvtl.XXXXXX");
+	strcpy(tempfile, MSKTEMP_PREFIX);
 	fd = mkstemp(tempfile);
 	if (fd == -1) {
 		cgi_print_header("Virtual Libraries", NULL, 1);

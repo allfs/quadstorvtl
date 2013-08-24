@@ -76,7 +76,7 @@ dump_fc_rule_list(void)
 	char vtl[40];
 	char wwpn[64];
 
-	strcpy(tempfile, "/tmp/.quadstorfcrllst.XXXXXX");
+	strcpy(tempfile, MSKTEMP_PREFIX);
 	fd = mkstemp(tempfile);
 	if (fd == -1) {
 		fprintf(stderr, "Internal system error\n");

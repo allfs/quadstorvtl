@@ -138,7 +138,7 @@ tl_client_list_disks(struct d_list *dlist, int msg_id)
 	int retval;
 
 	TAILQ_INIT(dlist);
-	strcpy(tempfile, "/tmp/.quadstoraddsk.XXXXXX");
+	strcpy(tempfile, MSKTEMP_PREFIX);
 	fd = mkstemp(tempfile);
 	if (fd == -1)
 		return -1;
@@ -171,7 +171,7 @@ tl_client_list_groups(struct group_list *group_list, int msg_id)
 
 	TAILQ_INIT(group_list);
 
-	strcpy(tempfile, "/tmp/.quadstorlstsg.XXXXXX");
+	strcpy(tempfile, MSKTEMP_PREFIX);
 	fd = mkstemp(tempfile);
 	if (fd == -1)
 		return -1;

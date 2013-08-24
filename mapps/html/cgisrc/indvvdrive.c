@@ -71,7 +71,7 @@ int main()
 
 	tl_id = atoi(tmp);
 
-	strcpy(tempfile, "/tmp/.quadstorindvvtl.XXXXXX");
+	strcpy(tempfile, MSKTEMP_PREFIX);
 	fd = mkstemp(tempfile);
 	if (fd == -1)
 		cgi_print_header_error_page("Internal processing error\n");

@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-	strcpy(tempfile, "/tmp/.quadstortl.XXXXXX");
+	strcpy(tempfile, MSKTEMP_PREFIX);
 	fd = mkstemp(tempfile);
 	if (fd == -1)
 	{

@@ -225,54 +225,6 @@ get_voltype(int drivetype)
 	return slottype_from_drivetype(drivetype);
 }
 
-void
-tl_trim(char *logfile)
-{
-	char tempfile[100];
-	int fd;
-	FILE *fp;
-	FILE *writefp;
-	int count = 0;
-	char buf[512];
-
-	strcpy(tempfile, "/tmp/.quadstortl.XXXXXX");
-	fd = mkstemp(tempfile);
-	if (fd == -1)
-	{
-		return;
-	}
-	close(fd);
-
-	fp = fopen(tempfile, "r");
-	if (!fp)
-	{
-		remove(tempfile);
-		return;
-	}
-
-	writefp = fopen(logfile, "w");
-	if (!writefp)
-	{
-		remove(tempfile);
-		fclose(fp);
-		return;
-	}
-
-	while (fgets(buf, sizeof(buf), fp) != NULL)
-	{
-		count++;
-		if (count < 512)
-		{
-			continue;
-		}
-		fprintf(writefp, "%.512s", buf);
-	}
-
-	remove(tempfile);
-	fclose(fp);
-	fclose(writefp);	
-}
-
 struct tdriveconf *
 parse_driveconf(FILE *fp)
 {

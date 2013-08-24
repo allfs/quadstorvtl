@@ -8,6 +8,9 @@ checkerror() {
 	fi
 }
 
+mkdir -p /quadstorvtl/tmp
+chmod 777 /quadstorvtl/tmp
+
 if [ -f /usr/bin/chcon ]; then
         /usr/bin/chcon -t textrel_shlib_t /quadstorvtl/lib/libtl* > /dev/null 2>&1
         /usr/bin/chcon -v -R -t httpd_unconfined_script_exec_t /var/www/cgi-bin/*.cgi > /dev/null 2>&1
