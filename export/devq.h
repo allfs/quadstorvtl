@@ -25,9 +25,11 @@ void devq_exit(struct qs_devq *devq);
 static inline void
 devq_insert_ccb(struct qs_devq *devq, struct qsio_hdr *ccb_h)
 {
-	mtx_lock(&devq->devq_lock);
+	unsigned long flags;
+
+	mtx_lock_irqsave(&devq->devq_lock, flags);
 	STAILQ_INSERT_TAIL(&devq->pending_queue, ccb_h, c_list);
-	mtx_unlock(&devq->devq_lock);
+	mtx_unlock_irqrestore(&devq->devq_lock, flags);
 	chan_wakeup_one(&devq->devq_wait);
 	return;
 }
