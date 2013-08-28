@@ -32,7 +32,11 @@ void iet_procfs_exit(void)
 	for (i = 0; i < ARRAY_SIZE(iet_proc_entries); i++)
 		remove_proc_entry(iet_proc_entries[i].name, proc_iet_dir);
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,10,0))
+	proc_remove(proc_iet_dir);
+#else
 	remove_proc_entry(proc_iet_dir->name, proc_iet_dir->parent);
+#endif
 }
 
 int iet_procfs_init(void)
@@ -48,11 +52,18 @@ int iet_procfs_init(void)
 #endif
 
 	for (i = 0; i < ARRAY_SIZE(iet_proc_entries); i++) {
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,10,0))
+		ent = proc_create(iet_proc_entries[i].name, 0, proc_iet_dir,
+					iet_proc_entries[i].fops);
+		if (!ent)
+			goto err;
+#else
 		ent = create_proc_entry(iet_proc_entries[i].name, 0, proc_iet_dir);
 		if (ent)
 			ent->proc_fops = iet_proc_entries[i].fops;
 		else
 			goto err;
+#endif
 	}
 
 	return 0;
