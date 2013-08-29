@@ -310,7 +310,7 @@ tl_client_list_generic(char *tempfile, int msg_id)
 }
 
 int
-tl_client_load_conf()
+tl_client_load_conf(void)
 {
 	struct tl_msg msg;
 
@@ -321,7 +321,7 @@ tl_client_load_conf()
 }
 
 int
-tl_client_unload_conf()
+tl_client_unload_conf(void)
 {
 	struct tl_msg msg;
 
@@ -649,7 +649,7 @@ tl_client_reset_vdrive_stats(int tl_id, int target_id)
 	return tl_client_send_msg(&msg, NULL);
 }
 
-int tl_client_disk_check()
+int tl_client_disk_check(void)
 {
 	struct tl_msg msg;
 

@@ -1003,7 +1003,7 @@ load_configured_devices(void)
 }
 
 static int
-query_disk_check()
+query_disk_check(void)
 {
 	struct tl_blkdevinfo *blkdev;
 	struct vdevice *vdevice;
@@ -1062,7 +1062,7 @@ query_disk_check()
 }
 
 static int
-sys_rid_init()
+sys_rid_init(void)
 {
 	char sqlcmd[128];
 	int error = 0, retval;
@@ -1082,7 +1082,7 @@ sys_rid_init()
 }
 
 static int
-sys_rid_load()
+sys_rid_load(void)
 {
 	char sqlcmd[64];
 	int nrows;

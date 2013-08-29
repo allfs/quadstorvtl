@@ -194,13 +194,13 @@ serial_number_unique(char *serial, struct d_list *tmp_disk_list)
 }
 
 #ifdef FREEBSD
-static long int get_random()
+static long int get_random(void)
 {
 	srandomdev();
 	return random();
 }
 #else
-static long int get_random()
+static long int get_random(void)
 {
 	struct timeval tv;
 	struct timezone tz;
