@@ -2984,6 +2984,7 @@ copy_current_medium_configuration_page(struct tdrive *tdrive, uint8_t *buffer, i
 		page.worm_mode_label_restrictions = 0x01;
 		page.worm_mode_filemark_restrictions = 0x02;
 	}
+	memcpy(buffer, &page, min_len);
 }
 
 static void
