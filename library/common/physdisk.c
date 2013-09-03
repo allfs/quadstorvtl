@@ -206,39 +206,6 @@ parse_device(FILE *fp, struct physdevice *device)
 
 	}
 
-	if (device->idflags & ID_FLAGS_VSPECIFIC)
-	{
-		DEBUG_INFO("device idflags& ID_FLAGS_VSPECIFIC");
-		if (fgets(buf, sizeof(buf), fp) == NULL)
-		{
-			DEBUG_ERR("vspecific tag not present\n");
-			return -1;
-		}
-		if (strcmp(buf, "<vspecific>\n"))
-		{
-			DEBUG_ERR("vspecific tag out of sync %s\n", buf);
-			return -1;
-		}
-
-		retval = fread(&device->vspecific_id, 1, sizeof(struct device_vspecific_id), fp);
-		if (retval != sizeof(struct device_vspecific_id))
-		{
-			DEBUG_ERR("vspecific tag fread failed retval is %d\n", retval);
-			return -1;
-		}
-
-		if (fgets(buf, sizeof(buf), fp) == NULL || fgets(buf, sizeof(buf), fp) == NULL)
-		{
-			DEBUG_ERR("/vspecific not present\n");
-			return -1;
-		}
-		if (strcmp(buf, "</vspecific>\n"))
-		{
-			DEBUG_ERR("/vspecific tag out of sync\n");
-			return -1;
-		}
-	}
-
 	if (device->idflags & ID_FLAGS_UNKNOWN)
 	{
 		DEBUG_INFO("device idflags& ID_FLAGS_UNKNOWN");
@@ -474,15 +441,6 @@ device_ids_match(struct physdevice *device, struct device_id *device_id)
 			return 1;
 		}
 	}
-	if (device_id->idflags & ID_FLAGS_VSPECIFIC && device->idflags & ID_FLAGS_VSPECIFIC)
-	{
-		DEBUG_INFO("device_id->idflags UNIT_IDENTIFIER_VENDOR_SPECIFIC\n");
-		DEBUG_INFO("device vspecific_id %.16s device_id vspecific_id %.16s\n", device->vspecific_id.vspecific_id, device_id->vspecific_id.vspecific_id);
-		if (memcmp(&device->vspecific_id.vspecific_id, &device_id->vspecific_id.vspecific_id, sizeof(device_id->vspecific_id.vspecific_id)) == 0)
-		{
-			return 1;
-		}
-	}
 	if (device_id->avoltag_valid)
 	{
 		if (memcmp(device->serialnumber, device_id->serialnumber+4, device->serial_len) == 0)
@@ -592,15 +550,6 @@ device_equal(struct physdevice *device, struct physdevice *olddevice)
 		return -1;
 	}
 
-	else if ((device->idflags & ID_FLAGS_VSPECIFIC) && (olddevice->idflags & ID_FLAGS_VSPECIFIC))
-	{
-		DEBUG_INFO("device vspecific_id %.16s olddevice vspecific_id %.16s\n", device->vspecific_id.vspecific_id, olddevice->vspecific_id.vspecific_id);
-		if (memcmp(&device->vspecific_id.vspecific_id, &olddevice->vspecific_id.vspecific_id, sizeof(olddevice->vspecific_id.vspecific_id)) == 0)
-		{
-			return 0;
-		}
-		return -1;
-	}
 	else if ((device->idflags & ID_FLAGS_UNKNOWN) && (olddevice->idflags & ID_FLAGS_UNKNOWN))
 	{
 		DEBUG_INFO("device unknown_id %.16s olddevice unknown_id %.16s\n", device->unknown_id.unknown_id, olddevice->unknown_id.unknown_id);

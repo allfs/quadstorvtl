@@ -282,7 +282,6 @@ alloc_disk(char *devname, char *vendor, char *product, char *serialnumber, int s
 		memcpy(&device->naa_id, &iddev->naa_id, sizeof(device->naa_id));
 		memcpy(&device->eui_id, &iddev->eui_id, sizeof(device->eui_id));
 		memcpy(&device->unknown_id, &iddev->unknown_id, sizeof(device->unknown_id));
-		memcpy(&device->vspecific_id, &iddev->vspecific_id, sizeof(device->vspecific_id));
 	}
 
 	if (!serial_len) {
@@ -1100,12 +1099,6 @@ do_device_identification(char *devname, struct physdevice *device)
 				device->idflags |= ID_FLAGS_NAA;
 				DEBUG_INFO("do_device_identification: id %.16s\n", device->naa_id.naa_id);
 				break;
-			case UNIT_IDENTIFIER_VENDOR_SPECIFIC:
-				DEBUG_INFO("do_device_identification: UNIT_IDENTIFIER_VENDOR_SPECIFIC\n");
-				memcpy(device->vspecific_id.vspecific_id, idbuffer+done, id_len);
-				device->idflags |= ID_FLAGS_VSPECIFIC;
-				DEBUG_INFO("do_device_identification: id %.16s\n", device->vspecific_id.vspecific_id);
-				break;
 			default:
 				DEBUG_INFO("do_device_identification: vendor specfic or unknown\n");
 				memcpy(device->unknown_id.unknown_id, idbuffer+done, id_len);
@@ -1213,13 +1206,6 @@ dump_device(FILE *fp, struct physdevice *device)
 		fprintf(fp, "<eui>\n");
 		fwrite (&device->eui_id, 1, sizeof(struct device_eui_id), fp);
 		fprintf(fp, "\n</eui>\n");
-	}
-
-	if (device->idflags & ID_FLAGS_VSPECIFIC)
-	{
-		fprintf(fp, "<vspecific>\n");
-		fwrite (&device->vspecific_id, 1, sizeof(struct device_vspecific_id), fp);
-		fprintf(fp, "\n</vspecific>\n");
 	}
 
 	if (device->idflags & ID_FLAGS_UNKNOWN)
@@ -2116,13 +2102,6 @@ dump_deviceid_diagnostics(FILE *fp, struct device_id *device_id)
 		fprintf(fp, "<eui>\n");
 		fwrite (device_id->eui_id.eui_id, 1, 8, fp);
 		fprintf(fp, "\n</eui>\n");
-	}
-
-	if (device_id->idflags & ID_FLAGS_VSPECIFIC)
-	{
-		fprintf(fp, "<vspecific>\n");
-		fwrite (device_id->vspecific_id.vspecific_id, 1, 20, fp);
-		fprintf(fp, "\n</vspecific>\n");
 	}
 
 	if (device_id->idflags & ID_FLAGS_UNKNOWN)
