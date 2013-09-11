@@ -2309,6 +2309,12 @@ tdrive_copy_read_attributes(struct tdrive *tdrive, struct qsio_scsiio *ctio, uin
 		return 0;
 	}
 
+	mam_attr = tape_partition_mam_get_attribute(partition, first_attribute);
+	if (!mam_attr) {
+		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);  
+		return 0;
+	}
+
 	ctio_allocate_buffer(ctio, allocation_length, Q_WAITOK);
 	if (unlikely(!ctio->data_ptr))
 	{
@@ -2345,12 +2351,6 @@ tdrive_copy_read_attributes(struct tdrive *tdrive, struct qsio_scsiio *ctio, uin
 			memcpy(attr->value, mam_attr->value, min_len);
 			done += min_len;
 		}
-	}
-
-	if (done == 4 && allocation_length > 4) {
-		ctio_free_data(ctio);
-		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);  
-		return 0;
 	}
 
 	bzero(buffer, 4);
