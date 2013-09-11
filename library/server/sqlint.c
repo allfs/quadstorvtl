@@ -427,6 +427,7 @@ sql_query_drives(struct vtlconf *vtlconf)
 		target_id = strtoul(PQgetvalue(res, i, 0), NULL, 10);
 		driveconf = tdriveconf_new(vdevice->tl_id, target_id, PQgetvalue(res, i, 1), PQgetvalue(res, i, 3));
 		driveconf->type = atoi(PQgetvalue(res, i, 2));
+		strcpy(driveconf->vdevice.serialnumber, PQgetvalue(res, i, 3));
 
 		retval= sql_query_iscsiconf(vdevice->tl_id, target_id, &driveconf->vdevice.iscsiconf);
 		if (retval != 0)
@@ -488,6 +489,7 @@ sql_query_vdevice(struct vdevice *device_list[])
 			vtlconf->slots = atoi(PQgetvalue(res, i, 4));
 			vtlconf->ieports = atoi(PQgetvalue(res, i, 5));
 			vtlconf->drives = atoi(PQgetvalue(res, i, 6));
+			strcpy(vtlconf->vdevice.serialnumber, PQgetvalue(res, i, 7));
 
 			retval = sql_query_drives(vtlconf);
 			if (retval != 0) {
@@ -515,6 +517,7 @@ sql_query_vdevice(struct vdevice *device_list[])
 				goto err;
 			}
 			driveconf->type = atoi(PQgetvalue(res, i, 3));
+			strcpy(driveconf->vdevice.serialnumber, PQgetvalue(res, i, 7));
 			retval = sql_query_driveprop(driveconf);
 			if (retval != 0) {
 				DEBUG_ERR("Query drive property failed\n");

@@ -349,7 +349,7 @@ tdrive_construct_serial_number(struct tdrive *tdrive, struct vdeviceinfo *device
 	case DRIVE_TYPE_VIBM_3580ULT4:
 	case DRIVE_TYPE_VIBM_3580ULT5:
 	case DRIVE_TYPE_VIBM_3580ULT6:
-		sprintf(tdrive->unit_identifier.serial_number, "QDRS%03X%03X", deviceinfo->tl_id, deviceinfo->target_id);
+		sprintf(tdrive->unit_identifier.serial_number, "%.6s%03X%01X", deviceinfo->sys_rid, deviceinfo->tl_id, deviceinfo->target_id);
 		break;
 	default:
 		debug_check(1);
@@ -371,8 +371,11 @@ tdrive_new(struct mchanger *mchanger, struct vdeviceinfo *deviceinfo)
 
 	tdrive->mchanger = mchanger;
 	tdrive->make = deviceinfo->make;
-	tdrive_construct_serial_number(tdrive, deviceinfo);
-	strcpy(deviceinfo->serialnumber, tdrive->unit_identifier.serial_number);
+	if (!deviceinfo->serialnumber[0]) {
+		tdrive_construct_serial_number(tdrive, deviceinfo);
+		strcpy(deviceinfo->serialnumber, tdrive->unit_identifier.serial_number);
+	} else
+		strcpy(tdrive->unit_identifier.serial_number, deviceinfo->serialnumber);
 	tdrive->serial_len = strlen(tdrive->unit_identifier.serial_number);
 
 	retval = tdrive_init(tdrive, deviceinfo);

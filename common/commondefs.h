@@ -95,6 +95,7 @@ struct vdeviceinfo {
 	uint32_t tape_id;
 	uint32_t target_id;
 	char serialnumber[40];
+	char sys_rid[TL_RID_MAX];
 	struct tdrive_stats stats;
 };
 

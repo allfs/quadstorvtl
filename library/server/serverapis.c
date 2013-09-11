@@ -47,6 +47,7 @@ pthread_cond_t socket_cond = PTHREAD_COND_INITIALIZER;
 struct vdevice *device_list[TL_MAX_DEVICES];
 struct tl_blkdevinfo *bdev_list[TL_MAX_DISKS];
 char sys_rid[TL_RID_MAX];
+char sys_rid_stripped[TL_RID_MAX];
 pthread_mutex_t bdev_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t device_lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -1081,11 +1082,33 @@ sys_rid_init(void)
 	return 0;
 }
 
+static void
+sys_rid_strip(void)
+{
+	int i, c, j;
+
+	bzero(sys_rid_stripped, sizeof(sys_rid_stripped));
+	j = 0;
+	for (i = 0; i < TL_RID_MAX; i++) {
+		c = sys_rid[i];
+		if (!c)
+			break;
+		if (c == '-')
+			continue;
+		if (c >= '0' && c <= '9') {
+			sys_rid_stripped[j++] = c;
+			continue;
+		}
+		sys_rid_stripped[j++] = c - 0x20;
+	}
+}
+
 static int
 sys_rid_load(void)
 {
 	char sqlcmd[64];
 	int nrows;
+	int retval;
 	PGconn *conn;
 	PGresult *res;
 
@@ -1109,8 +1132,12 @@ sys_rid_load(void)
 		strcpy(sys_rid, PQgetvalue(res, 0, 0));
 	PQclear(res);
 	PQfinish(conn);
-	if (!sys_rid[0])
-		return sys_rid_init();
+	if (!sys_rid[0]) {
+		retval = sys_rid_init();
+		if (retval != 0)
+			return retval;
+	}
+	sys_rid_strip();
 	return 0;
 }
 
@@ -1745,6 +1772,7 @@ load_vtl(struct vdevice *vdevice)
 	dinfo.slots = vtlconf->slots;
 	dinfo.ieports = vtlconf->ieports;
 	strcpy(dinfo.serialnumber, vdevice->serialnumber);
+	strcpy(dinfo.sys_rid, sys_rid_stripped);
 
 	retval = tl_ioctl(TLTARGIOCNEWDEVICE, &dinfo);
 	if (retval != 0) {
@@ -1767,6 +1795,7 @@ load_vtl(struct vdevice *vdevice)
 		dinfo.vhba_id = -1;
 		dinfo.enable_compression = enable_drive_compression;
 		strcpy(dinfo.serialnumber, drive_vdevice->serialnumber);
+		strcpy(dinfo.sys_rid, sys_rid_stripped);
 		retval = tl_ioctl(TLTARGIOCNEWDEVICE, &dinfo);
 		if (retval != 0) {
 			return -1;
@@ -1802,6 +1831,7 @@ vtl_add_drive(struct vtlconf *vtlconf, int drivetype, int target_id, char *errms
 	deviceinfo.enable_compression = enable_drive_compression;
 	strcpy(deviceinfo.name, dname);
 	strcpy(deviceinfo.serialnumber, serialnumber);
+	strcpy(deviceinfo.sys_rid, sys_rid_stripped);
 
 	retval = tl_ioctl(TLTARGIOCNEWDEVICE, &deviceinfo);
 	if (retval != 0) {
@@ -1867,6 +1897,7 @@ add_new_vtl(char *name, int vtltype, int slots, int ieports, char *errmsg)
 	dinfo.vhba_id = -1;
 	dinfo.slots = slots;
 	dinfo.ieports = ieports;
+	strcpy(dinfo.sys_rid, sys_rid_stripped);
 
 	retval = tl_ioctl(TLTARGIOCNEWDEVICE, &dinfo);
 	if (retval != 0) {
@@ -1918,6 +1949,7 @@ load_drive(struct vdevice *vdevice)
 	dinfo.target_id = vdevice->target_id;
 	dinfo.enable_compression = enable_drive_compression;
 	strcpy(dinfo.serialnumber, vdevice->serialnumber);
+	strcpy(dinfo.sys_rid, sys_rid_stripped);
 
 	retval = tl_ioctl(TLTARGIOCNEWDEVICE, &dinfo);
 	if (retval != 0) {
@@ -1976,6 +2008,7 @@ add_new_drive(char *name, int drivetype, char *errmsg)
 	deviceinfo.enable_compression = enable_drive_compression;
 	strcpy(deviceinfo.name, name);
 	strcpy(deviceinfo.serialnumber, serialnumber);
+	strcpy(deviceinfo.sys_rid, sys_rid_stripped);
 
 	retval = tl_ioctl(TLTARGIOCNEWDEVICE, &deviceinfo);
 	if (retval != 0) {

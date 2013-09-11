@@ -219,7 +219,7 @@ mchanger_construct_serial_number(struct mchanger *mchanger, struct vdeviceinfo *
 	case LIBRARY_TYPE_VADIC_SCALAR24:
 	case LIBRARY_TYPE_VADIC_SCALAR100:
 	case LIBRARY_TYPE_VADIC_SCALARi2000:
-		sprintf(mchanger->unit_identifier.serial_number, "QTLS%03X%03X", deviceinfo->tl_id, deviceinfo->target_id);
+		sprintf(mchanger->unit_identifier.serial_number, "%.20s%03X%01X", deviceinfo->sys_rid, deviceinfo->tl_id, deviceinfo->target_id);
 		break;
 	case LIBRARY_TYPE_VHP_ESL9000:
 	case LIBRARY_TYPE_VHP_ESLSERIES:
@@ -227,14 +227,14 @@ mchanger_construct_serial_number(struct mchanger *mchanger, struct vdeviceinfo *
 	case LIBRARY_TYPE_VHP_MSLSERIES:
 	case LIBRARY_TYPE_VHP_MSL6000:
 	case LIBRARY_TYPE_VOVL_NEOSERIES:
-		sprintf(mchanger->unit_identifier.serial_number, "QTLS%03X%03X", deviceinfo->tl_id, deviceinfo->target_id);
+		sprintf(mchanger->unit_identifier.serial_number, "%.6s%03X%01X", deviceinfo->sys_rid, deviceinfo->tl_id, deviceinfo->target_id);
 		break;
 	case LIBRARY_TYPE_VIBM_3583:
-		sprintf(mchanger->unit_identifier.serial_number, "IBMQTLS%04X%03X", deviceinfo->tl_id, deviceinfo->target_id);
+		sprintf(mchanger->unit_identifier.serial_number, "%.10s%03X%01X", deviceinfo->sys_rid, deviceinfo->tl_id, deviceinfo->target_id);
 		break;
 	case LIBRARY_TYPE_VIBM_3584:
 	case LIBRARY_TYPE_VIBM_TS3100:
-		sprintf(mchanger->unit_identifier.serial_number, "QTLS%04X%04X", deviceinfo->tl_id, deviceinfo->target_id);
+		sprintf(mchanger->unit_identifier.serial_number, "%.8s%03X%01X", deviceinfo->sys_rid, deviceinfo->tl_id, deviceinfo->target_id);
 		break;
 	default:
 		debug_check(1);
@@ -257,8 +257,11 @@ mchanger_new(struct vdeviceinfo *deviceinfo)
 
 	mchanger->make = deviceinfo->make;
 	mchanger->vtype = deviceinfo->vtype;
-	mchanger_construct_serial_number(mchanger, deviceinfo);
-	strcpy(deviceinfo->serialnumber, mchanger->unit_identifier.serial_number);
+	if (!deviceinfo->serialnumber[0]) {
+		mchanger_construct_serial_number(mchanger, deviceinfo);
+		strcpy(deviceinfo->serialnumber, mchanger->unit_identifier.serial_number);
+	} else
+		strcpy(mchanger->unit_identifier.serial_number, deviceinfo->serialnumber);
 	mchanger->serial_len = strlen(mchanger->unit_identifier.serial_number);
 	retval = mchanger_init(mchanger, deviceinfo);
 	if (unlikely(retval != 0)) {
