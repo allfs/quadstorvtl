@@ -1072,11 +1072,25 @@ blk_map_read(struct tape_partition *partition, struct qsio_scsiio *ctio, uint32_
 	uint32_t compressed_size = 0;
 
 	*done_blocks = 0;
-	orig_map = map = partition->cur_map;
+	map = partition->cur_map;
 	if (!map)
 		return EOD_REACHED;
 
 	blk_map_free_till_cur(partition);
+
+	if (!map->c_entry) {
+		if (!map_lookup_map_has_next(map))
+			return EOD_REACHED;
+
+		map = blk_map_set_next_map(map, 1);
+		if (unlikely(!map))
+			return MEDIA_ERROR;
+	}
+
+	if (!map->c_entry && !map_lookup_map_has_next(map))
+		return EOD_REACHED;
+
+	orig_map = map;
 	orig_entry = map->c_entry;
 
 	retval = __blk_map_read(map, block_size, num_blocks, &pglist_cnt, &data_blocks, &error, fixed, ili_block_size);
