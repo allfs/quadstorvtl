@@ -500,7 +500,7 @@ check_disk(struct physdisk *disk, int formaster)
 		return 0;
 	}
 
-	if (memcmp(raw_bint.serialnumber, disk->info.serialnumber, disk->info.serial_len)) {
+	if (!raw_bint_serial_match(&raw_bint, disk->info.serialnumber, disk->info.serial_len)) {
 		fprintf(stdout, "Serial number mismatch %.32s %.32s\n", raw_bint.serialnumber, disk->info.serialnumber);
 		return 0;
 	}

@@ -349,7 +349,24 @@ struct raw_bdevint {
 	struct bint_stats stats;
 	char mrid[TL_RID_MAX];
 	char group_name[TDISK_MAX_NAME_LEN];
+	uint8_t ext_serialnumber[224];
 } __attribute__ ((__packed__));
+
+static inline int
+raw_bint_serial_match(struct raw_bdevint *raw_bint, char *serialnumber, int serial_len)
+{
+	int serial_max;
+
+	serial_max = sizeof(raw_bint->serialnumber);
+	if (memcmp(raw_bint->serialnumber, serialnumber, serial_max))
+		return 0;
+
+	if (serial_len > serial_max) {
+		if (memcmp(raw_bint->ext_serialnumber, serialnumber + serial_max, serial_len - serial_max))
+			return 0;
+	}
+	return 1;
+}
 
 struct group_conf {
 	char name[TDISK_MAX_NAME_LEN];
@@ -374,7 +391,8 @@ struct bdev_info {
 	uint8_t free_alloc;
 	uint8_t  vendor[8];
 	uint8_t  product[16];
-	uint8_t  serialnumber[32];
+	uint8_t  serialnumber[256];
+	int serial_len;
 	uint32_t max_index_groups;
 	uint32_t group_id;
 	struct bint_stats stats;

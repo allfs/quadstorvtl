@@ -72,7 +72,8 @@ struct bdevint {
 	int group_flags;
 	uint8_t  vendor[8];
 	uint8_t  product[16];
-	uint8_t  serialnumber[32];
+	uint8_t  serialnumber[256];
+	int serial_len;
 	char mrid[TL_RID_MAX];
 	iodev_t *b_dev;
 	g_consumer_t *cp;

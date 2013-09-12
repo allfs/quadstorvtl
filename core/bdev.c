@@ -579,7 +579,7 @@ int
 bint_sync(struct bdevint *bint)
 {
 	struct raw_bdevint *raw_bint;
-	int retval;
+	int retval, serial_max;
 	pagestruct_t *page;
 
 	page = vm_pg_alloc(VM_ALLOC_ZERO);
@@ -602,7 +602,9 @@ bint_sync(struct bdevint *bint)
 	memcpy(raw_bint->quad_prod, "VTL", strlen("VTL"));
 	memcpy(raw_bint->vendor, bint->vendor, sizeof(bint->vendor));
 	memcpy(raw_bint->product, bint->product, sizeof(bint->product));
-	memcpy(raw_bint->serialnumber, bint->serialnumber, sizeof(bint->serialnumber));
+	serial_max = sizeof(raw_bint->serialnumber);
+	memcpy(raw_bint->serialnumber, bint->serialnumber, serial_max);
+	memcpy(raw_bint->ext_serialnumber, bint->serialnumber + serial_max, sizeof(raw_bint->ext_serialnumber));
 
 	retval = qs_lib_bio_lba(bint, bint->b_start, page, QS_IO_WRITE, 0);
 	if (unlikely(retval != 0)) {
@@ -796,7 +798,7 @@ bint_load(struct bdevint *bint)
 		goto err;
 	}
 
-	if (memcmp(raw_bint->serialnumber, bint->serialnumber, sizeof(bint->serialnumber))) {
+	if (!raw_bint_serial_match(raw_bint, bint->serialnumber, bint->serial_len)) {
 		debug_warn("raw bint serialnumber mismatch\n");
 		goto err;
 	}
@@ -982,6 +984,7 @@ bint_alloc(struct bdev_info *binfo)
 	memcpy(bint->vendor, binfo->vendor, sizeof(bint->vendor));
 	memcpy(bint->product, binfo->product, sizeof(bint->product));
 	memcpy(bint->serialnumber, binfo->serialnumber, sizeof(bint->serialnumber));
+	bint->serial_len = binfo->serial_len;
 	return bint;
 }
 

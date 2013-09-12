@@ -300,6 +300,7 @@ alloc_disk(char *devname, char *vendor, char *product, char *serialnumber, int s
 	memcpy(device->vendor, vendor, strlen(vendor));
 	memcpy(device->product, product, strlen(product));
 	memcpy(device->serialnumber, serialnumber, serial_len);
+	device->serial_len = serial_len;
 	if (fake_ident)
 		fake_device_identification(device);
 
@@ -1172,6 +1173,7 @@ dump_device(FILE *fp, struct physdevice *device)
 	fwrite (device->product, 1, 16, fp);
 	fwrite (device->serialnumber, 1, sizeof(device->serialnumber), fp);
 	fprintf(fp, "\n</ptags>\n");
+	fprintf(fp, "<serial_len>%d</serial_len>\n", device->serial_len);
 	if (device->online)
 	{
 		fprintf(fp, "<devname>%s</devname>\n", device->devname);
@@ -1793,7 +1795,7 @@ tl_common_scan_physdisk(void)
 	struct d_list tmp_disk_list;
 	struct physdisk *newdisk;
 	struct physdisk *olddisk;
-	char vendor[32], product[32], revision[32], serialnumber[64];
+	char vendor[32], product[32], revision[32], serialnumber[256];
 	struct physdevice device;
 
 	DEBUG_INFO("Entered tl_common_scan_physdisk\n");

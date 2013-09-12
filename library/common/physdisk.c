@@ -84,6 +84,13 @@ parse_device(FILE *fp, struct physdevice *device)
 	fgets(buf, sizeof(buf), fp);
 	fgets(buf, sizeof(buf), fp);
 
+	retval = fscanf (fp, "<serial_len>%d</serial_len>\n", &device->serial_len);
+	if (retval != 1)
+	{
+		DEBUG_ERR("serial len tag out of sync retval is %d\n", retval);
+		return -1;
+	}
+
 	retval = fscanf (fp, "<devname>%[^<]</devname>\n", device->devname);
 	if (retval != 1)
 	{

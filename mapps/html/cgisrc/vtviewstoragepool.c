@@ -124,7 +124,8 @@ skip_rename:
 		cgi_print_column_format("Model", "%.16s", disk->info.product);
 		cgi_print_comma();
 
-		cgi_print_column_format("Serial", "%.32s", disk->info.serialnumber);
+		sprintf(databuf, "Serial: '%%.%ds'", disk->info.serial_len);
+		printf(databuf, disk->info.serialnumber);
 		cgi_print_comma();
 
 		if (disk->info.multipath)

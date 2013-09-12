@@ -305,7 +305,7 @@ struct logical_unit_identifier {
 	uint8_t identifier_length;
 	uint8_t vendor_id[8];
 	uint8_t product_id[16];
-	uint8_t serial_number[32];
+	uint8_t serial_number[40];
 } __attribute__ ((__packed__));
 
 struct logical_unit_naa_identifier {
@@ -344,7 +344,7 @@ struct serial_number_page {
 	uint8_t page_code;
 	uint8_t rsvd;
 	uint8_t page_length;
-	uint8_t serial_number[32];
+	uint8_t serial_number[0];
 } __attribute__ ((__packed__));
 
 /* Ctio sense op */

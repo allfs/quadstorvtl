@@ -375,156 +375,97 @@ fcbridge_route_cmd(struct fcbridge *fcbridge, struct qsio_scsiio *ctio)
 }
 
 static int
-fcbridge_device_identification(struct fcbridge *fcbridge, uint8_t *buffer, int length)
+fcbridge_device_identification(struct fcbridge *fcbridge, uint8_t *buffer, int allocation_length)
 {
 	struct device_identification_page *page = (struct device_identification_page *)buffer;
-	struct logical_unit_identifier unit_identifier, *ptr_identifier;
-	uint32_t page_length = 0;
-	int done = 0;
-	uint8_t idlength;
+	struct logical_unit_identifier *identifier;
+	int idlength, min_len;
 
-	if (unlikely(length < sizeof(struct vital_product_page)))
-	{
-		return -1;
-	}
+	identifier = (struct logical_unit_identifier *)(buffer+sizeof(*page));
+	fcbridge_init_unit_identifier(fcbridge, identifier);
+	idlength = identifier->identifier_length + sizeof(struct device_identifier);
 
 	page->device_type = T_PROCESSOR;
 	page->page_code = DEVICE_IDENTIFICATION_PAGE;
+	page->page_length = idlength;
 
-	done += sizeof(struct device_identification_page);
-
-	fcbridge_init_unit_identifier(fcbridge, &unit_identifier);
-
-	idlength = unit_identifier.identifier_length + sizeof(struct device_identifier);
-	if (done + idlength > length)
-	{
-		goto out;
-	}
-
-	ptr_identifier = (struct logical_unit_identifier *)(buffer+done);
-	memcpy(ptr_identifier, &unit_identifier, sizeof(struct logical_unit_identifier)); 
-	page_length += idlength;
-	done += idlength;
-
-out:
-	page->page_length = page_length;
-	return done;
+	min_len = min_t(int, idlength + sizeof(*page), allocation_length);
+	return min_len;
 }
 
 static int
-fcbridge_serial_number(struct fcbridge *fcbridge, uint8_t *buffer, int length)
+fcbridge_serial_number(struct fcbridge *fcbridge, uint8_t *buffer, int allocation_length)
 {
 	struct serial_number_page *page = (struct serial_number_page *) buffer;
-	uint8_t serial_number[32];
 	uint64_t wwpn[2];
-	int min_len;
+	int min_len, serial_len;
 
-	if (unlikely(length < sizeof(struct vital_product_page)))
-	{
-		return -1;
-	}
-
-	fcbridge_get_tport(fcbridge, wwpn);
-	sprintf(serial_number, "%08llX%08llX", (unsigned long long)wwpn[1], (unsigned long long)wwpn[0]);
-
-	memset(page, 0, sizeof(struct vital_product_page));
+	memset(page, 0, sizeof(*page));
 	page->device_type = T_PROCESSOR; /* peripheral qualifier */
 	page->page_code = UNIT_SERIAL_NUMBER_PAGE;
-	page->page_length =  strlen(serial_number);
 
-	min_len = min_t(int, strlen(serial_number), (length - sizeof(struct vital_product_page)));
-	if (min_len) {
-		memcpy(page->serial_number, serial_number, min_len);
-	}
+	fcbridge_get_tport(fcbridge, wwpn);
+	sprintf(page->serial_number, "%08llX%08llX", (unsigned long long)wwpn[1], (unsigned long long)wwpn[0]);
+	serial_len = strlen(page->serial_number);
+	page->page_length =  serial_len;
 
-	return (min_len + sizeof(struct vital_product_page));
+	min_len = min_t(int, allocation_length, sizeof(*page) + serial_len);
+	return min_len;
 }
 
 static int 
 fcbridge_copy_vital_product_page_info(struct fcbridge *fcbridge, uint8_t *buffer, int allocation_length)
 {
-	struct vital_product_page tmp;
 	struct vital_product_page *page = (struct vital_product_page *)buffer;
-	int min_len;
-	int i;
-	int offset;
 	struct evpd_page_info evpd_info;
+	int i;
 
-	evpd_info.num_pages = 0x03; /* Five pages supported */
+	evpd_info.num_pages = 0x03;
 	evpd_info.page_code[0] = VITAL_PRODUCT_DATA_PAGE;
 	evpd_info.page_code[1] = DEVICE_IDENTIFICATION_PAGE;
 	evpd_info.page_code[2] = UNIT_SERIAL_NUMBER_PAGE;
 
-	memset(&tmp, 0, sizeof(struct vital_product_page));
-	tmp.device_type = T_DIRECT;
-	tmp.page_code = 0x00;
-	tmp.page_length = evpd_info.num_pages;
+	page->device_type = T_PROCESSOR;
+	page->page_code = 0x00;
+	page->page_length = evpd_info.num_pages;
 
-	min_len = min_t(int, allocation_length, sizeof(tmp));
-	memcpy(page, &tmp, min_len);
-	if (min_len < sizeof(tmp))
-		return min_len;
-
-	offset = min_len;
 	for (i = 0; i < evpd_info.num_pages; i++) {
-		if (offset == allocation_length)
-			break;
 		page->page_type[i] = evpd_info.page_code[i];
-		offset++;
 	}
 
-	return offset;
+	return min_t(int, allocation_length, evpd_info.num_pages + sizeof(*page));
 }
 
 static int
 fcbridge_evpd_inquiry_data(struct fcbridge *fcbridge, struct qsio_scsiio *ctio, uint8_t page_code, int allocation_length)
 {
 	int retval;
+	int max_allocation_length;
 
-	ctio->data_ptr = malloc(allocation_length, M_DEVBUF, M_NOWAIT);
+	max_allocation_length = max_t(int, 128, allocation_length); 
+	ctio->data_ptr = malloc(max_allocation_length, M_DEVBUF, M_NOWAIT);
 	if (unlikely(!ctio->data_ptr)) {
 		DEBUG_WARN_NEW("Cannot allocate for %d\n", allocation_length);
 		return -1;
 	}
-	bzero(ctio->data_ptr, allocation_length);
+	bzero(ctio->data_ptr, max_allocation_length);
 
-	switch (page_code)
-	{
-		case UNIT_SERIAL_NUMBER_PAGE:
-			retval = fcbridge_serial_number(fcbridge, ctio->data_ptr, allocation_length);
-			if (unlikely(retval < 0))
-			{
-				goto err;
-			}
-
-			ctio->dxfer_len = retval;
-			break;
-		case DEVICE_IDENTIFICATION_PAGE:
-			retval = fcbridge_device_identification(fcbridge, ctio->data_ptr, allocation_length);
-			if (unlikely(retval < 0))
-			{
-				goto err;
-			}
-
-			ctio->dxfer_len = retval;
-			break;
-		case VITAL_PRODUCT_DATA_PAGE:
-			retval = fcbridge_copy_vital_product_page_info(fcbridge, ctio->data_ptr, allocation_length);
-			if (unlikely(retval < 0))
-			{
-				goto err;
-			}
-
-			ctio->dxfer_len = retval;
-			break;
-		default:
-			DEBUG_WARN_NEW("Unhandled page code for EVPD inquiry %x\n", page_code);
-			goto err;
+	switch (page_code) {
+	case UNIT_SERIAL_NUMBER_PAGE:
+		retval = fcbridge_serial_number(fcbridge, ctio->data_ptr, allocation_length);
+		break;
+	case DEVICE_IDENTIFICATION_PAGE:
+		retval = fcbridge_device_identification(fcbridge, ctio->data_ptr, allocation_length);
+		break;
+	case VITAL_PRODUCT_DATA_PAGE:
+		retval = fcbridge_copy_vital_product_page_info(fcbridge, ctio->data_ptr, allocation_length);
+		break;
+	default:
+		__ctio_free_data(ctio);
+		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);
+		retval = 0;
 	}
-	return 0;
-err:
-	__ctio_free_data(ctio);
-	ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);
+	ctio->dxfer_len = retval;
 	return 0;
 }
 
@@ -669,6 +610,9 @@ fcbridge_cmd_inquiry(struct fcbridge *fcbridge, struct qsio_scsiio *ctio)
 
 	page_code = cdb[2];
 	allocation_length = be16toh(*(uint16_t *)(&cdb[3]));
+
+	if (!allocation_length)
+		return 0;
 
 	if (!evpd)
 		return fcbridge_standard_inquiry_data(fcbridge, ctio, allocation_length);

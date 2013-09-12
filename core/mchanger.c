@@ -849,7 +849,7 @@ mchanger_evpd_inquiry_data(struct mchanger *mchanger, struct qsio_scsiio *ctio, 
 	int retval;
 	uint16_t max_allocation_length;
 
-	max_allocation_length = max_t(uint16_t, 64, allocation_length);
+	max_allocation_length = max_t(uint16_t, 128, allocation_length);
 	ctio_allocate_buffer(ctio, max_allocation_length, Q_WAITOK);
 	if (!ctio->data_ptr)
 		return -1;
@@ -1307,23 +1307,18 @@ int
 mchanger_copy_vital_product_page_info(struct mchanger *mchanger, uint8_t *buffer, uint16_t allocation_length)
 {
 	struct vital_product_page *page = (struct vital_product_page *)buffer;
-	uint8_t num_pages = 0;
-
-	if (allocation_length < (sizeof(struct vital_product_page)+mchanger->evpd_info.num_pages))
-	{
-		return -1;
-	}
+	int i;
 
 	bzero(page, sizeof(*page));
-	page->device_type = 0x01;
+	page->device_type = T_SEQUENTIAL;
 	page->page_code = 0x00;
 	page->page_length = mchanger->evpd_info.num_pages;
 
-	for (num_pages = 0; num_pages < mchanger->evpd_info.num_pages; num_pages++) {
-		page->page_type[num_pages] = mchanger->evpd_info.page_code[num_pages];
+	for (i = 0; i < mchanger->evpd_info.num_pages; i++) {
+		page->page_type[i] = mchanger->evpd_info.page_code[i];
 	}
 
-	return (mchanger->evpd_info.num_pages + sizeof(struct vital_product_page));
+	return min_t(int, allocation_length, mchanger->evpd_info.num_pages + sizeof(*page));
 }	
 
 static int
@@ -2632,58 +2627,37 @@ mchanger_reset(struct mchanger *mchanger, uint64_t i_prt[], uint64_t t_prt[], ui
 }
 
 int
-mchanger_device_identification(struct mchanger *mchanger, uint8_t *buffer, int length)
+mchanger_device_identification(struct mchanger *mchanger, uint8_t *buffer, int allocation_length)
 {
 	struct device_identification_page *page = (struct device_identification_page *)buffer;
-	struct logical_unit_identifier *unit_identifier;
-	uint32_t page_length = 0;
-	int done = 0;
-	uint8_t idlength;
+	struct logical_unit_identifier *identifier;
+	int idlength, min_len;
 
-	if (length < sizeof(struct vital_product_page))
-	{
-		return -1;
-	}
+	identifier = (struct logical_unit_identifier *)(buffer+sizeof(*page));
+	idlength = mchanger->unit_identifier.identifier_length + sizeof(struct device_identifier);
 
 	page->device_type = T_CHANGER;
 	page->page_code = DEVICE_IDENTIFICATION_PAGE;
+	page->page_length = idlength;
 
-	page_length = mchanger->unit_identifier.identifier_length + sizeof(struct device_identifier);
-	page->page_length = page_length;
- 
-	done += sizeof(struct device_identification_page);
-
-	idlength = mchanger->unit_identifier.identifier_length + sizeof(struct device_identifier);
-	if (done + idlength > length)
-	{
-		return done;
-	}
-
-	unit_identifier = (struct logical_unit_identifier *)(buffer+done);
-	memcpy(unit_identifier, &mchanger->unit_identifier, idlength);
-	done += idlength;
-	return done;
+	memcpy(identifier, &mchanger->unit_identifier, idlength);
+	min_len = min_t(int, allocation_length, idlength + sizeof(*page));
+	return min_len;
 }
 
 int
-mchanger_serial_number(struct mchanger *mchanger, uint8_t *buffer, int length)
+mchanger_serial_number(struct mchanger *mchanger, uint8_t *buffer, int allocation_length)
 {
 	struct serial_number_page *page = (struct serial_number_page *) buffer;
 	int min_len;
 
-	if (length < sizeof(struct vital_product_page))
-		return -1;
-
-	bzero(page, sizeof(struct vital_product_page));
-	page->device_type = T_CHANGER; /* peripheral qualifier */
+	page->device_type = T_CHANGER;
 	page->page_code = UNIT_SERIAL_NUMBER_PAGE;
-	page->page_length = mchanger->serial_len;
+	page->page_length =  mchanger->serial_len;
+	memcpy(page->serial_number, mchanger->unit_identifier.serial_number, mchanger->serial_len);
 
-	min_len = min_t(int, mchanger->serial_len, length - sizeof(struct vital_product_page));
-	if (min_len)
-		memcpy(page->serial_number, mchanger->unit_identifier.serial_number, min_len);
-
-	return (min_len+sizeof(struct vital_product_page));
+	min_len = min_t(int, allocation_length, mchanger->serial_len + sizeof(*page));
+	return min_len;
 }
 
 struct tdrive *

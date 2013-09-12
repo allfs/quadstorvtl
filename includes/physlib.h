@@ -31,7 +31,7 @@ struct device_unknown_id {
 struct device_t10_id {
 	uint8_t vendor[8];
 	uint8_t product[16];
-	uint8_t serialnumber[104];
+	uint8_t serialnumber[232];
 };
 
 struct device_naa_id {
@@ -49,7 +49,7 @@ struct device_id {
 	struct device_eui_id eui_id;
 	struct device_unknown_id unknown_id;
 	uint32_t  avoltag_valid;
-	uint8_t   serialnumber[32];
+	uint8_t   serialnumber[256];
 };
 
 struct element_info {
@@ -77,7 +77,7 @@ struct physdevice {
 	char product[16];
 	char revision[4];
 	int serial_len;
-	char serialnumber[32];
+	char serialnumber[256];
 	char devname[256];
 	char mdevname[512];
 	uint32_t idflags;

@@ -759,13 +759,13 @@ sql_query_blkdevs(struct tl_blkdevinfo *bdev_list[])
 				goto err;
 			}
 
-			if (len != sizeof(struct device_t10_id))
+			if (len > sizeof(struct device_t10_id))
 			{
 				DEBUG_ERR("Got invalid length for t10id %d\n", (int)len);
 				PQfreemem(ptr);
 				goto err;
 			}
-			memcpy(&device->t10_id, ptr, sizeof(struct device_t10_id));
+			memcpy(&device->t10_id, ptr, len);
 			PQfreemem(ptr);
 		}
 

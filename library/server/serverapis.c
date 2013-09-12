@@ -922,6 +922,7 @@ load_blkdev(struct tl_blkdevinfo *blkdev)
 	memcpy(binfo.vendor, blkdev->disk.info.vendor, sizeof(binfo.vendor));
 	memcpy(binfo.product, blkdev->disk.info.product, sizeof(binfo.product));
 	memcpy(binfo.serialnumber, blkdev->disk.info.serialnumber, sizeof(binfo.serialnumber));
+	binfo.serial_len = blkdev->disk.info.serial_len;
 	binfo.isnew = 0;
 	error = gen_rid(binfo.rid);
 	if (error != 0)
@@ -2736,6 +2737,7 @@ tl_server_add_disk(struct tl_comm *comm, struct tl_msg *msg)
 	memcpy(binfo.vendor, blkdev->disk.info.vendor, sizeof(binfo.vendor));
 	memcpy(binfo.product, blkdev->disk.info.product, sizeof(binfo.product));
 	memcpy(binfo.serialnumber, blkdev->disk.info.serialnumber, sizeof(binfo.serialnumber));
+	binfo.serial_len = blkdev->disk.info.serial_len;
 	binfo.isnew = 1;
 	binfo.unmap = is_quadstor_vdisk(binfo.vendor, binfo.product);
 
