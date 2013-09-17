@@ -3152,6 +3152,7 @@ copy_changeable_data_compression_page(struct tdrive *tdrive, uint8_t *buffer, in
 	page.page_code = DATA_COMPRESSION_PAGE;
 	page.page_length = sizeof(struct data_compression_page) - offsetof(struct data_compression_page, dcc);
 	page.dcc |= 0x80; /* Data compression enable modifyable */
+	memcpy(buffer, &page, min_len);
 }
 
 static void
