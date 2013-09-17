@@ -1,7 +1,7 @@
 #/bin/sh
 set -x
 curdir=`pwd`
-libvers="2.2.12"
+libvers="2.2.13"
 
 cd /quadstorvtl/quadstor/ && sh build.sh clean
 cd /quadstorvtl/quadstor/ && sh build.sh

@@ -1,3 +1,11 @@
+Release 2.2.13
+	* Allow configuration of disks with serial numbers > 32 bytes
+	* Generate serial number based on sys rid
+	* Read Attribute return ILLEGAL REQUEST sense if First Attribute
+	  specified in CDB isn't present
+	* Allow configuration of disks with vendor specific device identifiers
+	* Minor fixes in the data returned for certain mode pages
+
 Release 2.2.12
 	* Fibre channel fixes and merge with upstream
 	* Faster startup and shutdown
