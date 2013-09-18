@@ -164,15 +164,15 @@ ldev_send_ccb(void *ccb_void)
 		csio->sense_len = ctio->sense_len;
 		memcpy(&csio->sense_data, ctio->sense_data, ctio->sense_len);
 		csio->scsi_status = ctio->scsi_status;
-		csio->resid = csio->dxfer_len - ctio->dxfer_len;
 	}
 
-	if (ctio->pglist_cnt > 0) {
+	if (ctio->pglist_cnt > 0)
 		copy_out_request_buffer((struct pgdata **)ctio->data_ptr, ctio->pglist_cnt, csio, ctio->dxfer_len);
-	}
-	else if (ctio->dxfer_len > 0) {
+	else if (ctio->dxfer_len > 0)
 		copy_out_request_buffer2(ctio->data_ptr, ctio->dxfer_len, csio);
-	}
+
+	if (csio->ccb_h.flags & CAM_DIR_IN && csio->dxfer_len > ctio->dxfer_len)
+		csio->resid = csio->dxfer_len - ctio->dxfer_len;
 
 	csio->ccb_h.status = CAM_REQ_CMP;
 	mtx_lock(&ldev->cam_mtx);
