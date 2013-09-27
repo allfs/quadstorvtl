@@ -2395,7 +2395,7 @@ tdrive_copy_read_attribute_list(struct tdrive *tdrive, struct qsio_scsiio *ctio,
 		if (!mam_attr->valid)
 			continue;
 		if ((done + 2) <= allocation_length) {
-			*((uint16_t *)buffer+done) = htobe16(mam_attr->identifier);
+			*((uint16_t *)(buffer+done)) = htobe16(mam_attr->identifier);
 			done += 2;
 		}
 		avail += 2;
