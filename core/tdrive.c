@@ -2324,7 +2324,7 @@ tdrive_copy_read_attributes(struct tdrive *tdrive, struct qsio_scsiio *ctio, uin
 	}
 
 	mam_attr = tape_partition_mam_get_attribute(partition, first_attribute);
-	if (!mam_attr) {
+	if (!mam_attr || !mam_attr->valid) {
 		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);  
 		return 0;
 	}
