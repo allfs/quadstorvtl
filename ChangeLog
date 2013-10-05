@@ -5,6 +5,7 @@ Release 2.2.13
 	  specified in CDB isn't present
 	* Allow configuration of disks with vendor specific device identifiers
 	* Minor fixes in the data returned for certain mode pages
+	* RHEL/CentOS x86(32-bit) support
 
 Release 2.2.12
 	* Fibre channel fixes and merge with upstream
