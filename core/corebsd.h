@@ -65,6 +65,7 @@ extern uma_t *mtx_cache;
 #define Q_NOWAIT	M_WAITOK
 #define Q_NOWAIT_INTR	M_NOWAIT
 #define Q_ZERO		M_ZERO
+#define Q_SFBUF		0
 
 #ifdef CLANG_CHECK
 void * zalloc(unsigned long size, struct malloc_type *type, int flags);

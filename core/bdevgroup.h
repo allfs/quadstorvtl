@@ -31,7 +31,6 @@ struct bdevgroup {
 	SLIST_ENTRY(bdevgroup) g_list;
 	uint32_t group_id;
 	int worm;
-	atomic64_t free;
 };
 
 struct bdevgroup * bdev_group_locate(uint32_t group_id);
@@ -72,9 +71,4 @@ bint_is_group_master(struct bdevint *bint)
 	return atomic_test_bit(GROUP_FLAGS_MASTER, &bint->group_flags);
 }
 
-static inline uint64_t
- bdev_group_get_avail(struct bdevgroup *group)
-{
-	return atomic64_read(&group->free);
-}
 #endif

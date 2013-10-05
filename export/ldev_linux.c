@@ -135,6 +135,7 @@ copy_out_request_buffer2(__u8 *dataptr, int dxfer_len, struct scsi_cmnd *SCpnt)
 	int i;
 	__u32 offset = 0;
 	struct scatterlist *sgentry;
+	uint8_t *kaddr_dest;
 
 	if (!dxfer_len)
 		return;
@@ -151,8 +152,10 @@ copy_out_request_buffer2(__u8 *dataptr, int dxfer_len, struct scsi_cmnd *SCpnt)
 
 		min = min_t(int, (dxfer_len - offset), sgentry->length);
 
-		out_addr = page_address(sg_page(sgentry))+sgentry->offset;
+		kaddr_dest = kmap_atomic(sg_page(sgentry), KM_USER0);
+		out_addr = kaddr_dest + sgentry->offset;
 		memcpy(out_addr, dataptr+offset, min); 
+		kunmap_atomic(kaddr_dest, KM_USER0);
 
 		offset += min; 
 		sgentry++;
@@ -181,6 +184,7 @@ copy_out_request_buffer(struct pgdata **pglist, int pglist_cnt, struct scsi_cmnd
 	int sgoffset;
 	int pgoffset;
 	int j;
+	uint8_t *kaddr_src, *kaddr_dest;
 	struct scatterlist *sgentry;
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,25))
@@ -191,7 +195,9 @@ copy_out_request_buffer(struct pgdata **pglist, int pglist_cnt, struct scsi_cmnd
 			struct pgdata *pgtmp = pglist[i];
 
 			min_len = min_t(int, (dxfer_len - offset), pgtmp->pg_len);
-			memcpy(SCpnt->request_buffer+offset, page_address(pgtmp->page) + pgtmp->pg_offset, min_len); 
+			kaddr_src = kmap_atomic(pgtmp->page, KM_USER0);
+			memcpy(SCpnt->request_buffer+offset, kaddr_src + pgtmp->pg_offset, min_len); 
+			kunmap_atomic(kaddr_src, KM_USER0);
 			offset += min_len;
 			if (offset == dxfer_len)
 				break;
@@ -229,9 +235,13 @@ again:
 		in_avail = sgentry->length - sgoffset;
 		min = min_t(int, in_avail, out_avail);
 
-		out_addr = page_address(pgtmp->page)+ pgtmp->pg_offset + pgoffset;
-		in_addr = page_address(sg_page(sgentry))+sgentry->offset+sgoffset;
+		kaddr_src = kmap_atomic(pgtmp->page, KM_USER0);
+		kaddr_dest = kmap_atomic(sg_page(sgentry), KM_USER1);
+		out_addr = kaddr_src + pgtmp->pg_offset + pgoffset;
+		in_addr = kaddr_dest + sgentry->offset + sgoffset;
 		memcpy(in_addr, out_addr, min);
+		kunmap_atomic(kaddr_dest, KM_USER1);
+		kunmap_atomic(kaddr_src, KM_USER0);
 
 		sgoffset += min;
 		pgoffset += min;
@@ -323,6 +333,7 @@ copy_in_request_buffer2(__u8 *dataptr, int dxfer_len, struct scsi_cmnd *SCpnt)
 	int i;
 	int offset;
 	struct scatterlist *sgentry;
+	uint8_t *kaddr_src;
 
 	if (!dxfer_len)
 		return;
@@ -340,8 +351,10 @@ copy_in_request_buffer2(__u8 *dataptr, int dxfer_len, struct scsi_cmnd *SCpnt)
 
 		min = min_t(int, dxfer_len - offset, sgentry->length);
 
-		in_addr = page_address(sg_page(sgentry))+sgentry->offset;
+		kaddr_src = kmap_atomic(sg_page(sgentry), KM_USER0);
+		in_addr = kaddr_src + sgentry->offset;
 		memcpy(dataptr+offset, in_addr, min); 
+		kunmap_atomic(kaddr_src, KM_USER0);
 		offset += min;
 		sgentry++;
 	}
@@ -368,6 +381,7 @@ copy_in_request_buffer(struct pgdata **pglist, int pglist_cnt, struct scsi_cmnd 
 	__u32 pgoffset;
 	int j;
 	struct scatterlist *sgentry;
+	uint8_t *kaddr_src, *kaddr_dest;
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,25))
 	if (scsi_sg_count(SCpnt) == 0) {
@@ -378,7 +392,9 @@ copy_in_request_buffer(struct pgdata **pglist, int pglist_cnt, struct scsi_cmnd 
 			struct pgdata *pgtmp = pglist[i];
 
 			min_len = min_t(int, pgtmp->pg_len, (dxfer_len - offset));
-			memcpy(page_address(pgtmp->page), SCpnt->request_buffer+offset, min_len); 
+			kaddr_dest = kmap_atomic(pgtmp->page, KM_USER0);
+			memcpy(kaddr_dest, SCpnt->request_buffer+offset, min_len); 
+			kunmap_atomic(kaddr_dest, KM_USER0);
 			offset += min_len;
 		}
 		return;
@@ -411,9 +427,13 @@ again:
 		in_avail = sgentry->length - sgoffset;
 		min = min_t(int, in_avail, out_avail);
 
-		out_addr = page_address(pgtmp->page)+pgoffset;
-		in_addr = page_address(sg_page(sgentry))+sgentry->offset+sgoffset;
+		kaddr_dest = kmap_atomic(pgtmp->page, KM_USER0);
+		kaddr_src = kmap_atomic(sg_page(sgentry), KM_USER1);
+		out_addr = kaddr_dest + pgoffset;
+		in_addr = kaddr_src + sgentry->offset + sgoffset;
 		memcpy(out_addr, in_addr, min);
+		kunmap_atomic(kaddr_src, KM_USER1);
+		kunmap_atomic(kaddr_dest, KM_USER0);
 
 		sgoffset += min;
 		pgoffset += min;

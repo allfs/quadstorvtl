@@ -126,7 +126,9 @@ partition_size_from_units(uint16_t part_size, uint8_t units)
 static uint16_t
 partition_size_to_units(uint64_t part_size, uint8_t units)
 {
-	uint64_t partition_div = 10;
+	uint32_t partition_div = 10;
+	uint32_t partition_size = (uint32_t)(part_size >> 30);
+	uint32_t ret_size;
 	int i;
 
 	if (!units)
@@ -135,8 +137,11 @@ partition_size_to_units(uint64_t part_size, uint8_t units)
 	for (i = 1; i < units; i++) {
 		partition_div *= 10;
 	}
-	debug_check((part_size / partition_div) > 0xFFFFULL);
-	return (uint16_t)(part_size / partition_div);
+	ret_size = partition_size / partition_div;
+	if (!ret_size)
+		ret_size = 1U;
+	debug_check(ret_size > 0xFFFF);
+	return (((uint64_t)ret_size) << 30);
 }
 
 static void
@@ -302,6 +307,7 @@ tdrive_init(struct tdrive *tdrive, struct vdeviceinfo *deviceinfo)
 		return -1;
 	}
 
+	tdrive->stats_lock = mtx_alloc("tdrive stats lock");
 	tdrive->tdrive_lock = sx_alloc("tdrive lock");
 	SLIST_INIT(&tdrive->density_list);
 	LIST_INIT(&tdrive->media_list);
@@ -441,6 +447,7 @@ tdrive_free(struct tdrive *tdrive, int delete)
 	tdrive_free_density_list(tdrive);
 	tdevice_exit(&tdrive->tdevice);
 	devq_exit(tdrive->write_devq);
+	mtx_free(tdrive->stats_lock);
 	sx_free(tdrive->tdrive_lock);
 	free(tdrive, M_DRIVE);
 }
@@ -1246,19 +1253,21 @@ get_fixed_partition_size(struct tape *tape, int pnum)
 static uint64_t
 tape_custom_size_adjust(struct tape *tape, uint64_t size)
 {
-	uint64_t default_size;
-	uint64_t custom_size;
-	uint64_t tape_size;
+	uint32_t default_size;
+	uint32_t custom_size;
+	uint32_t cur_size;
+	uint32_t tape_size;
 	
-	default_size = get_vol_size_default(tape->make);
-	if (!default_size || default_size == tape->size)
+	default_size = (uint32_t)(get_vol_size_default(tape->make) >> 30);
+	tape_size = (uint32_t)(tape->size >> 30);
+	cur_size = (uint32_t)(size >> 30);
+	if (!default_size || default_size == tape_size)
 		return size;
-	tape_size = (tape->size >> 30);
-	custom_size = ((size * tape_size) / default_size);
-	if (custom_size > size)
+	custom_size = ((cur_size * tape_size) / default_size);
+	if (custom_size > cur_size)
 		return size;
-	custom_size = max_t(uint64_t, custom_size, (1U << 30));
-	return custom_size;
+	custom_size = max_t(uint32_t, custom_size, 1U);
+	return (((uint64_t)custom_size) << 30);
 }
 
 static int
@@ -1437,6 +1446,7 @@ tdrive_cmd_set_capacity(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	uint8_t *cdb = ctio->cdb;
 	int retval, valid;
 	uint16_t proportion;
+	uint32_t tape_size;
 	uint64_t set_size;
 
 	tdrive_wait_for_write_queue(tdrive);
@@ -1453,7 +1463,8 @@ tdrive_cmd_set_capacity(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 		return 0;
 	}
 
-	set_size = (tape->size / 65535) * proportion;
+	tape_size = (uint32_t)(tape->size >> 30);
+	set_size = ((tape_size / 65535) * proportion) >> 30;
 	set_size = align_size(set_size, BINT_UNIT_SIZE);
 
 	if (tape->set_size == set_size)
@@ -3180,7 +3191,7 @@ tdrive_copy_vital_product_page_info(struct tdrive *tdrive, uint8_t *buffer, uint
 }	
 
 static int
-mode_sense_current_values(struct tdrive *tdrive, uint8_t *buffer, uint16_t allocation_length, uint8_t dbd, uint8_t page_code, uint8_t sub_page_code, int *start_offset)
+tdrive_mode_sense_current_values(struct tdrive *tdrive, uint8_t *buffer, uint16_t allocation_length, uint8_t dbd, uint8_t page_code, uint8_t sub_page_code, int *start_offset)
 {
 	int offset = *start_offset;
 	int avail = 0;
@@ -3281,7 +3292,7 @@ mode_sense_current_values(struct tdrive *tdrive, uint8_t *buffer, uint16_t alloc
 }
 
 static int
-mode_sense_changeable_values(struct tdrive *tdrive, uint8_t *buffer, uint16_t allocation_length, uint8_t dbd, uint8_t page_code, uint8_t sub_page_code, int *start_offset)
+tdrive_mode_sense_changeable_values(struct tdrive *tdrive, uint8_t *buffer, uint16_t allocation_length, uint8_t dbd, uint8_t page_code, uint8_t sub_page_code, int *start_offset)
 {
 	int offset = *start_offset;
 	int avail = 0;
@@ -3383,15 +3394,9 @@ mode_sense_changeable_values(struct tdrive *tdrive, uint8_t *buffer, uint16_t al
 }
 
 static int
-mode_sense_default_values(struct tdrive *tdrive, uint8_t *buffer, uint16_t allocation_length, uint8_t dbd, uint8_t page_code, uint8_t sub_page_code, int *start_offset)
+tdrive_mode_sense_default_values(struct tdrive *tdrive, uint8_t *buffer, uint16_t allocation_length, uint8_t dbd, uint8_t page_code, uint8_t sub_page_code, int *start_offset)
 {
-	return mode_sense_current_values(tdrive, buffer, allocation_length, dbd, page_code, sub_page_code, start_offset);
-}
-
-static int
-mode_sense_saved_values(struct tdrive *tdrive, uint8_t *buffer, uint16_t allocation_length, uint8_t dbd, uint8_t page_code, uint8_t sub_page_code, int *start_offset)
-{
-	return mode_sense_current_values(tdrive, buffer, allocation_length, dbd, page_code, sub_page_code, start_offset);
+	return tdrive_mode_sense_current_values(tdrive, buffer, allocation_length, dbd, page_code, sub_page_code, start_offset);
 }
 
 static int
@@ -3461,13 +3466,13 @@ tdrive_cmd_mode_sense10(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 
 	switch (pc) {
 		case MODE_SENSE_CURRENT_VALUES:
-			avail += mode_sense_current_values(tdrive, ctio->data_ptr, allocation_length, dbd, page_code, sub_page_code, &offset);
+			avail += tdrive_mode_sense_current_values(tdrive, ctio->data_ptr, allocation_length, dbd, page_code, sub_page_code, &offset);
 			break;
 		case MODE_SENSE_CHANGEABLE_VALUES:
-			avail += mode_sense_changeable_values(tdrive, ctio->data_ptr, allocation_length, dbd, page_code, sub_page_code, &offset);
+			avail += tdrive_mode_sense_changeable_values(tdrive, ctio->data_ptr, allocation_length, dbd, page_code, sub_page_code, &offset);
 			break;
 		case MODE_SENSE_DEFAULT_VALUES:
-			avail += mode_sense_default_values(tdrive, ctio->data_ptr, allocation_length, dbd, page_code, sub_page_code, &offset);
+			avail += tdrive_mode_sense_default_values(tdrive, ctio->data_ptr, allocation_length, dbd, page_code, sub_page_code, &offset);
 			break;
 		case MODE_SENSE_SAVED_VALUES:
 			ctio_free_data(ctio);
@@ -3536,16 +3541,17 @@ tdrive_cmd_mode_sense6(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 
 	switch (pc) {
 		case MODE_SENSE_CURRENT_VALUES:
-			avail += mode_sense_current_values(tdrive, ctio->data_ptr, allocation_length, dbd, page_code, sub_page_code, &offset);
+			avail += tdrive_mode_sense_current_values(tdrive, ctio->data_ptr, allocation_length, dbd, page_code, sub_page_code, &offset);
 			break;
 		case MODE_SENSE_CHANGEABLE_VALUES:
-			avail += mode_sense_changeable_values(tdrive, ctio->data_ptr, allocation_length, dbd, page_code, sub_page_code, &offset);
+			avail += tdrive_mode_sense_changeable_values(tdrive, ctio->data_ptr, allocation_length, dbd, page_code, sub_page_code, &offset);
 			break;
 		case MODE_SENSE_DEFAULT_VALUES:
-			avail += mode_sense_default_values(tdrive, ctio->data_ptr, allocation_length, dbd, page_code, sub_page_code, &offset);
+			avail += tdrive_mode_sense_default_values(tdrive, ctio->data_ptr, allocation_length, dbd, page_code, sub_page_code, &offset);
 			break;
 		case MODE_SENSE_SAVED_VALUES:
-			avail += mode_sense_saved_values(tdrive, ctio->data_ptr, allocation_length, dbd, page_code, sub_page_code, &offset);
+			ctio_free_data(ctio);
+			ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, SAVING_PARAMETERS_NOT_SUPPORTED_ASC, SAVING_PARAMETERS_NOT_SUPPORTED_ASCQ);
 			break;
 	}
 
@@ -4136,7 +4142,7 @@ tdrive_proc_cmd(void *drive, void *iop)
 			ascq = INCOMPATIBLE_MEDIUM_INSTALLED_ASCQ;
 		} else if (!atomic_test_bit(TDRIVE_FLAGS_TAPE_LOADED, &tdrive->flags)) {
 			asc = MEDIUM_NOT_PRESENT_LOADABLE_ASC;
-			asc = MEDIUM_NOT_PRESENT_LOADABLE_ASCQ;
+			ascq = MEDIUM_NOT_PRESENT_LOADABLE_ASCQ;
 		} else {
 			asc = LOGICAL_UNIT_IS_IN_PROCESS_OF_BECOMING_READY_ASC;
 			ascq = LOGICAL_UNIT_IS_IN_PROCESS_OF_BECOMING_READY_ASCQ;

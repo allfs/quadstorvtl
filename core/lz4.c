@@ -63,17 +63,21 @@
 // 32 or 64 bits ?
 #if (defined(__x86_64__) || defined(__x86_64) || defined(__amd64__) || defined(__amd64) || defined(__ppc64__) || defined(_WIN64) || defined(__LP64__) || defined(_LP64) )   // Detects 64 bits mode
 #  define LZ4_ARCH64 1
+#elif (defined(x86))
+#  define LZ4_ARCH64 0
 #else
 # error "Unsupported architecture"
 #  define LZ4_ARCH64 0
 #endif
 
+#if 0
 // Little Endian or Big Endian ?
 // Note : overwrite the below #define if you know your architecture endianess
 #if (defined(__BIG_ENDIAN__) || defined(__BIG_ENDIAN) || defined(_BIG_ENDIAN) || defined(_ARCH_PPC) || defined(__PPC__) || defined(__PPC) || defined(PPC) || defined(__powerpc__) || defined(__powerpc) || defined(powerpc) || ((defined(__BYTE_ORDER__)&&(__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__))) )
 #  define LZ4_BIG_ENDIAN 1
 #else
 // Little Endian assumed. PDP Endian and other very rare endian format are unsupported.
+#endif
 #endif
 
 // Unaligned memory access is automatically enabled for "common" CPU, such as x86.

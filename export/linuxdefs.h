@@ -94,6 +94,7 @@ enum {
 	Q_NOWAIT	= 0x2,
 	Q_NOWAIT_INTR	= 0x4,
 	Q_ZERO   	= 0x8,
+	Q_SFBUF   	= 0x10,
 };
 
 #define M_WAITOK (GFP_KERNEL | __GFP_NOFAIL)

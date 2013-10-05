@@ -76,16 +76,16 @@
 #define        MAX_REF        ((1 << 8) + (1 << 3))
 
 #if __GNUC__ >= 3
-# define expect(expr,value)         __builtin_expect ((expr),(value))
+# define bexpect(expr,value)         __builtin_expect ((expr),(value))
 # define inline                     inline
 #else
-# define expect(expr,value)         (expr)
+# define bexpect(expr,value)         (expr)
 # define inline                     static
 # error "define expect"
 #endif
 
-#define expect_false(expr) expect ((expr) != 0, 0)
-#define expect_true(expr)  expect ((expr) != 0, 1)
+#define expect_false(expr) bexpect ((expr) != 0, 0)
+#define expect_true(expr)  bexpect ((expr) != 0, 1)
 
 /*
  * compressed format

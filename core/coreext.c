@@ -5,6 +5,19 @@
 #include "bdev.h"
 #include "tcache.h"
 
+#ifdef x86
+void
+memcpy(void *a, const void *b, unsigned size)
+{
+	int i;
+	unsigned char *dest = a;
+	const unsigned char *src = b;
+
+	for (i = 0; i < size; i++)
+		dest[i] = src[i];
+}
+#endif
+
 void
 sys_memset(void *dest, int c, int size)
 {

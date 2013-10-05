@@ -15,7 +15,11 @@
 typedef char			__int8_t;
 typedef short			__int16_t;
 typedef int			__int32_t;
+#ifdef x86
+typedef long long		__int64_t;
+#else
 typedef long			__int64_t;
+#endif
 
 typedef __int8_t		int8_t;
 typedef __int16_t		int16_t;
@@ -26,7 +30,11 @@ typedef __int64_t		int64_t;
 typedef unsigned char		__uint8_t;
 typedef unsigned short		__uint16_t;
 typedef unsigned int		__uint32_t;
+#ifdef x86
+typedef unsigned long long	__uint64_t;
+#else
 typedef unsigned long		__uint64_t;
+#endif
 
 typedef __uint8_t		uint8_t;
 typedef __uint16_t		uint16_t;
@@ -38,18 +46,23 @@ typedef __uint16_t		u_int16_t;
 typedef __uint32_t		u_int32_t;
 typedef __uint64_t		u_int64_t;
 
-typedef __uint8_t		u_char;
-typedef __uint16_t		u_short;
-typedef __uint32_t		u_int;
-typedef __uint64_t		u_long;
+typedef unsigned char		u_char;
+typedef unsigned short		u_short;
+typedef unsigned int		u_int;
+typedef unsigned long		u_long;
 
-typedef uint64_t size_t;
-typedef int64_t ssize_t;
-typedef int64_t off_t;
+typedef unsigned long size_t;
+typedef long ssize_t;
+typedef long off_t;
 typedef int pid_t;
 
+#ifdef x86
+#include "sysdefsx86/atomic.h"
+#include "sysdefsx86/endian.h"
+#else
 #include "sysdefs/atomic.h"
 #include "sysdefs/endian.h"
+#endif
 #include "asmdefs.h"
 
 /*
@@ -87,14 +100,20 @@ typedef void kproc_t;
 typedef void cv_t;
 typedef void bio_t;
 
+#ifdef x86
+#define NULL    	(0LL)
+#define offsetof(s, m)	((size_t)(&(((s *)0LL)->m)))
+#else
 #define NULL    	(0L)
 #define offsetof(s, m)	((size_t)(&(((s *)0)->m)))
+#endif
 #define PAGE_SIZE	LBA_SIZE
 
-#define Q_WAITOK	1
-#define Q_NOWAIT	2
-#define Q_NOWAIT_INTR	4
-#define Q_ZERO		8
+#define Q_WAITOK	0x1
+#define Q_NOWAIT	0x2
+#define Q_NOWAIT_INTR	0x4
+#define Q_ZERO		0x8
+#define Q_SFBUF		0x10
 #define M_WAITOK	Q_WAITOK
 
 #define VM_ALLOC_ZERO	Q_ZERO
@@ -303,10 +322,15 @@ extern struct qs_kern_cbs kcbs;
 void memcpy(void *dst, const void *src, unsigned len);
 void sys_memset(void *b, int c, int len);
 void bcopy(const void *src, void *dst, size_t len);
+#ifndef x86
 void bzero(void *b, size_t len);
 int bcmp(const void *b1, const void *b2, size_t len);
-
 #define memcmp(sp1, sp2, szi)		bcmp(sp1, sp2, szi)
+#else
+#define bzero(bptr, lnt)	sys_memset(bptr, 0, lnt)
+int memcmp(const void *s1, const void *s2, size_t n);
+#endif
+
 
 int strcmp(const char *s1, const char *s2);
 size_t strlen(const char *s);

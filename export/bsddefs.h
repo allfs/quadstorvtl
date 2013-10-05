@@ -445,6 +445,7 @@ typedef void sock_t;
 #define Q_WAITOK	M_WAITOK
 #define Q_NOWAIT	M_NOWAIT
 #define Q_ZERO		M_ZERO
+#define Q_SFBUF		0
 
 #if __FreeBSD_version >= 900032
 #define uio_yield()	kern_yield(PRI_UNCHANGED)

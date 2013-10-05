@@ -36,7 +36,7 @@ mkdir -p /quadstorvtl/bin
 
 rm -f /quadstorvtl/quadstor/target-mode/fc/qla2xxx
 
-if [ "$1" = "rhel6" ]; then
+if [ "$1" = "rhel6" -o "$1" = "rhel6x86" ]; then
 	cd /quadstorvtl/quadstor/target-mode/fc && ln -s qla2xxx.upstream qla2xxx
 elif [ "$1" = "sles11sp2" ]; then
 	cd /quadstorvtl/quadstor/target-mode/fc && ln -s qla2xxx.upstream qla2xxx

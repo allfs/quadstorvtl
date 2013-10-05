@@ -54,10 +54,6 @@ typedef struct {
 #define atomic_sub(i, v)	atomic_subtract_int(&(v)->val, (i))
 #define atomic_dec_and_test(v)	(atomic_fetchadd_int(&(v)->val, -1) == 1)
 
-typedef struct {
-	volatile unsigned long val;
-} atomic64_t;
-
 #define atomic64_read(v)		((v)->val)
 #define atomic64_set(v, i)	((v)->val = (i))
 

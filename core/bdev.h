@@ -64,7 +64,7 @@ struct bdevint {
 	uint64_t b_end;
 	uint64_t size;
 	uint64_t usize;
-	atomic64_t free;
+	uint64_t free;
 	uint32_t bid;
 	uint32_t sector_size;
 	uint32_t sector_shift;
@@ -103,7 +103,7 @@ bint_blocks(struct bdevint *bint, uint32_t size)
 static inline int
 bint_nindexes(uint64_t usize)
 {
-	uint64_t units;
+	unsigned long units;
 	int nindexes;
 
 	units = usize >> BINT_UNIT_SHIFT;
@@ -150,9 +150,9 @@ static inline int
 calc_index_id(struct bdevint *bint, uint64_t block, int *ret_i, int *ret_j)
 {
 	uint64_t span = block << bint->sector_shift;
-	uint64_t units = span >> BINT_UNIT_SHIFT;
-	uint64_t index_id;
-	uint64_t bits;
+	unsigned long units = span >> BINT_UNIT_SHIFT;
+	unsigned long index_id;
+	unsigned long bits;
 
 	index_id = units / UNITS_PER_INDEX;
 	bits = units % UNITS_PER_INDEX;

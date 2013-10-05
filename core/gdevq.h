@@ -24,7 +24,7 @@
 #include "blk_map.h"
 
 struct qs_cdevq {
-	uint8_t wrkmem[sizeof(LZF_STATE)];
+	uint8_t wrkmem[65536];
 	kproc_t *task;
 	SLIST_ENTRY(qs_cdevq) c_list;
 	int exit_flags;

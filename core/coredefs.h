@@ -128,8 +128,6 @@ struct pgdata {
 	wait_compl_t *completion;
 };
 
-#define pgdata_page_address(pgdta)	vm_pg_address((pgdta)->page)
-
 static inline void
 pgdata_free_page(struct pgdata *pgdata)
 {
@@ -152,12 +150,6 @@ pgdata_alloc_page(struct pgdata *pgdata, allocflags_t flags)
 }
 
 static inline void
-pgdata_copy_page_ref(struct pgdata *dest, pagestruct_t *page)
-{
-	memcpy(pgdata_page_address(dest), vm_pg_address(page), LBA_SIZE);
-}
-
-static inline void
 pgdata_add_page_ref(struct pgdata *dest, pagestruct_t *page)
 {
 	vm_pg_ref(page);
@@ -165,22 +157,10 @@ pgdata_add_page_ref(struct pgdata *dest, pagestruct_t *page)
 }
 
 static inline void
-pgdata_copy_ref(struct pgdata *dest, struct pgdata *src)
-{
-	memcpy(pgdata_page_address(dest), pgdata_page_address(src), LBA_SIZE);
-}
-
-static inline void
 pgdata_add_ref(struct pgdata *dest, struct pgdata *src)
 {
 	pgdata_add_page_ref(dest, src->page);
 	dest->pg_len = src->pg_len;
-}
-
-static inline void
-pgdata_move(struct pgdata *dest, struct pgdata *src)
-{
-	dest->page = src->page;
 }
 
 static inline void
@@ -278,7 +258,7 @@ pgdata_allocate(uint32_t block_size, uint32_t num_blocks, int *ret_pglist_cnt, a
 				continue;
 
 			pgtmp->pg_len = (remaining > LBA_SIZE) ? LBA_SIZE : remaining;
-			retval = pgdata_alloc_page(pgtmp, 0);
+			retval = pgdata_alloc_page(pgtmp, Q_SFBUF);
 			if (unlikely(retval != 0)) {
 				debug_warn("allocating for pgdata page failed\n");
 				pglist_free(pglist, idx);

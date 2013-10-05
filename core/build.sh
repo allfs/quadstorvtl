@@ -11,7 +11,15 @@ rm -f corelib.o
 if [ "$os" = "FreeBSD" ]; then
 	make -f Makefile.bsd $1
 else
-	make -f Makefile.ext $1
+	if [ "$1" != "x86" ]; then
+		make -f Makefile.ext $1
+	else
+		rm -f corelib.c
+		for i in `ls -1 *.c util/*.c | grep -v bsd`; do
+			echo "#include \"$i\"" >> corelib.c
+		done
+		make -f Makefile.ext.x86
+	fi
 fi
 
 if [ "$?" != "0" ]; then
@@ -22,11 +30,14 @@ if [ "$1" = "clean" ]; then
 	exit 0
 fi
 
-rm -f core.ko corelib.o
 if [ "$os" = "FreeBSD" ]; then
+	rm -f core.ko corelib.o
 	ld  -d -warn-common -r -d -o corelib.o `ls *.o`
 else
-	ld -m elf_x86_64 -r -o corelib.o `ls *.o` `ls util/*.o`
+	if [ "$1" != "x86" ]; then
+		rm -f core.ko corelib.o
+		ld -m elf_x86_64 -r -o corelib.o `ls *.o` `ls util/*.o`
+	fi
 fi
 
 #objcopy --strip-debug corelib.o

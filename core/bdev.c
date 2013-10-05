@@ -48,7 +48,7 @@ bdev_alloc_list_insert(struct bdevint *bint)
 	}
 
 	SLIST_FOREACH(iter, &group->alloc_list, a_list) {
-		if (atomic64_read(&iter->free) < atomic64_read(&bint->free))
+		if (iter->free < bint->free)
 			break;
 		prev = iter;
 	}
@@ -82,15 +82,13 @@ bdev_remove_from_alloc_list(struct bdevint *bint)
 void 
 bint_decr_free(struct bdevint *bint, uint64_t used)
 {
-	atomic64_sub(used, &bint->free);
-	atomic64_sub(used, &bint->group->free);
+	bint->free -= used;
 }
 
 void 
 bint_incr_free(struct bdevint *bint, uint64_t freed)
 {
-	atomic64_add(freed, &bint->free);
-	atomic64_add(freed, &bint->group->free);
+	bint->free += freed;
 }
 
 static uint64_t
@@ -463,7 +461,7 @@ found:
 	}
 
 	*b_end = end;
-	debug_check(atomic64_read(&bint->free) < BINT_UNIT_SIZE);
+	debug_check(bint->free < BINT_UNIT_SIZE);
 	bint_decr_free(bint, BINT_UNIT_SIZE);
 	return block;
 }
@@ -717,7 +715,7 @@ bdev_get_info(struct bdev_info *binfo)
 
 	binfo->size = bint->size;
 	binfo->usize = bint->usize;
-	binfo->free = atomic64_read(&bint->free);
+	binfo->free = bint->free;
 	binfo->ismaster = bint_is_group_master(bint);
 	binfo->unmap = atomic_test_bit(GROUP_FLAGS_UNMAP_ENABLED, &bint->group_flags) ? 1 : 0;
 	return 0;
@@ -844,7 +842,7 @@ bint_load(struct bdevint *bint)
 	}
 
 	debug_info("usize %llu free %llu\n", (unsigned long long)bint->usize, (unsigned long long)(free << BINT_UNIT_SHIFT));
-	atomic64_set(&bint->free, (free << BINT_UNIT_SHIFT));
+	bint->free = (free << BINT_UNIT_SHIFT);
 
 	retval = 0;
 	if (memcmp(raw_bint->quad_prod, "VTL", strlen("VTL"))) {
@@ -1023,7 +1021,7 @@ bdev_add_new(struct bdev_info *binfo)
 			goto err;
 		}
 
-		atomic64_set(&bint->free, bint->usize - BINT_RESERVED_SIZE);
+		bint->free = bint->usize - BINT_RESERVED_SIZE;
 
 		if (binfo->unmap) {
 			int unmap;
@@ -1093,7 +1091,7 @@ err:
 static inline uint64_t
 bint_used(struct bdevint *bint)
 {
-	return (bint->usize - atomic64_read(&bint->free));
+	return (bint->usize - bint->free);
 }
 
 #define BINT_ALLOC_RESERVED		(BINT_UNIT_SIZE << 2) /* 4 segments */
@@ -1122,7 +1120,7 @@ bint_get_eligible(struct bdevgroup *group, uint32_t size)
 	}
 
 	while (eligible) {
-		if (atomic64_read(&eligible->free)) {
+		if (eligible->free) {
 			found = eligible;
 			eligible = bdev_alloc_list_next_rotate(eligible);
 			break;
@@ -1158,7 +1156,7 @@ bdev_get_block(struct bdevint *bint, struct bdevint **ret_bint, uint64_t *b_end)
 	if (ret)
 		*ret_bint = a_bint;
 	else
-		debug_warn("a_bint usize %llu free %llu\n", (unsigned long long)a_bint->usize, (unsigned long long)atomic64_read(&a_bint->free));
+		debug_warn("a_bint usize %llu free %llu\n", (unsigned long long)a_bint->usize, (unsigned long long)a_bint->free);
 
 	return ret;
 }

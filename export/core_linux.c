@@ -423,6 +423,8 @@ vm_pg_alloc(allocflags_t aflags)
 	pagestruct_t *pp;
 	int flags = GFP_NOIO | (aflags ? __GFP_ZERO : 0);
 
+	if (aflags & Q_SFBUF)
+		aflags |= __GFP_HIGHMEM;
 	pp = alloc_page(flags);
 	return pp;
 }

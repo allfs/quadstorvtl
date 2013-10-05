@@ -285,7 +285,9 @@ struct density_descriptor {
 
 #define TDRIVE_STATS_ADD(tdrv,count,val)				\
 do {									\
-	atomic64_add(val, (atomic64_t *)&tdrv->stats.count);		\
+	mtx_lock(tdrv->stats_lock);					\
+	tdrv->stats.count += val;					\
+	mtx_unlock(tdrv->stats_lock);					\
 } while (0)
 
 struct tdrive {
@@ -311,6 +313,7 @@ struct tdrive {
 	uint8_t add_sense_len;
 	uint8_t serial_len;
 
+	mtx_t *stats_lock;
 	sx_t *tdrive_lock;
 	struct tdrive_handlers handlers;
 	struct tdrive_stats stats;

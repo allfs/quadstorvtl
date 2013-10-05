@@ -121,16 +121,6 @@ device_send_notify(struct qsio_immed_notify *notify)
 
 #define PRIME 0x9e37fffffffc0001UL
 
-static inline unsigned long
-hashblock(unsigned long val, int bits, uint32_t sector_shift)
-{
-	unsigned int mod = (1U << bits) - 1;
-
-	if (sector_shift != LBA_SHIFT && !(val & 0x7))
-		val >>= 3;
-	return (val % mod);
-}
-
 static inline uint32_t __device_tid(uint32_t bus, uint32_t target)
 {
 	return ((bus * TL_DEVICES_PER_BUS) + target + 1);

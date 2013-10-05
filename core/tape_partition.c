@@ -1394,7 +1394,7 @@ tape_partition_unload(struct tape_partition *partition)
 static void
 partition_calc_max_tmaps(struct tape_partition *partition)
 {
-	uint64_t units = partition->size >> BINT_UNIT_SHIFT;
+	unsigned long units = partition->size >> BINT_UNIT_SHIFT;
 	int data_tmaps, meta_tmaps;
 
 	if (partition->tape->size & BINT_UNIT_MASK)
