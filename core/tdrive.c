@@ -3038,6 +3038,7 @@ copy_current_disconnect_reconnect_page(struct tdrive *tdrive, uint8_t *buffer, i
 struct control_mode_page control_mode_page = {
 	.page_code = CONTROL_MODE_PAGE,
 	.page_length = 0x0A,
+	.tst = 0x20,
 	.tas = 0x40,
 };
 
