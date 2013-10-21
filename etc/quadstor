@@ -33,7 +33,7 @@ unload_module() {
 
 kill_prog() {
 	pkill -f $1
-	progpid=`quadstorvtl/bin/pidof $1 2> /dev/null`
+	progpid=`/quadstorvtl/bin/pidof $1 2> /dev/null`
 	tries="0"
 	while [ "$progpid" != "" ]; do
 		sleep .1
@@ -41,7 +41,7 @@ kill_prog() {
 			break
 		fi
 		tries=`expr $tries + 1`
-		progpid=`quadstorvtl/bin/pidof $1 2> /dev/null`
+		progpid=`/quadstorvtl/bin/pidof $1 2> /dev/null`
 	done
 }
 

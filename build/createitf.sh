@@ -16,7 +16,6 @@ sh build.sh clean
 sh build.sh 
 sh build.sh install
 
-install -m 755 /quadstorvtl/quadstor/target-mode/iscsi/etc/initd/initd.bsd /quadstorvtl/etc/iscsit
 install -m 755 /quadstorvtl/quadstor/target-mode/iscsi/etc/targets.allow /quadstorvtl/etc/iet/targets.allow.sample
 install -m 755 /quadstorvtl/quadstor/target-mode/iscsi/etc/initiators.allow /quadstorvtl/etc/iet/initiators.allow.sample
 install -m 755 /quadstorvtl/quadstor/target-mode/iscsi/etc/ietd.conf /quadstorvtl/etc/iet/ietd.conf.sample
@@ -44,7 +43,6 @@ rm /quadstorvtl/quadstor/build/pkg-plist
 echo "quadstorvtl/bin/ietadm" >> /quadstorvtl/quadstor/build/pkg-plist
 echo "quadstorvtl/sbin/ietd" >> /quadstorvtl/quadstor/build/pkg-plist
 echo "quadstorvtl/lib/modules/iscsit.ko" >> /quadstorvtl/quadstor/build/pkg-plist
-echo "quadstorvtl/etc/iscsit" >> /quadstorvtl/quadstor/build/pkg-plist
 cd / && find quadstorvtl/etc/iet/* >> /quadstorvtl/quadstor/build/pkg-plist
 
 for i in `cd / && find quadstorvtl/src/`;do
