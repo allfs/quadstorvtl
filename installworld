@@ -63,7 +63,11 @@ checkerror
 
 sh buildworld clean
 checkerror
-sh buildworld
+if [ "$buildtype" = "rhel6x86" ]; then
+	sh buildworld x86
+else
+	sh buildworld
+fi
 checkerror
 sh buildworld install
 checkerror
@@ -103,10 +107,10 @@ else
 	sudo $QUADSTOR_ROOT/scripts/qlainst
 	if [ -d /etc/rc.d/init.d ]; then
 		sudo install -m 755 $QUADSTOR_ROOT/etc/quadstor.linux /etc/rc.d/init.d/quadstorvtl
-		/sbin/chkconfig --add quadstorvtl
+		sudo /sbin/chkconfig --add quadstorvtl
 	elif [ -d /etc/rc.d ]; then
 		sudo install -m 755 $QUADSTOR_ROOT/etc/quadstor.linux /etc/rc.d/quadstorvtl
-		/sbin/chkconfig --add quadstorvtl
+		sudo /sbin/chkconfig --add quadstorvtl
 	else
 		sudo install -m 755 $QUADSTOR_ROOT/etc/quadstor.linux /etc/init.d/quadstorvtl
 		sudo sed -e 's/# Default-Start:.*/# Default-Start:\t\t2 3 4 5/g' -i /etc/init.d/quadstorvtl

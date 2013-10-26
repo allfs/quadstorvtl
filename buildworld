@@ -31,6 +31,10 @@ rm -f $QUADSTOR_ROOT/export/corelib.o
 cd $QUADSTOR_ROOT/core && sh build.sh clean && sh build.sh $clean
 checkerror
 
+if [ "$clean" = "x86" ]; then
+	clean=""
+fi
+
 if [ "$clean" != install ]; then
 if [ "$os" = "FreeBSD" ]; then
 	cd $QUADSTOR_ROOT/export && make -f Makefile.core $clean
