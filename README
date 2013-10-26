@@ -18,7 +18,7 @@ zypper install apache2 gcc perl kernel-default-devel sg3_utils
 
 On Debian 6.x/7.x:
 
-apt-get install uuid-runtimeG
+apt-get install uuid-runtime
 apt-get install build-essential
 apt-get install sg3-utils
 apt-get install apache2
