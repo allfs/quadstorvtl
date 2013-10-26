@@ -3,7 +3,6 @@
 # Copyright (C) QUADStor Systems
 set -x
 buildtype=$1
-installtype=$2
 
 buildroot=`pwd`
 export QUADSTOR_ROOT="$buildroot"
@@ -82,25 +81,19 @@ sudo install -m 644  $QUADSTOR_ROOT/library/client/libtlclnt.so /quadstorvtl/lib
 sudo install -m 644 $QUADSTOR_ROOT/library/server/libtlsrv.so /quadstorvtl/lib/libtlsrv.so
 sudo install -m 644 $QUADSTOR_ROOT/library/common/libtlmsg.so /quadstorvtl/lib/libtlmsg.so
 sudo install -m 755 $QUADSTOR_ROOT/sbin/vtmdaemon /quadstorvtl/sbin/
-if [ "$installtype" = "" ]; then
-	sudo install -m 755 $QUADSTOR_ROOT/sbin/ietd /quadstorvtl/sbin/
-fi
+sudo install -m 755 $QUADSTOR_ROOT/sbin/ietd /quadstorvtl/sbin/
 sudo install -m 755 $QUADSTOR_ROOT/bin/* /quadstorvtl/bin/
 
 if [ "$os" = "FreeBSD" ]; then
 	sudo mkdir -p /quadstorvtl/lib/modules
 	sudo install -m 755 $QUADSTOR_ROOT/export/*.ko /quadstorvtl/lib/modules/
 	sudo install -m 755 $QUADSTOR_ROOT/target-mode/fc/isp/ispmod.ko /boot/kernel/
-	if [ "$installtype" = "" ]; then
-		sudo install -m 755 $QUADSTOR_ROOT/target-mode/iscsi/kernel/iscsit.ko /quadstorvtl/lib/modules/
-	fi
+	sudo install -m 755 $QUADSTOR_ROOT/target-mode/iscsi/kernel/iscsit.ko /quadstorvtl/lib/modules/
 	sudo install -m 755 $QUADSTOR_ROOT/etc/quadstor /etc/rc.d/quadstorvtl
 else
 	kvers=`uname -r`
 	sudo install -m 755 -d /quadstorvtl/lib/modules/$kvers
-	if [ "$installtype" = "" ]; then
-		sudo install -m 755 $QUADSTOR_ROOT/target-mode/iscsi/kernel/iscsit.ko /quadstorvtl/lib/modules/$kvers/
-	fi
+	sudo install -m 755 $QUADSTOR_ROOT/target-mode/iscsi/kernel/iscsit.ko /quadstorvtl/lib/modules/$kvers/
 	sudo install -m 755 $QUADSTOR_ROOT/export/*.ko /quadstorvtl/lib/modules/$kvers/
 	sudo install -m 755 $QUADSTOR_ROOT/target-mode/fc/qla2xxx/qla2xxx.ko /quadstorvtl/lib/modules/$kvers/
 	if [ -f $QUADSTOR_ROOT/target-mode/fc/srpt/ib_srpt.ko ]; then
