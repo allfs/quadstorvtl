@@ -1,5 +1,3 @@
-QUADSTOR_ROOT=/quadstorvtl/quadstor
-
 include $(QUADSTOR_ROOT)/build/rules.mk
 
 SUBDIRS = iscsi

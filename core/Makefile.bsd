@@ -3,7 +3,7 @@ KMOD = core
 
 SRCS := vnode_if.h vadic.c vibmtl.c vhptl.c vqtl.c vsdlt.c vultrium.c bdev.c  tcache.c corebsd.c blk_map.c  tape.c tape_partition.c mchanger.c tdrive.c map_lookup.c kernint.c qs_lib.c vdevdefs.c reservation.c lzf_c.c lzf_d.c lz4.c devq.c bdevgroup.c gdevq.c tdevice.c bcheck.c
 
-CFLAGS = -DFREEBSD -I/quadstorvtl/quadstor/export
+CFLAGS = -DFREEBSD -I$(QUADSTOR_ROOT)/export
 #CFLAGS += -O2
 #CFLAGS += -Wunused -Wunused-parameter -Wextra
 #CFLAGS += -g

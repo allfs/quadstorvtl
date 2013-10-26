@@ -59,4 +59,7 @@ target-mode/iscsi/kernel/vnode_if_newproto.h
 target-mode/iscsi/kernel/vnode_if_typedef.h
 target-mode/iscsi/kernel/x86
 core/corelib.c
+bin
+httpd
+sbin
 

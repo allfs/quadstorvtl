@@ -1,0 +1,110 @@
+#!/bin/sh
+# Uninstalls QUADStor modules and userland programs on an end user system
+# Copyright (C) QUADStor Systems
+set -x
+
+buildroot=`pwd`
+QUADSTOR_ROOT="$buildroot"
+os=`uname`
+if [ "$os" = "FreeBSD" ]; then
+	sudo rm -f /boot/kernel/ispmod.ko
+	cmod=`/sbin/kldstat | grep vtlcore`
+	if [ "$cmod" = "" ]; then
+		/etc/rc.d/quadstorvtl stop > /dev/null 2>&1
+	fi
+
+	cmod=`/sbin/kldstat | grep vtlcore`
+	if [ "$cmod" = "" ]; then
+		/etc/rc.d/quadstorvtl onestop > /dev/null 2>&1
+	fi
+
+	cmod=`/sbin/kldstat | grep vtlcore`
+	if [ "$cmod" != "" ]; then
+		echo "Unable to shutdown QUADStor VTL service cleanly. Please restart the system and try again"
+		exit 1
+	fi
+
+	rm -f /etc/rc.d/quadstorvtl
+else
+	if [ -d /etc/rc.d/init.d ]; then
+		rcdir="/etc/rc.d/init.d"
+	elif [ -d /etc/rc.d ]; then
+		rcdir="/etc/rc.d"
+	else
+		rcdir="/etc/init.d"
+	fi
+	cmod=`/sbin/lsmod | grep vtlcore`
+	if [ "$cmod" != "" -a -f /etc/init.d/quadstorvtl ]; then
+		$rcdir/quadstorvtl stop
+	fi
+
+	cmod=`/sbin/lsmod | grep vtlcore`
+	if [ "$cmod" != "" ]; then
+		echo "Unable to shutdown QUADStor VTL service cleanly. Please restart the system and try again"
+		exit 1
+	fi
+
+	$QUADSTOR_ROOT/scripts/qlauninst
+	if [ -d /etc/rc.d/init.d ]; then
+		/sbin/chkconfig --del quadstorvtl
+		sudo rm -f /etc/rc.d/init.d/quadstorvtl
+	elif [ -d /etc/rc.d ]; then
+		/sbin/chkconfig --del quadstorvtl
+		sudo rm -f /etc/rc.d/quadstorvtl
+	else
+		sudo rm -f /etc/rc0.d/*quadstorvtl
+		sudo rm -f /etc/rc1.d/*quadstorvtl
+		sudo rm -f /etc/rc2.d/*quadstorvtl
+		sudo rm -f /etc/rc3.d/*quadstorvtl
+		sudo rm -f /etc/rc4.d/*quadstorvtl
+		sudo rm -f /etc/rc5.d/*quadstorvtl
+		sudo rm -f /etc/rc6.d/*quadstorvtl
+		sudo rm -f /etc/init.d/quadstorvtl
+	fi
+fi
+sudo rm -rf /quadstorvtl/lib/
+sudo rm -rf /quadstorvtl/sbin/
+sudo rm -rf /quadstorvtl/bin/
+sudo rm -rf /quadstorvtl/bin/
+sudo rm -f /quadstorvtl/etc/iet/*.sample
+sudo rmdir /quadstorvtl/etc/iet > /dev/null 2>&1
+sudo rmdir /quadstorvtl/etc > /dev/null 2>&1
+sudo rm -rf /quadstorvtl/pgsql/etc
+sudo rm -rf /quadstorvtl/pgsql/lib
+sudo rm -rf /quadstorvtl/pgsql/scripts
+sudo rm -rf /quadstorvtl/pgsql/share
+sudo rm -rf /quadstorvtl/pgsql/bin
+sudo rm -f /quadstorvtl/pgsql/*.log
+
+if [ -d /usr/local/www/apache22/ ]; then 
+	htdocs=/usr/local/www/apache22/data;
+	cgibin=/usr/local/www/apache22/cgi-bin;
+elif [ -d /usr/local/www/ ]; then
+	htdocs=/usr/local/www/data;
+	cgibin=//usr/local/www/cgi-bin;
+elif [ -f /etc/debian_version ]; then
+	htdocs="/var/www"
+	cgibin="/usr/lib/cgi-bin"
+elif [ -f /etc/SuSE-release ]; then
+	htdocs="/srv/www/htdocs"
+	cgibin="/srv/www/cgi-bin"
+elif [ -f /etc/redhat-release ]; then
+	htdocs=/var/www/html
+	cgibin=/var/www/cgi-bin
+else
+	htdocs="/var/www"
+	cgibin="/usr/lib/cgi-bin"
+fi
+
+sudo rm -rf $htdocs/quadstorvtl
+if [ -f $htdocs/index.html.qsave ]; then
+	sudo mv -f $htdocs/index.html.qsave $htdocs/index.html
+fi
+
+if [ -d $QUADSTOR_ROOT/httpd/cgi-bin ]; then
+	cgilist=`cd $QUADSTOR_ROOT/httpd/cgi-bin && ls -1 *.cgi`
+	for i in $cgilist; do
+		sudo rm -f $cgibin/$i
+	done
+fi
+

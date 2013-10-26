@@ -4,13 +4,12 @@ SRCS = opt_cam.h core_bsd.c
 
 OBJS = corelib.o
 
-QUADSTOR_ROOT := /quadstorvtl/quadstor
 CFLAGS = -I. -DFREEBSD -I$(QUADSTOR_ROOT)/common
 #CFLAGS += -O2
 #CFLAGS += -g
 DEBUG_FLAGS = -g
 #CFLAGS += -DENABLE_STATS
 $(OBJS):
-	cp /quadstorvtl/lib/modules/corelib.o .
+	cp $(QUADSTOR_ROOT)/lib/modules/corelib.o .
 
 .include <bsd.kmod.mk>

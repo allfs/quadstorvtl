@@ -23,6 +23,8 @@ fi
 
 /quadstorvtl/pgsql/scripts/pgpatch.sh > /dev/null 2>&1
 
+sed -e 's/# Default-Start:.*/# Default-Start:\t\t2 3 4 5/g' -i /etc/init.d/quadstorvtl
+sed -e 's/# Default-Stop:.*/# Default-Stop:\t\t\t0 1 6/g' -i /etc/init.d/quadstorvtl
 update-rc.d quadstorvtl defaults
 
 /usr/sbin/setsebool -P httpd_enable_cgi 1 > /dev/null 2>&1

@@ -1,18 +1,23 @@
 #!/bin/sh
 
-rm -rf /quadstorvtl/httpd/
-mkdir -p /quadstorvtl/httpd/www/quadstorvtl
-mkdir -p /quadstorvtl/httpd/cgi-bin/
-cp -r yui /quadstorvtl/httpd/www/quadstorvtl/
-cp -f *.png /quadstorvtl/httpd/www/quadstorvtl/
-cp -f *.js /quadstorvtl/httpd/www//quadstorvtl/
-cp -f *.css /quadstorvtl/httpd/www//quadstorvtl/
-cp -f vtindex.html /quadstorvtl/httpd/www/
+rm -rf $QUADSTOR_ROOT/httpd/
+mkdir -p $QUADSTOR_ROOT/httpd/www/quadstorvtl
+mkdir -p $QUADSTOR_ROOT/httpd/cgi-bin/
+if [ ! -d $QUADSTOR_ROOT/httpd/www/quadstorvtl/yui ]; then
+	cp -r yui $QUADSTOR_ROOT/httpd/www/quadstorvtl/
+fi
 
+cp -f *.png $QUADSTOR_ROOT/httpd/www/quadstorvtl
+cp -f *.js $QUADSTOR_ROOT/httpd/www/quadstorvtl
+cp -f *.css $QUADSTOR_ROOT/httpd/www/quadstorvtl
+cp -f vtindex.html $QUADSTOR_ROOT/httpd/www/
 for i in `ls -1 *.cgi`;do
-	echo "cp -f $i /quadstorvtl/httpd/cgi-bin/"; \
-	cp -f $i /quadstorvtl/httpd/cgi-bin/; \
+	echo "cp -f $i $QUADSTOR_ROOT/httpd/cgi-bin/"; \
+	cp -f $i $QUADSTOR_ROOT/httpd/cgi-bin/; \
 done
+if [ "$1" = "localinstall" ]; then
+	exit 0
+fi
 
 if [ -d /usr/local/www/apache22/ ]; then 
 	htdocs=/usr/local/www/apache22/data;
@@ -34,16 +39,17 @@ else
 	cgibin="/usr/lib/cgi-bin"
 fi
 
-mkdir -p $htdocs/quadstorvtl/ 
+sudo mkdir -p $htdocs/quadstorvtl
 if [ ! -d $htdocs/quadstorvtl/yui ]; then
-	cp -r yui $htdocs/quadstorvtl/
+	sudo cp -r yui $htdocs/quadstorvtl/
 fi
 
-cp -f *.js $htdocs/quadstorvtl/
-cp -f *.css $htdocs/quadstorvtl/
-cp -f *.png $htdocs/quadstorvtl/
-cp -f vtindex.html $htdocs/
+sudo cp -f *.js $htdocs/quadstorvtl
+sudo cp -f *.css $htdocs/quadstorvtl
+sudo cp -f *.png $htdocs/quadstorvtl
+sudo cp -f vtindex.html $htdocs/
 for i in `ls -1 *.cgi`;do
 	echo "cp -f $i $cgibin"; \
-	cp -f $i $cgibin; \
+	sudo cp -f $i $cgibin; \
 done
+

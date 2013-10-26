@@ -32,6 +32,6 @@ clobber: clean
 
 install:
 	@set -e; \
-	mkdir -p /quadstorvtl/sbin; \
-	echo "cp -f vtmdaemon /quadstorvtl/sbin"; \
-	cp -f vtmdaemon /quadstorvtl/sbin;
+	mkdir -p $(QUADSTOR_ROOT)/sbin; \
+	echo "cp -f vtmdaemon $(QUADSTOR_ROOT)/sbin"; \
+	cp -f vtmdaemon $(QUADSTOR_ROOT)/sbin;

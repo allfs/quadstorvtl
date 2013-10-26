@@ -1,0 +1,96 @@
+#!/bin/sh
+
+set -x
+buildroot=`pwd`
+export QUADSTOR_ROOT="$buildroot"
+os=`uname`
+GMAKE="make"
+if [ "$os" = "FreeBSD" ]; then
+	GMAKE="gmake"
+fi
+
+checkerror() {
+	if [ "$?" != "0" ]; then
+		exit 1
+	fi
+}
+
+clean=$1
+if [ "$1" = "clobber" ]; then
+	clean="clean"
+fi
+
+if [ "$1" = "" ]; then
+	bash $QUADSTOR_ROOT/scripts/emitdrivetypes.sh
+	if [ ! -f $QUADSTOR_ROOT/includes/sensedefs.h ]; then
+		bash $QUADSTOR_ROOT/scripts/emitsensecodes.sh
+	fi
+fi
+
+rm -f $QUADSTOR_ROOT/export/corelib.o
+cd $QUADSTOR_ROOT/core && sh build.sh clean && sh build.sh $clean
+checkerror
+
+if [ "$clean" != install ]; then
+if [ "$os" = "FreeBSD" ]; then
+	cd $QUADSTOR_ROOT/export && make -f Makefile.core $clean
+	cd $QUADSTOR_ROOT/export && make -f Makefile.ldev $clean
+	checkerror
+else
+	cd $QUADSTOR_ROOT/export && make $clean
+	checkerror
+fi
+fi
+
+cd $QUADSTOR_ROOT/target-mode/iscsi/kernel && $GMAKE -f Makefile.kmod $clean
+checkerror
+
+cd $QUADSTOR_ROOT/target-mode/fc/ && $GMAKE $clean
+checkerror
+
+cd $QUADSTOR_ROOT/others/ && $GMAKE $clean
+checkerror
+cd $QUADSTOR_ROOT/library && $GMAKE $clean
+checkerror
+cd $QUADSTOR_ROOT/target-mode/iscsi/usr && $GMAKE $clean
+checkerror
+if [ "$clean" = "install" ]; then
+	cd $QUADSTOR_ROOT/mapps/html && $GMAKE localinstall
+else
+	cd $QUADSTOR_ROOT/mapps/html && $GMAKE $clean
+fi
+checkerror
+cd $QUADSTOR_ROOT/masterd && $GMAKE $clean
+checkerror
+cd $QUADSTOR_ROOT/scctl && $GMAKE $clean
+checkerror
+
+if [ "$QUADSTOR_ROOT" = "/quadstorvtl/quadstor" ]; then
+	cd $QUADSTOR_ROOT/etc && $GMAKE $clean
+	checkerror
+fi
+
+if [ "$clean" = "clean" ]; then
+	rm -rf $QUADSTOR_ROOT/bin
+	rm -rf $QUADSTOR_ROOT/sbin
+	rm -rf $QUADSTOR_ROOT/httpd
+	rm -rf $QUADSTOR_ROOT/lib
+fi
+
+if [ "$clean" = "" ]; then
+	exit 0
+fi
+
+rm -f $QUADSTOR_ROOT/core/@
+rm -f $QUADSTOR_ROOT/core/x86
+rm -f $QUADSTOR_ROOT/core/machine
+rm -f $QUADSTOR_ROOT/export/@
+rm -f $QUADSTOR_ROOT/export/x86
+rm -f $QUADSTOR_ROOT/export/machine
+rm -f $QUADSTOR_ROOT/target-mode/iscsi/kernel/@
+rm -f $QUADSTOR_ROOT/target-mode/iscsi/kernel/x86
+rm -f $QUADSTOR_ROOT/target-mode/iscsi/kernel/machine
+rm -f $QUADSTOR_ROOT/target-mode/fc/isp/@
+rm -f $QUADSTOR_ROOT/target-mode/fc/isp/x86
+rm -f $QUADSTOR_ROOT/target-mode/fc/isp/machine
+exit 0

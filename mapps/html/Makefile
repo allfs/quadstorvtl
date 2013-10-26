@@ -21,4 +21,8 @@ install:
 		$(MAKE) install -C $$i; \
 	done
 
-
+localinstall:
+	@set -e; \
+	for i in $(INSTALL_SUBDIRS); do \
+		$(MAKE) localinstall -C $$i; \
+	done

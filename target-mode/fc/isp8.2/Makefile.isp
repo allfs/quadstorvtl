@@ -2,7 +2,6 @@ KMOD = ispmod
 
 SRCS = opt_cam.h device_if.h bus_if.h pci_if.h opt_ddb.h opt_isp.h isp.c isp_freebsd.c isp_library.c isp_pci.c isp_target.c isp_qdefs.c fcbridge.c fcq.c qla_sc.c
 
-QUADSTOR_ROOT := /quadstorvtl/quadstor/
 CFLAGS = -I$(QUADSTOR_ROOT)/export -I$(QUADSTOR_ROOT)/common -DISP_TARGET_MODE -I$(QUADSTOR_ROOT)/target-mode/fc/common -DFREEBSD
 
 CFLAGS += -O2

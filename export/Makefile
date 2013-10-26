@@ -28,7 +28,7 @@ EXTRA_CFLAGS += -g
 
 else
 default:
-	cp /quadstorvtl/lib/modules/corelib.o $(PWD)
+	cp $(QUADSTOR_ROOT)/lib/modules/corelib.o $(PWD)
 	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
 #	strip --strip-debug *.ko
 #	strip --strip-unneeded *.ko

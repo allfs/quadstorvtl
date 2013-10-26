@@ -1,9 +1,13 @@
 set -e
 os=`uname`
 
+if [ "$QUADSTOR_ROOT" = "" ]; then
+	QUADSTOR_ROOT=`cd ../../.. && pwd`
+fi
+
 if [ "$1" = "install" ]; then
-	mkdir -p /quadstorvtl/lib/modules
-	cp -f iscsit.ko /quadstorvtl/lib/modules/
+	mkdir -p $QUADSTOR_ROOT/lib/modules
+	cp -f iscsit.ko $QUADSTOR_ROOT/lib/modules/
 	exit 0
 fi
 

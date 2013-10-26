@@ -120,7 +120,12 @@ install: $(CGILIST)
 	@set -x; \
 	export LD_LIBRARY_PATH=.; \
 	sudo sh ./install.sh
-	
+
+localinstall: $(CGILIST)
+	@set -x; \
+	export LD_LIBRARY_PATH=.; \
+	sh ./install.sh localinstall
+
 strip:
 	@set -x; \
 	if [ "$(RELEASE_BUILD)" -eq "1" ]; then \
