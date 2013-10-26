@@ -1,0 +1,63 @@
+QUADStor VTL installation guide
+
+Prerequistes
+------------
+
+On FreeBSD 8.x/9.x:
+
+pkg_add -r sudo apache22 gmake 
+Additionally the kernel source /usr/sys/sys needs to be present
+
+On RHEL/CentOS 5.x/6.x:
+
+yum install httpd gcc perl kernel-devel sg3_utils
+
+On SLES 11 SP1/SP2:
+
+zypper install apache2 gcc perl kernel-default-devel sg3_utils
+
+On Debian 6.x/7.x:
+
+apt-get install uuid-runtimeG
+apt-get install build-essential
+apt-get install sg3-utils
+apt-get install apache2
+apt-get install psmisc
+apt-get install firmware-qlogic (for FC access)
+apt-get install linux-headers-{uname}
+where {uname} can be got from the command 'uname -r'
+
+If you have installed any of the release packages before, then you most likely have all the prerequistes installed.
+
+Installation
+------------
+
+git clone --branch opensource https://github.com/quadstor/quadstorvtl.git quadstorvtl
+cd quadstorvtl
+
+You could also download the source from https://github.com/quadstor/quadstorvtl
+(Download ZIP button on the right)
+
+./installworld <buildtype>
+
+Where buildtype is:
+rhel6 for RHEL/CentOS 6.x
+rhel5 for RHEL/CentOS 5.x
+debian6 for Debian 6.x/Squeeze
+debian7 for Debian 7.x/Wheezy
+sles11 for SLES 11 SP1
+sles11sp2 for SLES 11 SP2
+bsd for FreeBSD 8.x
+bsd9 for FreeBSD 9.x
+
+Uninstallation
+--------------
+
+Go back to the location where the sources were built and run
+./uninstallworld
+
+Getting Help
+------------
+
+http://groups.google.com/group/quadstor-vtl
+
