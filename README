@@ -39,8 +39,11 @@ You could also download the source from https://github.com/quadstor/quadstorvtl
 
 cd quadstorvtl (or the directory which gets unpacked)
 
-On RHEL/CentOS 6.x:
+On RHEL/CentOS 6.x (x86_64):
 ./installworld rhel6
+
+On RHEL/CentOS 6.x (x86):
+./installworld rhel6x86
 
 On RHEL/CentOS 5.x:
 ./installworld rhel5
