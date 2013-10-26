@@ -33,22 +33,37 @@ Installation
 ------------
 
 git clone --branch opensource https://github.com/quadstor/quadstorvtl.git quadstorvtl
-cd quadstorvtl
 
 You could also download the source from https://github.com/quadstor/quadstorvtl
 (Download ZIP button on the right)
 
-./installworld <buildtype>
+cd quadstorvtl (or the directory which gets unpacked)
 
-Where buildtype is:
-rhel6 for RHEL/CentOS 6.x
-rhel5 for RHEL/CentOS 5.x
-debian6 for Debian 6.x/Squeeze
-debian7 for Debian 7.x/Wheezy
-sles11 for SLES 11 SP1
-sles11sp2 for SLES 11 SP2
-bsd for FreeBSD 8.x
-bsd9 for FreeBSD 9.x
+On RHEL/CentOS 6.x:
+./installworld rhel6
+
+On RHEL/CentOS 5.x:
+./installworld rhel5
+
+On Debian 7.x/Wheezy:
+./installworld debian7
+
+On Debian 6.x/Wheezy:
+./installworld debian6
+
+On SLES 11 SP2:
+./installworld sles11sp2
+
+On SLES 11 SP1:
+./installworld sles11
+
+On FreeBSD 9.x
+./installworld bsd9
+
+On FreeBSD 8.x
+./installworld bsd
+
+For other distributions, choose the method closest from the above. For example for FC19 ./installworld rhel6 should work
 
 Uninstallation
 --------------
