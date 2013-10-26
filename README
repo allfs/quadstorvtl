@@ -71,6 +71,9 @@ Uninstallation
 Go back to the location where the sources were built and run
 ./uninstallworld
 
+uninstallworld removes most of the installed files except for custom configurationf files like /quadstorvtl/etc/quadstor.conf and the postgresql database data files under /quadstorvtl/pgsql/data. These will have to be manually removed if you are clearing out an installation. 
+NOTE: /quadstorvtl/pgdata contains the configuration database of the software. This data is maintained even after an uninstall of the software and is required during upgrades. If this data were to manually removed all previous configuration such as configured storage, VTL information etc is lost. Refer to http://www.quadstor.com/support/131-recovering-from-a-lost-or-damaged-database.html to recover from a lost or damage database
+
 Getting Help
 ------------
 
