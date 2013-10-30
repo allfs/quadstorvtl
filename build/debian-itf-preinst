@@ -1,0 +1,7 @@
+#!/bin/sh
+kbuilddir="/lib/modules/`uname -r`/build/"
+if [ ! -f $kbuilddir/Makefile ]; then
+	echo "Kernel build dir $kbuilddir does not seem to be valid. Cannot continue."
+	echo "If you have done a kernel upgrade, rebooting might help."
+	exit 1
+fi

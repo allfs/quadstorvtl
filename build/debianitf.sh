@@ -11,6 +11,7 @@ mkdir $DEBIAN_ROOT/DEBIAN
 cp debian-itf-control $DEBIAN_ROOT/DEBIAN/control
 install -m 755 debian-itf-prerm $DEBIAN_ROOT/DEBIAN/prerm
 install -m 755 debian-itf-postrm $DEBIAN_ROOT/DEBIAN/postrm
+install -m 755 debian-itf-preinst $DEBIAN_ROOT/DEBIAN/preinst
 install -m 755 debian-itf-postinst $DEBIAN_ROOT/DEBIAN/postinst
 
 install -m 755 -d $DEBIAN_ROOT/etc/udev/rules.d

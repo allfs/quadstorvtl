@@ -95,6 +95,13 @@ if [ "$os" = "FreeBSD" ]; then
 	sudo install -m 755 $QUADSTOR_ROOT/target-mode/iscsi/kernel/iscsit.ko /quadstorvtl/lib/modules/
 	sudo install -m 755 $QUADSTOR_ROOT/etc/quadstor /etc/rc.d/quadstorvtl
 else
+        kbuilddir="/lib/modules/`uname -r`/build/"
+        if [ ! -f $kbuilddir/Makefile ]; then
+		echo "Kernel build dir $kbuilddir does not seem to be valid. Cannot continue."
+		echo "If you have done a kernel upgrade, rebooting might help."
+		exit 1
+        fi
+
 	kvers=`uname -r`
 	sudo install -m 755 -d /quadstorvtl/lib/modules/$kvers
 	sudo install -m 755 $QUADSTOR_ROOT/target-mode/iscsi/kernel/iscsit.ko /quadstorvtl/lib/modules/$kvers/
@@ -117,6 +124,7 @@ else
 		sudo sed -e 's/# Default-Stop:.*/# Default-Stop:\t\t\t0 1 6/g' -i /etc/init.d/quadstorvtl
 		sudo update-rc.d quadstorvtl defaults
 	fi
+	/usr/sbin/setsebool -P httpd_enable_cgi 1 > /dev/null 2>&1
 fi
 
 datacontents=`sudo ls /quadstorvtl/pgsql/data`
