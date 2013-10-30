@@ -177,7 +177,7 @@ fi
 sudo cp -f $QUADSTOR_ROOT/httpd/www/quadstorvtl/*.js $htdocs/quadstorvtl
 sudo cp -f $QUADSTOR_ROOT/httpd/www/quadstorvtl/*.css $htdocs/quadstorvtl
 sudo cp -f $QUADSTOR_ROOT/httpd/www/quadstorvtl/*.png $htdocs/quadstorvtl
-if [ -f $htdocs/index.html ]; then
+if [ -f $htdocs/index.html -a ! -f $htdocs/index.html.qsave ]; then
 	sudo mv -f $htdocs/index.html $htdocs/index.html.qsave
 fi
 sudo cp -f $QUADSTOR_ROOT/httpd/www/vtindex.html $htdocs/index.html
