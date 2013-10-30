@@ -169,6 +169,7 @@ else
 	cgibin="/usr/lib/cgi-bin"
 fi
 
+sudo mkdir -p $cgibin
 sudo mkdir -p $htdocs/quadstor
 if [ ! -d $htdocs/quadstorvtl/yui ]; then
 	sudo cp -r $QUADSTOR_ROOT/httpd/www/quadstorvtl/yui $htdocs/quadstorvtl/

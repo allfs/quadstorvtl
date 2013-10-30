@@ -38,6 +38,7 @@ fi
 
 cp -f /quadstorvtl/httpd/www/*.html $htdocs/
 rm -rf $htdocs/quadstorvtl/
+mkdir -p $cgibin
 mkdir -p $htdocs/quadstorvtl
 cp -fr /quadstorvtl/httpd/www/quadstorvtl/* $htdocs/quadstorvtl/
 cp -f /quadstorvtl/httpd/cgi-bin/* $cgibin/
