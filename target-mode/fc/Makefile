@@ -27,5 +27,8 @@ clobber: clean
 install:
 	@set -e; \
 	mkdir -p $(QUADSTOR_ROOT)/lib/modules;
-	cp -f $(MOD) $(QUADSTOR_ROOT)/lib/modules
-
+	for i in $(MOD); do \
+		if [ -f $$i ]; then \
+			cp -f $$i $(QUADSTOR_ROOT)/lib/modules; \
+		fi; \
+	done
