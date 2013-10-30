@@ -65,6 +65,14 @@ install -m 755 /quadstorvtl/quadstor/scripts/builditf.linux.sh $RPM_BUILD_ROOT/q
 install -m 755 /quadstorvtl/quadstor/scripts/qlainst $RPM_BUILD_ROOT/quadstorvtl/bin/qlainst
 install -m 755 /quadstorvtl/quadstor/scripts/qlauninst $RPM_BUILD_ROOT/quadstorvtl/bin/qlauninst
 
+%pre
+	kbuilddir="/lib/modules/`uname -r`/build/"
+	if [ ! -f $kbuilddir/Makefile ]; then
+		echo "Kernel build dir $kbuilddir does not seem to be valid. Cannot continue."
+		echo "If you have done a kernel upgrade, rebooting might help."
+		exit 1
+	fi
+
 %post
 	if [ ! -f /quadstorvtl/etc/iet/targets.allow ]; then
 		cp /quadstorvtl/etc/iet/targets.allow.sample /quadstorvtl/etc/iet/targets.allow
