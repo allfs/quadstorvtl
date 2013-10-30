@@ -33,6 +33,13 @@ if [ "$os" = "FreeBSD" ]; then
 	coreversion=`pkg_info | grep quadstor-vtl-core`
 	itfversion=`pkg_info | grep quadstor-vtl-itf`
 else
+        kbuilddir="/lib/modules/`uname -r`/build/"
+        if [ ! -f $kbuilddir/Makefile ]; then
+		echo "Kernel build dir $kbuilddir does not seem to be valid. Cannot continue."
+		echo "If you have done a kernel upgrade, rebooting might help."
+		exit 1
+        fi
+
 	dpkgexists=`which dpkg`
 	if [ "$dpkgexists" != "" ]; then
 		coreversion=`dpkg --get-selections | grep quadstor-vtl-core | grep -v purge | grep -v deinstall`
@@ -95,13 +102,6 @@ if [ "$os" = "FreeBSD" ]; then
 	sudo install -m 755 $QUADSTOR_ROOT/target-mode/iscsi/kernel/iscsit.ko /quadstorvtl/lib/modules/
 	sudo install -m 755 $QUADSTOR_ROOT/etc/quadstor /etc/rc.d/quadstorvtl
 else
-        kbuilddir="/lib/modules/`uname -r`/build/"
-        if [ ! -f $kbuilddir/Makefile ]; then
-		echo "Kernel build dir $kbuilddir does not seem to be valid. Cannot continue."
-		echo "If you have done a kernel upgrade, rebooting might help."
-		exit 1
-        fi
-
 	kvers=`uname -r`
 	sudo install -m 755 -d /quadstorvtl/lib/modules/$kvers
 	sudo install -m 755 $QUADSTOR_ROOT/target-mode/iscsi/kernel/iscsit.ko /quadstorvtl/lib/modules/$kvers/
