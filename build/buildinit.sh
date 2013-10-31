@@ -1,6 +1,10 @@
 #!/bin/bash
 set -x
 
+if [ "$QUADSTOR_ROOT" = "" ]; then
+	QUADSTOR_ROOT=`cd .. && pwd`
+fi
+
 tarfile="vtpgsql$1.tgz"
 if [ "$1" = "" ]; then
 	tarfile="vtpgsqlrhel6.tgz"
