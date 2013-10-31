@@ -61,6 +61,10 @@ cd /quadstorvtl/quadstor/etc && $GMAKE $clean
 checkerror
 
 if [ "$clean" = "" ]; then
+	mkdir -p /quadstorvtl/bin
+	mkdir -p /quadstorvtl/sbin
+	sudo cp -f /quadstorvtl/quadstor/bin/* /quadstorvtl/bin/
+	sudo cp -f /quadstorvtl/quadstor/sbin/* /quadstorvtl/sbin/
 	exit 0
 fi
 
