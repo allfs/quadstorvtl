@@ -137,11 +137,12 @@ partition_size_to_units(uint64_t part_size, uint8_t units)
 	for (i = 1; i < units; i++) {
 		partition_div *= 10;
 	}
+	partition_div = (partition_div)/(1000000000);
 	ret_size = partition_size / partition_div;
 	if (!ret_size)
 		ret_size = 1U;
 	debug_check(ret_size > 0xFFFF);
-	return (((uint64_t)ret_size) << 30);
+	return ret_size;
 }
 
 static void
@@ -1464,7 +1465,7 @@ tdrive_cmd_set_capacity(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 	}
 
 	tape_size = (uint32_t)(tape->size >> 30);
-	set_size = ((tape_size / 65535) * proportion) >> 30;
+	set_size = ((uint64_t)((tape_size * proportion) / 65535)) << 30;
 	set_size = align_size(set_size, BINT_UNIT_SIZE);
 
 	if (tape->set_size == set_size)
