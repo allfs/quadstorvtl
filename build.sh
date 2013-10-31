@@ -1,4 +1,6 @@
 set -x
+buildroot=`pwd`
+export QUADSTOR_ROOT="$buildroot"
 os=`uname`
 GMAKE="make"
 if [ "$os" = "FreeBSD" ]; then
