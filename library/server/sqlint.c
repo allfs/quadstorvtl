@@ -354,7 +354,7 @@ sql_query_iscsiconf(int tl_id, uint32_t target_id, struct iscsiconf *iscsiconf)
 		}
 		return -1;
 	}
-	memcpy(iscsiconf->IncomingUser, PQgetvalue(res, 0, 0), PQgetlength(res, 0, 1));
+	memcpy(iscsiconf->IncomingUser, PQgetvalue(res, 0, 0), PQgetlength(res, 0, 0));
 	memcpy(iscsiconf->IncomingPasswd, PQgetvalue(res, 0, 1), PQgetlength(res, 0, 1));
 	memcpy(iscsiconf->OutgoingUser, PQgetvalue(res, 0, 2), PQgetlength(res, 0, 2));
 	memcpy(iscsiconf->OutgoingPasswd, PQgetvalue(res, 0, 3), PQgetlength(res, 0, 3));
