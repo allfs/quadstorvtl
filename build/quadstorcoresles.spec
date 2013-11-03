@@ -41,7 +41,7 @@ install -m 755 /quadstorvtl/quadstor/masterd/vtmdaemon $RPM_BUILD_ROOT/quadstorv
 install -m 755  /quadstorvtl/quadstor/library/client/libtlclnt.so $RPM_BUILD_ROOT/quadstorvtl/lib/libtlclnt.so.%{libvers}
 install -m 755 /quadstorvtl/quadstor/library/server/libtlsrv.so $RPM_BUILD_ROOT/quadstorvtl/lib/libtlsrv.so.%{libvers}
 install -m 755 /quadstorvtl/quadstor/library/common/libtlmsg.so $RPM_BUILD_ROOT/quadstorvtl/lib/libtlmsg.so.%{libvers}
-install -m 644 /quadstorvtl/lib/modules/corelib.o $RPM_BUILD_ROOT/quadstorvtl/lib/modules/
+install -m 644 /quadstorvtl/quadstor/lib/modules/corelib.o $RPM_BUILD_ROOT/quadstorvtl/lib/modules/
 install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/*.cgi $RPM_BUILD_ROOT/srv/www/cgi-bin/
 install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/*.css $RPM_BUILD_ROOT/srv/www/htdocs/quadstorvtl/
 install -m 755 /quadstorvtl/quadstor/mapps/html/cgisrc/*.js $RPM_BUILD_ROOT/srv/www/htdocs/quadstorvtl/
