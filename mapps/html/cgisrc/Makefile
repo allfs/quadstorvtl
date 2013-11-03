@@ -119,7 +119,7 @@ clean:
 install: $(CGILIST)
 	@set -x; \
 	export LD_LIBRARY_PATH=.; \
-	sudo sh ./install.sh
+	sh ./install.sh
 
 localinstall: $(CGILIST)
 	@set -x; \
