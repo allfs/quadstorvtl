@@ -3,6 +3,7 @@
 set -x
 buildroot=`pwd`
 export QUADSTOR_ROOT="$buildroot"
+export QUADSTOR_INSTALL_ROOT="$buildroot"
 os=`uname`
 GMAKE="make"
 if [ "$os" = "FreeBSD" ]; then
@@ -68,11 +69,6 @@ cd $QUADSTOR_ROOT/masterd && $GMAKE $clean
 checkerror
 cd $QUADSTOR_ROOT/scctl && $GMAKE $clean
 checkerror
-
-if [ "$QUADSTOR_ROOT" = "/quadstorvtl/quadstor" ]; then
-	cd $QUADSTOR_ROOT/etc && $GMAKE $clean
-	checkerror
-fi
 
 if [ "$clean" = "clean" ]; then
 	rm -rf $QUADSTOR_ROOT/bin

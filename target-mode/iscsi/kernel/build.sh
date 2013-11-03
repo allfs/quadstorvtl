@@ -5,9 +5,13 @@ if [ "$QUADSTOR_ROOT" = "" ]; then
 	QUADSTOR_ROOT=`cd ../../.. && pwd`
 fi
 
+if [ "$QUADSTOR_ROOT" = "" ]; then
+	QUADSTOR_INSTALL_ROOT="/quadstorvtl"
+fi
+
 if [ "$1" = "install" ]; then
-	mkdir -p $QUADSTOR_ROOT/lib/modules
-	cp -f iscsit.ko $QUADSTOR_ROOT/lib/modules/
+	mkdir -p $QUADSTOR_INSTALL_ROOT/lib/modules
+	cp -f iscsit.ko $QUADSTOR_INSTALL_ROOT/lib/modules/
 	exit 0
 fi
 

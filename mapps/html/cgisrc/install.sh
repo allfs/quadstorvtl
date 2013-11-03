@@ -1,19 +1,19 @@
 #!/bin/sh
 
-rm -rf $QUADSTOR_ROOT/httpd/
-mkdir -p $QUADSTOR_ROOT/httpd/www/quadstorvtl
-mkdir -p $QUADSTOR_ROOT/httpd/cgi-bin/
-if [ ! -d $QUADSTOR_ROOT/httpd/www/quadstorvtl/yui ]; then
-	cp -r yui $QUADSTOR_ROOT/httpd/www/quadstorvtl/
+rm -rf $QUADSTOR_INSTALL_ROOT/httpd/
+mkdir -p $QUADSTOR_INSTALL_ROOT/httpd/www/quadstorvtl
+mkdir -p $QUADSTOR_INSTALL_ROOT/httpd/cgi-bin/
+if [ ! -d $QUADSTOR_INSTALL_ROOT/httpd/www/quadstorvtl/yui ]; then
+	cp -r yui $QUADSTOR_INSTALL_ROOT/httpd/www/quadstorvtl/
 fi
 
-cp -f *.png $QUADSTOR_ROOT/httpd/www/quadstorvtl
-cp -f *.js $QUADSTOR_ROOT/httpd/www/quadstorvtl
-cp -f *.css $QUADSTOR_ROOT/httpd/www/quadstorvtl
-cp -f vtindex.html $QUADSTOR_ROOT/httpd/www/
+cp -f *.png $QUADSTOR_INSTALL_ROOT/httpd/www/quadstorvtl
+cp -f *.js $QUADSTOR_INSTALL_ROOT/httpd/www/quadstorvtl
+cp -f *.css $QUADSTOR_INSTALL_ROOT/httpd/www/quadstorvtl
+cp -f vtindex.html $QUADSTOR_INSTALL_ROOT/httpd/www/
 for i in `ls -1 *.cgi`;do
-	echo "cp -f $i $QUADSTOR_ROOT/httpd/cgi-bin/"; \
-	cp -f $i $QUADSTOR_ROOT/httpd/cgi-bin/; \
+	echo "cp -f $i $QUADSTOR_INSTALL_ROOT/httpd/cgi-bin/"; \
+	cp -f $i $QUADSTOR_INSTALL_ROOT/httpd/cgi-bin/; \
 done
 if [ "$1" = "localinstall" ]; then
 	exit 0

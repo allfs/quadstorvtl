@@ -31,12 +31,12 @@ ietadm: ietadm.o param.o
 
 install:
 	@set -e; \
-	mkdir -p $(QUADSTOR_ROOT)/bin; \
-	mkdir -p $(QUADSTOR_ROOT)/sbin; \
-	echo "cp -f ietadm $(QUADSTOR_ROOT)/bin"; \
-	cp -f ietadm $(QUADSTOR_ROOT)/bin; \
-	echo "cp -f ietd $(QUADSTOR_ROOT)/sbin"; \
-	cp -f ietd $(QUADSTOR_ROOT)/sbin;
+	mkdir -p $(QUADSTOR_INSTALL_ROOT)/bin; \
+	mkdir -p $(QUADSTOR_INSTALL_ROOT)/sbin; \
+	echo "cp -f ietadm $(QUADSTOR_INSTALL_ROOT)/bin"; \
+	cp -f ietadm $(QUADSTOR_INSTALL_ROOT)/bin; \
+	echo "cp -f ietd $(QUADSTOR_INSTALL_ROOT)/sbin"; \
+	cp -f ietd $(QUADSTOR_INSTALL_ROOT)/sbin;
 
 clean:
 	rm -f *.o $(PROGRAMS)

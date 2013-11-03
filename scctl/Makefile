@@ -19,13 +19,13 @@ cam: cam.c
 
 install:
 	@set -e;
-	mkdir -p $(QUADSTOR_ROOT)/bin
-	cp -f scctl $(QUADSTOR_ROOT)/bin
-	cp -f dbrecover $(QUADSTOR_ROOT)/bin
+	mkdir -p $(QUADSTOR_INSTALL_ROOT)/bin
+	cp -f scctl $(QUADSTOR_INSTALL_ROOT)/bin
+	cp -f dbrecover $(QUADSTOR_INSTALL_ROOT)/bin
 	if [ -f cam ]; then \
-		cp -f cam $(QUADSTOR_ROOT)/bin; \
+		cp -f cam $(QUADSTOR_INSTALL_ROOT)/bin; \
 	fi
-	cp -f fcconfig $(QUADSTOR_ROOT)/bin
+	cp -f fcconfig $(QUADSTOR_INSTALL_ROOT)/bin
 
 clean:
 	rm -f *.o scctl vctl cam dbrecover fcconfig

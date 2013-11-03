@@ -5,6 +5,10 @@ if [ "$QUADSTOR_ROOT" = "" ]; then
 	QUADSTOR_ROOT=`cd .. && pwd`
 fi
 
+if [ "$QUADSTOR_INSTALL_ROOT" = "" ]; then
+	QUADSTOR_INSTALL_ROOT="/quadstorvtl"
+fi
+
 tarfile="vtpgsql$1.tgz"
 if [ "$1" = "" ]; then
 	tarfile="vtpgsqlrhel6.tgz"
@@ -35,8 +39,8 @@ rm -f $QUADSTOR_ROOT/pgsql/share/pg_hba.conf.sample-e
 
 cd $QUADSTOR_ROOT/pgsql && gmake install
 
-mkdir -p /quadstorvtl/sbin
-mkdir -p /quadstorvtl/bin
+mkdir -p $QUADSTOR_INSTALL_ROOT/sbin
+mkdir -p $QUADSTOR_INSTALL_ROOT/bin
 
 rm -f $QUADSTOR_ROOT/target-mode/fc/qla2xxx
 
