@@ -1,3 +1,8 @@
+Release 2.2.14
+	* Misc fixes for new build and install system
+	* Fixes for x86 port regressions
+	* Fix for truncation of iSCSI IncomingUser on a restart
+
 Release 2.2.13
 	* Allow configuration of disks with serial numbers > 32 bytes
 	* Generate serial number based on sys rid

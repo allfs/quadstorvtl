@@ -29,7 +29,7 @@ update-rc.d quadstorvtl defaults
 
 /usr/sbin/setsebool -P httpd_enable_cgi 1 > /dev/null 2>&1
 mkdir -p /quadstorvtl/etc
-echo "2.2.13 for Debian" > /quadstorvtl/etc/quadstor-vtl-core-version
+echo "2.2.14 for Debian" > /quadstorvtl/etc/quadstor-vtl-core-version
 
 if [ ! -f /quadstor/etc/quadstor-core-version ]; then
 	cp -f /var/www/vtindex.html /var/www/index.html
