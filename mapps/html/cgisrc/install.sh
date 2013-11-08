@@ -1,5 +1,9 @@
 #!/bin/sh
 
+if [ "$QUADSTOR_INSTALL_ROOT" = "" ]; then
+	QUADSTOR_INSTALL_ROOT="/quadstorvtl"
+fi
+
 rm -rf $QUADSTOR_INSTALL_ROOT/httpd/
 mkdir -p $QUADSTOR_INSTALL_ROOT/httpd/www/quadstorvtl
 mkdir -p $QUADSTOR_INSTALL_ROOT/httpd/cgi-bin/
