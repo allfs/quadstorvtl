@@ -48,7 +48,8 @@ struct vcartridge {
 	uint32_t group_id;
 	int tl_id;
 	uint32_t tape_id;
-	int worm; /* worm support */
+	uint8_t worm; /* worm support */
+	uint8_t use_free_slot;
 	uint8_t type;
 	uint8_t elem_type;
 	uint16_t elem_address;

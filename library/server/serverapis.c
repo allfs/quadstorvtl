@@ -1397,7 +1397,13 @@ vdevice_add_volumes(struct vdevice *vdevice, struct group_info *group_info, int 
 	int result = 0;
 	char *suffix="";
 	char labelfmt[24];
-	int start = 0;
+	int start = 0, use_free_slot = 0;;
+	char buf[64];
+
+	buf[0] = 0;
+	get_config_value(QUADSTOR_CONFIG_FILE, "UseFreeSlot", buf);
+	if (atoi(buf) == 1)
+		use_free_slot = 1;
 
 	size = get_size_spec(voltype);
 	if (!size)
@@ -1466,6 +1472,7 @@ vdevice_add_volumes(struct vdevice *vdevice, struct group_info *group_info, int 
 		vinfo->worm = worm || group_info->worm;
 		strcpy(vinfo->group_name, group_info->name);
 		strcpy(vinfo->label, vollabel);
+		vinfo->use_free_slot = use_free_slot;
 
 		retval = add_new_vcartridge(vinfo, errmsg);
 

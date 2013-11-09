@@ -404,7 +404,7 @@ element_address_valid_for_voltype(struct mchanger_element *element, int vol_type
 }
 
 static struct mchanger_element *
-get_free_element(struct mchanger *mchanger, int eaddress, int vol_type)
+get_free_element(struct mchanger *mchanger, int eaddress, int vol_type, int use_free_slot)
 {
 	struct mchanger_element *element = NULL, *ie_element = NULL;
 
@@ -418,12 +418,13 @@ get_free_element(struct mchanger *mchanger, int eaddress, int vol_type)
 	if (!element)
 		return NULL;
 
+	if (use_free_slot)
+		return element;
+
 	if (!SLIST_EMPTY(&mchanger->tdevice.istate_list)) {
 		ie_element = get_free_ie_element(mchanger);
 		if (ie_element)
-		{
 			element = ie_element;
-		}
 	}
 	return element;
 }
@@ -447,7 +448,7 @@ mchanger_load_vcartridge(struct mchanger *mchanger, struct vcartridge *vinfo)
 	struct raw_tape *raw_tape;
 	struct mchanger_element *element = NULL;
 
-	element = get_free_element(mchanger, vinfo->elem_address, vinfo->type);
+	element = get_free_element(mchanger, vinfo->elem_address, vinfo->type, 1);
 	if (!element) {
 		debug_warn("Cannot get a free element for tape\n");
 		return -1;
@@ -512,7 +513,7 @@ mchanger_new_vcartridge(struct mchanger *mchanger, struct vcartridge *vinfo)
 	struct tape *tape;
 	struct mchanger_element *element;
 
-	element = get_free_element(mchanger, 0, vinfo->type);
+	element = get_free_element(mchanger, 0, vinfo->type, vinfo->use_free_slot);
 
 	if (!element) {
 		debug_warn("Couldnt find an empty slot/ieport");

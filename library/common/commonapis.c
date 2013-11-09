@@ -143,7 +143,7 @@ parse_vcartridge(FILE *fp)
 		goto err;
 	}
 
-	if (fscanf(fp, "worm: %d\n", &vinfo->worm) != 1)
+	if (fscanf(fp, "worm: %hhu\n", &vinfo->worm) != 1)
 	{
 		DEBUG_ERR("Cannot get worm\n");
 		goto err;
