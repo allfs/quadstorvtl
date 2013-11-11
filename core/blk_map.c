@@ -1300,14 +1300,13 @@ blk_map_overwrite_check(struct blk_map *map)
 #define MAX_CACHED_WRITES		(1 * 1024 * 1024)
 
 static int 
-blk_map_setup_writes(struct blk_map *map)
+blk_map_setup_writes(struct blk_map *map, int wait)
 {
 	struct blk_entry *entry;
 	struct tcache *tcache, *prev = NULL;
 	int retval;
 	int pending_pglist_cnt, pages, entry_pglist_cnt;
 	struct tcache_list tcache_list;
-	int has_filemark = 0;
 
 	pending_pglist_cnt = map->pending_pglist_cnt;
 	if (!pending_pglist_cnt)
@@ -1323,10 +1322,8 @@ blk_map_setup_writes(struct blk_map *map)
 	SLIST_INSERT_HEAD(&tcache_list, tcache, t_list);
 
 	TAILQ_FOREACH(entry, &map->entry_list, e_list) {
-		if (!entry_is_data_block(entry)) {
-			has_filemark = 1;
+		if (!entry_is_data_block(entry))
 			continue;
-		}
 		if (!atomic_test_bit(BLK_ENTRY_NEW, &entry->flags))
 			continue;
 		atomic_clear_bit(BLK_ENTRY_NEW, &entry->flags);
@@ -1345,7 +1342,7 @@ blk_map_setup_writes(struct blk_map *map)
 			SLIST_INSERT_AFTER(prev, tcache, t_list);
 		}
 
-		retval = blk_entry_add_to_tcache(tcache, map, entry, has_filemark ? QS_IO_SYNC_FLUSH : QS_IO_WRITE);
+		retval = blk_entry_add_to_tcache(tcache, map, entry, wait ? QS_IO_SYNC_FLUSH : QS_IO_WRITE);
 		if (unlikely(retval != 0))
 			goto err;
 		pending_pglist_cnt -= entry_pglist_cnt;
@@ -1358,7 +1355,7 @@ blk_map_setup_writes(struct blk_map *map)
 			tcache_put(tcache);
 			continue;
 		}
-		tcache_entry_rw(tcache, has_filemark ? QS_IO_SYNC_FLUSH : QS_IO_WRITE);
+		tcache_entry_rw(tcache, wait ? QS_IO_SYNC_FLUSH : QS_IO_WRITE);
 		SLIST_INSERT_HEAD(&map->tcache_list, tcache, t_list);
 	}
 
@@ -1442,14 +1439,14 @@ blk_entries_write_insert(struct tape_partition *partition, struct blk_map *start
 	partition->cur_map = map;
 
 	if (start && start != partition->cur_map) {
-		retval = blk_map_setup_writes(start);
+		retval = blk_map_setup_writes(start, 0);
 		if (retval != 0)
 			goto reset;
 	}
 
 	TAILQ_FOREACH(map, &map_list, m_list) {
 		if (tmark || map != partition->cur_map || map->cached_data > MAX_CACHED_WRITES) {
-			retval = blk_map_setup_writes(map);
+			retval = blk_map_setup_writes(map, 0);
 			if (retval != 0)
 				goto reset;
 		}
@@ -1729,7 +1726,7 @@ __tape_partition_flush_writes(struct tape_partition *partition, int wait)
 	TAILQ_FOREACH_SAFE(map, &partition->map_list, m_list, next) {
 		if (!wait && map == partition->cur_map)
 			continue;
-		blk_map_setup_writes(map);
+		blk_map_setup_writes(map, wait && !next);
 		if (wait || error)
 			blk_map_wait_for_data_completion(map);
 		else {
