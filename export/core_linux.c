@@ -963,6 +963,24 @@ bio_set_command(bio_t *bio, int cmd)
 	case QS_IO_WRITE:
 		bio->bi_rw = WRITE;
 		break;
+	case QS_IO_SYNC:
+#if defined(WRITE_FUA)
+		bio->bi_rw = WRITE_FUA;
+#elif defined(WRITE_BARRIER)
+		bio->bi_rw = WRITE_BARRIER;
+#else
+#error "Cannot handle sync cmds"
+#endif
+		break;
+	case QS_IO_SYNC_FLUSH:
+#if defined(WRITE_FLUSH_FUA)
+		bio->bi_rw = WRITE_FLUSH_FUA;
+#elif defined(WRITE_BARRIER)
+		bio->bi_rw = WRITE_BARRIER;
+#else
+#error "Cannot handle sync cmds"
+#endif
+		break;
 	default:
 		DEBUG_BUG_ON(1);
 	}

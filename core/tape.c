@@ -49,7 +49,7 @@ __tape_write_metadata(struct tape *tape)
 {
 	int retval;
 
-	retval = qs_lib_bio_lba(tape->bint, tape->b_start, tape->metadata, QS_IO_WRITE, 0);
+	retval = qs_lib_bio_lba(tape->bint, tape->b_start, tape->metadata, QS_IO_SYNC, 0);
 	return retval;
 }
 

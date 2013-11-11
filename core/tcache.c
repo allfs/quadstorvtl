@@ -271,7 +271,7 @@ tcache_zero_range(struct bdevint *bint, uint64_t b_start, int pages)
 		tcache = tcache_alloc(todo);
 		pages -= todo;
 		for (i = 0; i < todo; i++) {
-			retval = tcache_add_page(tcache, page, b_start, bint, LBA_SIZE, QS_IO_WRITE);
+			retval = tcache_add_page(tcache, page, b_start, bint, LBA_SIZE, QS_IO_SYNC);
 			if (unlikely(retval != 0)) {
 				debug_warn("tcache add page failed\n");
 				tcache_put(tcache);
@@ -279,7 +279,7 @@ tcache_zero_range(struct bdevint *bint, uint64_t b_start, int pages)
 			}
 			b_start += (LBA_SIZE >> bint->sector_shift);
 		}
-		tcache_entry_rw(tcache, QS_IO_WRITE);
+		tcache_entry_rw(tcache, QS_IO_SYNC);
 		SLIST_INSERT_HEAD(&tcache_list, tcache, t_list);
 	}
 

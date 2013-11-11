@@ -392,7 +392,7 @@ tmap_write(struct tape_partition *partition, struct tsegment_map *tmap)
 	int retval;
 
 	tmap_write_csum(tmap->metadata);
-	retval = qs_lib_bio_lba(partition->tmaps_bint, tmap->b_start, tmap->metadata, QS_IO_WRITE, 0);
+	retval = qs_lib_bio_lba(partition->tmaps_bint, tmap->b_start, tmap->metadata, QS_IO_SYNC, 0);
 	return retval;
 }
 
@@ -1228,7 +1228,7 @@ tmap_eod_segments(struct tape_partition *partition, struct tsegment_map *tmap, i
 	}
 
 	tmap_write_csum(page);
-	retval = qs_lib_bio_lba(partition->tmaps_bint, tmap->b_start, page, QS_IO_WRITE, 0);
+	retval = qs_lib_bio_lba(partition->tmaps_bint, tmap->b_start, page, QS_IO_SYNC, 0);
 	vm_pg_free(page);
 	if (unlikely(retval != 0))
 		return retval;
@@ -1588,7 +1588,7 @@ tape_partition_write_mam(struct tape_partition *partition)
 	csum = net_calc_csum16(vm_pg_address(partition->mam_data), LBA_SIZE - sizeof(*raw_mam));
 	raw_mam->csum = csum;
 
-	retval = qs_lib_bio_lba(partition->tmaps_bint, partition->tmaps_b_start, partition->mam_data, QS_IO_WRITE, 0);
+	retval = qs_lib_bio_lba(partition->tmaps_bint, partition->tmaps_b_start, partition->mam_data, QS_IO_SYNC, 0);
 	return retval;
 }
 

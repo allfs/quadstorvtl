@@ -324,7 +324,7 @@ bint_index_check(struct bdevint *bint, int index_id)
 	if (!need_sync)
 		return 0;
 
-	retval = bint_index_io(bint, index, QS_IO_WRITE);
+	retval = bint_index_io(bint, index, QS_IO_SYNC);
 	if (unlikely(retval < 0)) {
 		return -1;
 	}

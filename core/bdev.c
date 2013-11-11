@@ -144,7 +144,7 @@ bint_index_io(struct bdevint *bint, struct bintindex *index, int rw)
 {
 	int retval;
 
-	if (rw == QS_IO_WRITE)
+	if (rw != QS_IO_READ)
 		bint_index_write_csum(index);
 
 	retval = qs_lib_bio_lba(bint, index->b_start, index->metadata, rw, 0);
@@ -181,7 +181,7 @@ bint_index_new(struct bdevint *bint, int index_id)
 	index->index_id = index_id;
 	index->bint = bint;
 
-	retval = bint_index_io(bint, index, QS_IO_WRITE);
+	retval = bint_index_io(bint, index, QS_IO_SYNC);
 	if (unlikely(retval != 0)) {
 		debug_warn("Failed to read index data\n");
 		bint_index_free(index);
@@ -312,7 +312,7 @@ bint_free(struct bdevint *bint, int free_alloc)
 		return -1;
 	}
 
-	retval = qs_lib_bio_lba(bint, bint->b_start, page, QS_IO_WRITE, 0);
+	retval = qs_lib_bio_lba(bint, bint->b_start, page, QS_IO_SYNC, 0);
 	vm_pg_free(page);
 	if (unlikely(retval != 0))
 		return -1;
@@ -453,7 +453,7 @@ found:
 		return 0ULL;
 	}
 
-	retval = bint_index_io(bint, index, QS_IO_WRITE);
+	retval = bint_index_io(bint, index, QS_IO_SYNC);
 	if (unlikely(retval != 0)) {
 		bmap[i] &= ~(1 << j);
 		debug_warn("index sync failed for index_id %d bid %u\n", index->index_id, bint->bid);
@@ -547,7 +547,7 @@ __bint_release_block(struct bdevint *bint, uint64_t block)
 
 	bmap[entry] &= ~(1 << pos);
 
-	retval = bint_index_io(bint, index, QS_IO_WRITE);
+	retval = bint_index_io(bint, index, QS_IO_SYNC);
 	if (unlikely(retval != 0)) {
 		debug_warn("index write failed\n");
 		bmap[entry] |= (1 << pos);
@@ -604,7 +604,7 @@ bint_sync(struct bdevint *bint)
 	memcpy(raw_bint->serialnumber, bint->serialnumber, serial_max);
 	memcpy(raw_bint->ext_serialnumber, bint->serialnumber + serial_max, sizeof(raw_bint->ext_serialnumber));
 
-	retval = qs_lib_bio_lba(bint, bint->b_start, page, QS_IO_WRITE, 0);
+	retval = qs_lib_bio_lba(bint, bint->b_start, page, QS_IO_SYNC, 0);
 	if (unlikely(retval != 0)) {
 		debug_warn("Sync failed for bdev meta at b_start %llu\n", (unsigned long long)bint->b_start);
 	}
@@ -847,7 +847,7 @@ bint_load(struct bdevint *bint)
 	retval = 0;
 	if (memcmp(raw_bint->quad_prod, "VTL", strlen("VTL"))) {
 		memcpy(raw_bint->quad_prod, "VTL", strlen("VTL"));
-		retval = qs_lib_bio_lba(bint, bint->b_start, page, QS_IO_WRITE, 0);
+		retval = qs_lib_bio_lba(bint, bint->b_start, page, QS_IO_SYNC, 0);
 		if (unlikely(retval != 0))
 			debug_warn("Fixing quad prod failed\n");
 	}

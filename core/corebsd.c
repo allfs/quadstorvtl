@@ -200,11 +200,9 @@ bio_set_command(struct bio *bio, int cmd)
 	case QS_IO_READ:
 		bio->bio_cmd = BIO_READ;
 		break;
-	case QS_IO_WRITE:
+	default:
 		bio->bio_cmd = BIO_WRITE;
 		break;
-	default:
-		debug_check(1);
 	}
 }
 

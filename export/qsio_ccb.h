@@ -8,6 +8,8 @@
 enum {
 	QS_IO_READ,
 	QS_IO_WRITE,
+	QS_IO_SYNC,
+	QS_IO_SYNC_FLUSH,
 };
 
 enum {

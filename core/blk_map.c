@@ -200,7 +200,7 @@ void static blk_map_end_bio(bio_t *bio, int err)
 	if (unlikely(err))
 		atomic_set_bit(META_DATA_ERROR, &blk_map->flags);
 
-	if (bio_get_command(bio) == QS_IO_WRITE)
+	if (bio_get_command(bio) != QS_IO_READ)
 		atomic_clear_bit(META_DATA_DIRTY, &blk_map->flags);
 	else
 		atomic_clear_bit(META_DATA_READ_DIRTY, &blk_map->flags);
@@ -215,7 +215,7 @@ blk_map_io(struct blk_map *blk_map, int rw)
 {
 	int retval;
 
-	if (rw == QS_IO_WRITE) {
+	if (rw != QS_IO_READ) {
 		debug_check(atomic_test_bit(META_DATA_DIRTY, &blk_map->flags));
 		atomic_set_bit(META_DATA_DIRTY, &blk_map->flags);
 		atomic_clear_bit(META_IO_PENDING, &blk_map->flags);
@@ -481,7 +481,7 @@ blk_map_flush_meta(struct blk_map *map)
 
 	blk_map_flush_entries(map);
 	blk_map_write_header(map);
-	retval = blk_map_io(map, QS_IO_WRITE);
+	retval = blk_map_io(map, QS_IO_SYNC);
 	return retval;
 }
 

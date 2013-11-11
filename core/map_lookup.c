@@ -125,7 +125,7 @@ void static map_lookup_end_bio(bio_t *bio, int err)
 	if (unlikely(err))
 		atomic_set_bit(META_DATA_ERROR, &map_lookup->flags);
 
-	if (bio_get_command(bio) == QS_IO_WRITE)
+	if (bio_get_command(bio) != QS_IO_READ)
 		atomic_clear_bit(META_DATA_DIRTY, &map_lookup->flags);
 	else
 		atomic_clear_bit(META_DATA_READ_DIRTY, &map_lookup->flags);
@@ -146,7 +146,7 @@ map_lookup_io(struct map_lookup *map_lookup, int rw)
 {
 	int retval;
 
-	if (rw == QS_IO_WRITE) {
+	if (rw != QS_IO_READ) {
 		debug_check(atomic_test_bit(META_DATA_DIRTY, &map_lookup->flags));
 		map_lookup_write_csum(map_lookup);
 		atomic_set_bit(META_DATA_DIRTY, &map_lookup->flags);
@@ -193,7 +193,7 @@ map_lookup_flush_meta(struct map_lookup *mlookup)
 	raw_mlookup->l_ids_start = mlookup->l_ids_start;
 	raw_mlookup->f_ids_start = mlookup->f_ids_start;
 	raw_mlookup->s_ids_start = mlookup->s_ids_start;
-	retval = map_lookup_io(mlookup, QS_IO_WRITE);
+	retval = map_lookup_io(mlookup, QS_IO_SYNC);
 	return retval;
 }
 
