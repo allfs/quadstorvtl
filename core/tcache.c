@@ -199,6 +199,8 @@ __tcache_entry_rw(struct tcache *tcache, int rw, void *end_bio)
 			break;
 
 		send_biot(bio, rw, end_bio);
+		if (rw == QS_IO_SYNC || rw == QS_IO_SYNC_FLUSH)
+			g_io_flush(bio->bint->cp);
 	}
 }
 

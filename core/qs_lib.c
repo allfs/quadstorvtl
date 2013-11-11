@@ -104,6 +104,8 @@ qs_lib_bio_page(struct bdevint *bint, uint64_t b_start, uint32_t size, pagestruc
 	bio_add_page(bio, (caddr_t)vm_pg_address(page), size);
 	bio->bio_caller2 = page;
 	g_io_request(bio, bint->cp);
+	if (rw == QS_IO_SYNC || rw == QS_IO_SYNC_FLUSH)
+		g_io_flush(bint->cp);
 #else
 	retval = bio_add_page(bio, page, size, 0);
 	if (unlikely(retval != size)) {

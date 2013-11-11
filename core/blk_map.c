@@ -1307,6 +1307,7 @@ blk_map_setup_writes(struct blk_map *map)
 	int retval;
 	int pending_pglist_cnt, pages, entry_pglist_cnt;
 	struct tcache_list tcache_list;
+	int has_filemark = 0;
 
 	pending_pglist_cnt = map->pending_pglist_cnt;
 	if (!pending_pglist_cnt)
@@ -1322,8 +1323,10 @@ blk_map_setup_writes(struct blk_map *map)
 	SLIST_INSERT_HEAD(&tcache_list, tcache, t_list);
 
 	TAILQ_FOREACH(entry, &map->entry_list, e_list) {
-		if (!entry_is_data_block(entry))
+		if (!entry_is_data_block(entry)) {
+			has_filemark = 1;
 			continue;
+		}
 		if (!atomic_test_bit(BLK_ENTRY_NEW, &entry->flags))
 			continue;
 		atomic_clear_bit(BLK_ENTRY_NEW, &entry->flags);
@@ -1342,7 +1345,7 @@ blk_map_setup_writes(struct blk_map *map)
 			SLIST_INSERT_AFTER(prev, tcache, t_list);
 		}
 
-		retval = blk_entry_add_to_tcache(tcache, map, entry, QS_IO_WRITE);
+		retval = blk_entry_add_to_tcache(tcache, map, entry, has_filemark ? QS_IO_SYNC_FLUSH : QS_IO_WRITE);
 		if (unlikely(retval != 0))
 			goto err;
 		pending_pglist_cnt -= entry_pglist_cnt;
@@ -1355,7 +1358,7 @@ blk_map_setup_writes(struct blk_map *map)
 			tcache_put(tcache);
 			continue;
 		}
-		tcache_entry_rw(tcache, QS_IO_WRITE);
+		tcache_entry_rw(tcache, has_filemark ? QS_IO_SYNC_FLUSH : QS_IO_WRITE);
 		SLIST_INSERT_HEAD(&map->tcache_list, tcache, t_list);
 	}
 
