@@ -105,6 +105,8 @@ map_lookup_free_till_cur(struct tape_partition *partition)
 
 	cur_mlookup = partition->cur_map->mlookup;
 	TAILQ_FOREACH_SAFE(mlookup, &partition->mlookup_list, l_list, next) {
+		if (mlookup == tape_partition_first_mlookup(partition))
+			continue;
 		if (mlookup == cur_mlookup)
 			break;
 		map_lookup_remove(partition, mlookup);
