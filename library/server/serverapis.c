@@ -668,15 +668,11 @@ blkdev_load_volumes(struct tl_blkdevinfo *blkdev)
 
 		vdevice = device_list[volume->tl_id];
 		retval = tl_ioctl(TLTARGIOCLOADVCARTRIDGE, volume);
+		TAILQ_INSERT_TAIL(&vdevice->vol_list, volume, q_entry);
 		if (retval != 0) {
 			DEBUG_ERR("Loading of volume failed");
 			volume->loaderror = 1;
-			TAILQ_INSERT_TAIL(&vdevice->vol_list, volume, q_entry);
-			volume = next;
-			continue;
 		}
-
-		TAILQ_INSERT_TAIL(&vdevice->vol_list, volume, q_entry);
 		volume = next;
 	}
 }

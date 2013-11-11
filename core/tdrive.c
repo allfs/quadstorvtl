@@ -4419,13 +4419,13 @@ tdrive_load(struct tdrive *tdrive, struct vdeviceinfo *deviceinfo)
 
 	tape = tdrive_find_tape(tdrive, deviceinfo->tape_id);
 	if (unlikely(!tape)) {
-		debug_warn("Cannot find tape at id %s\n", deviceinfo->tape_label);
+		debug_warn("Cannot find tape at id %u\n", deviceinfo->tape_id);
 		return -1;
 	}
 
 	retval = tdrive_load_tape(tdrive, tape);
 	if (unlikely(retval != 0)) {
-		debug_warn("Cannot load tape at id %s\n", deviceinfo->tape_label);
+		debug_warn("Cannot load tape %s\n", deviceinfo->tape_label);
 		return -1;
 	}
 
