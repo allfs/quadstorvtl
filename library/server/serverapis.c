@@ -61,6 +61,22 @@ static int check_blkdev_exists(char *devname);
 extern struct d_list disk_list;
 struct mdaemon_info mdaemon_info;
 
+static uint32_t gtape_id;
+uint32_t
+get_new_tape_id(void)
+{
+	if ((gtape_id + 1) == 0xFFFFFFFF)
+		return 0;
+
+	return (++gtape_id);
+}
+
+static void
+free_tape_id(uint32_t tape_id)
+{
+	gtape_id = tape_id;
+}
+
 static int
 target_name_valid(char *name)
 {
@@ -615,7 +631,7 @@ tl_server_delete_vol_conf(struct tl_comm *comm, struct tl_msg *msg)
 		goto senderr;
 	}
 
-	retval = sql_delete_vcartridge(conn, vinfo->tl_id, vinfo->tape_id);
+	retval = sql_delete_vcartridge(conn, vinfo->label);
 	if (retval != 0) {
 		snprintf(errmsg, sizeof(errmsg), "Unable to delete the volume from db\n");
 		pgsql_rollback(conn);
@@ -1469,10 +1485,16 @@ vdevice_add_volumes(struct vdevice *vdevice, struct group_info *group_info, int 
 		strcpy(vinfo->group_name, group_info->name);
 		strcpy(vinfo->label, vollabel);
 		vinfo->use_free_slot = use_free_slot;
+		vinfo->tape_id = get_new_tape_id();
+		if (!vinfo->tape_id) {
+			sprintf(errmsg, "Reached maximum possible tape ids. A service restart might help. Number of VCartridges added are %d", i);
+			return -1;
+		}
 
 		retval = add_new_vcartridge(vinfo, errmsg);
 
 		if (retval != 0) {
+			free_tape_id(vinfo->tape_id);
 			char tmpstr[64];
 
 			sprintf(tmpstr, ". Number of VCartridges added are %d", i);
@@ -3251,7 +3273,7 @@ vtl_update_element_addresses(struct vdevice *vdevice)
 		retval = tl_ioctl(TLTARGIOCGETVCARTRIDGEINFO, volume);
 		if (retval != 0)
 			continue;
-		sql_update_element_address(conn, vdevice->tl_id, volume->tape_id, volume->elem_address);
+		sql_update_element_address(conn, volume->label, volume->elem_address);
 	}
 	pgsql_commit(conn);
 }

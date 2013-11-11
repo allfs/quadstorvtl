@@ -610,7 +610,7 @@ prune_volumes(struct vlist *vol_list)
 		fprintf(stdout, "Removing vcartridge %s\n", vinfo->label);
 		if (testmode)
 			continue;
-		sql_delete_vcartridge(conn, vinfo->tl_id, vinfo->tape_id);
+		sql_delete_vcartridge(conn, vinfo->label);
 	}
 	pgsql_commit(conn);
 }

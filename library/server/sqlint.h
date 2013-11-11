@@ -24,7 +24,7 @@
 PGconn *sql_add_blkdev(struct physdisk *disk, uint32_t bid, uint32_t group_id);
 int sql_delete_blkdev(struct tl_blkdevinfo *binfo);
 int sql_add_vcartridge(PGconn *conn, struct vcartridge *vinfo);
-int sql_delete_vcartridge(PGconn *conn, int tl_id, uint32_t tape_id);
+int sql_delete_vcartridge(PGconn *conn, char *label);
 int sql_add_vtl_drive(int tl_id, struct tdriveconf *driveconf);
 int sql_add_drive(struct tdriveconf *driveconf);
 int sql_delete_vtl(int tl_id);
@@ -41,7 +41,6 @@ int sql_query_blkdevs(struct tl_blkdevinfo *bdev_list[]);
 int sql_virtvol_label_exists(char *label);
 int sql_get_last_range(char *prefix, char *suffix);
 int sql_virtvol_label_unique(char *label);
-int sql_set_volume_exported(struct vcartridge *vinfo);
 uint32_t sql_get_libid(struct physdevice *device, int devtype, int *enabled);
 uint32_t sql_get_driveid(struct physdevice *device, uint32_t libid);
 int sql_query_iscsiconf(int tl_id, uint32_t target_id, struct iscsiconf *iscsiconf);
@@ -54,6 +53,6 @@ int sql_rename_pool(uint32_t group_id, char *name);
 int sql_delete_fc_rule(struct fc_rule *fc_rule);
 int sql_delete_vtl_fc_rules(int tl_id);
 int sql_clear_slot_configuration(PGconn *conn, int tl_id);
-int sql_update_element_address(PGconn *conn, int tl_id, int tid, int eaddress);
+int sql_update_element_address(PGconn *conn, char *label, int eaddress);
 int sql_update_blkdev_group_id(uint32_t bid, uint32_t group_id);
 #endif

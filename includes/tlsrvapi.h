@@ -25,6 +25,7 @@
 
 #include <apicommon.h>
 
+uint32_t get_new_tape_id(void);
 int main_server_start(pthread_t *thread_id);
 int new_server_start(pthread_t *thread_id);
 int tl_server_register_pid(void);

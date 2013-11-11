@@ -230,12 +230,12 @@ sql_delete_blkdev(struct tl_blkdevinfo *binfo)
 }
 
 int
-sql_delete_vcartridge(PGconn *conn, int tl_id, int tape_id)
+sql_delete_vcartridge(PGconn *conn, char *label)
 {
 	char sqlcmd[256];
 	int error;
 
-	snprintf(sqlcmd, sizeof(sqlcmd), "DELETE FROM VCARTRIDGE WHERE TAPEID='%d' AND TLID='%d'", tape_id, tl_id);
+	snprintf(sqlcmd, sizeof(sqlcmd), "DELETE FROM VCARTRIDGE WHERE LABEL='%s'", label);
 	pgsql_exec_query3(conn, sqlcmd, 0, &error, NULL, NULL);
 	return error;
 }
@@ -557,41 +557,15 @@ err:
 }
 
 int
-sql_set_volume_exported(struct vcartridge *vinfo)
-{
-	char sqlcmd[128];
-	int error;
-
-	snprintf(sqlcmd, sizeof(sqlcmd), "UPDATE VCARTRIDGE SET VSTATUS='%d' WHERE TLID='%d' AND TAPEID='%u'", MEDIA_STATUS_EXPORTED, vinfo->tl_id, vinfo->tape_id);
-
-	pgsql_exec_query2(sqlcmd, 0, &error, NULL, NULL);
-	if (error != 0)
-	{
-		return -1;
-	}
-
-	return 0;
-}
-
-int
 sql_add_vcartridge(PGconn *conn, struct vcartridge *vinfo)
 {
 	char sqlcmd[512];
 	int error = -1;
 
-	if (!vinfo->tape_id) {
-		snprintf(sqlcmd, sizeof(sqlcmd), "INSERT INTO VCARTRIDGE (GROUPID, TLID, VTYPE, LABEL, VSIZE, VSTATUS, WORM) VALUES ('%u', '%d', '%d', '%s', '%llu', '%u', '%d')", vinfo->group_id, vinfo->tl_id, vinfo->type, vinfo->label, (unsigned long long)vinfo->size, vinfo->vstatus, vinfo->worm);
-		vinfo->tape_id = pgsql_exec_query3(conn, sqlcmd, 1, &error, "VCARTRIDGE" , "TAPEID");
-	}
-	else {
-		snprintf(sqlcmd, sizeof(sqlcmd), "INSERT INTO VCARTRIDGE (TAPEID, GROUPID, TLID, VTYPE, LABEL, VSIZE, VSTATUS, WORM) VALUES ('%u', '%u', '%d', '%d', '%s', '%llu', '%u', '%d')", vinfo->tape_id, vinfo->group_id, vinfo->tl_id, vinfo->type, vinfo->label, (unsigned long long)vinfo->size, vinfo->vstatus, vinfo->worm);
-		pgsql_exec_query3(conn, sqlcmd, 0, &error, NULL, NULL);
-	}
+	snprintf(sqlcmd, sizeof(sqlcmd), "INSERT INTO VCARTRIDGE (GROUPID, TLID, VTYPE, LABEL, VSIZE, WORM) VALUES ('%u', '%u', '%d', '%s', '%llu', '%d')", vinfo->group_id, vinfo->tl_id, vinfo->type, vinfo->label, (unsigned long long)vinfo->size, vinfo->worm);
+	pgsql_exec_query3(conn, sqlcmd, 0, &error, NULL, NULL);
 
-	if (!vinfo->tape_id || error != 0)
-		return -1;
-	else
-		return 0;
+	return error;
 }
 
 int
@@ -604,7 +578,7 @@ sql_query_volumes(struct tl_blkdevinfo *binfo)
 	int i;
 	struct vcartridge *vinfo;
 
-	snprintf(sqlcmd, sizeof(sqlcmd), "SELECT TAPEID,TLID,VTYPE,LABEL,VSIZE,VSTATUS,WORM,EADDRESS FROM VCARTRIDGE WHERE GROUPID='%u' ORDER BY TAPEID", binfo->group->group_id);
+	snprintf(sqlcmd, sizeof(sqlcmd), "SELECT TLID,VTYPE,LABEL,VSIZE,WORM,EADDRESS FROM VCARTRIDGE WHERE GROUPID='%u'", binfo->group->group_id);
 
 	res = pgsql_exec_query(sqlcmd, &conn);
 	if (res == NULL)
@@ -614,8 +588,7 @@ sql_query_volumes(struct tl_blkdevinfo *binfo)
 	}
 
 	nrows = PQntuples(res);
-	for (i = 0; i < nrows; i++)
-	{
+	for (i = 0; i < nrows; i++) {
 		vinfo = alloc_buffer(sizeof(struct vcartridge));
 		if (!vinfo) {
 			DEBUG_ERR("Unable to allocate for a new volumeinfo struct\n");
@@ -623,13 +596,17 @@ sql_query_volumes(struct tl_blkdevinfo *binfo)
 		}
 		vinfo->group_id = binfo->group->group_id;
 		strcpy(vinfo->group_name, binfo->group->name);
-		vinfo->tape_id = atoi(PQgetvalue(res, i, 0));
-		vinfo->tl_id = atoi(PQgetvalue(res, i, 1));
-		vinfo->type = atoi(PQgetvalue(res, i, 2));
-		memcpy(vinfo->label, PQgetvalue(res, i, 3), PQgetlength(res, i, 3));
-		vinfo->size = strtoull(PQgetvalue(res, i, 4), NULL, 10);
-		vinfo->worm = strtoul(PQgetvalue(res, i, 6), NULL, 10);
-		vinfo->elem_address = atoi(PQgetvalue(res, i, 7));
+		vinfo->tape_id = get_new_tape_id();
+		if (!vinfo->tape_id) {
+			DEBUG_ERR_SERVER("Cannot get a new tape id\n");
+			goto err;
+		}
+		vinfo->tl_id = atoi(PQgetvalue(res, i, 0));
+		vinfo->type = atoi(PQgetvalue(res, i, 1));
+		memcpy(vinfo->label, PQgetvalue(res, i, 2), PQgetlength(res, i, 2));
+		vinfo->size = strtoull(PQgetvalue(res, i, 3), NULL, 10);
+		vinfo->worm = strtoul(PQgetvalue(res, i, 4), NULL, 10);
+		vinfo->elem_address = atoi(PQgetvalue(res, i, 5));
 		TAILQ_INSERT_TAIL(&binfo->vol_list, vinfo, q_entry);
 	}
 
@@ -967,12 +944,12 @@ sql_clear_slot_configuration(PGconn *conn, int tl_id)
 }
 
 int
-sql_update_element_address(PGconn *conn, int tl_id, int tid, int eaddress)
+sql_update_element_address(PGconn *conn, char *label, int eaddress)
 {
 	char sqlcmd[128];
 	int error = 0;
 
-	snprintf(sqlcmd, sizeof(sqlcmd), "UPDATE VCARTRIDGE set EADDRESS='%d' WHERE TLID='%d' AND TAPEID='%d'", eaddress, tl_id, tid);
+	snprintf(sqlcmd, sizeof(sqlcmd), "UPDATE VCARTRIDGE set EADDRESS='%d' WHERE LABEL='%s'", eaddress, label);
 	pgsql_exec_query3(conn, sqlcmd, 0, &error, NULL, NULL);
 	return error;
 }
