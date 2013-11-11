@@ -87,7 +87,7 @@ tape_free(struct tape *tape, int free_alloc)
 }
 
 static struct tape *
-tape_alloc(struct vcartridge *vinfo)
+tape_alloc(struct vcartridge *vinfo, int isnew)
 {
 	struct tape *tape;
 
@@ -120,7 +120,8 @@ tape_alloc(struct vcartridge *vinfo)
 	tape->set_size = tape->size = vinfo->size;
 	tape->tl_id = vinfo->tl_id;
 	tape->tape_id = vinfo->tape_id;
-	tape->worm = vinfo->worm || tape->group->worm;
+	if (isnew)
+		tape->worm = vinfo->worm || tape->group->worm;
 	tape->b_start = bdev_tape_bstart(tape->bint, tape->tape_id);
 	debug_info("tape bstart %llu tape_id %u\n", (unsigned long long)tape->b_start, tape->tape_id);
 	strcpy(tape->label, vinfo->label);
@@ -154,11 +155,7 @@ tape_validate_metadata(struct tdevice *tdevice, struct tape *tape, struct vcartr
 		return -1;
 	}
 
-	if (vinfo->worm != tape->worm) {
-		debug_warn("Mismatch in worm property expected %d found %d\n", tape->worm, raw_tape->worm);
-		return -1;
-	}
-
+	tape->worm = raw_tape->worm;
 	tape->set_size = raw_tape->set_size;
 	tape->flags = raw_tape->flags;
 	debug_info("size %llu set size %llu\n", (unsigned long long)tape->size, (unsigned long long)tape->set_size);
@@ -269,7 +266,7 @@ tape_new(struct tdevice *tdevice, struct vcartridge *vinfo)
 	struct tape_partition *partition;
 	int retval;
 
-	tape = tape_alloc(vinfo);
+	tape = tape_alloc(vinfo, 1);
 	if (unlikely(!tape))
 		return NULL;
 
@@ -303,7 +300,7 @@ tape_load(struct tdevice *tdevice, struct vcartridge *vinfo)
 	int retval;
 	int i;
 
-	tape = tape_alloc(vinfo);
+	tape = tape_alloc(vinfo, 0);
 	if (unlikely(!tape))
 		return NULL;
 

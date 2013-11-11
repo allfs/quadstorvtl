@@ -1269,15 +1269,15 @@ blk_map_overwrite_check(struct blk_map *map)
 	if (!map)
 		return 0;
 
+	partition = map->partition;
+	if (atomic_test_bit(PARTITION_DIR_WRITE, &partition->flags))
+		return 0;
+
 	if (!map_lookup_map_has_next(map) && !map->c_entry)
 		return 0;
 
-	partition = map->partition;
 	if (partition->tape->worm)
 		return OVERWRITE_WORM_MEDIA;
-
-	if (atomic_test_bit(PARTITION_DIR_WRITE, &partition->flags))
-		return 0;
 
 	if (!map->nr_entries && map->l_ids_start) {
 		map = blk_map_set_prev(map);

@@ -43,7 +43,7 @@ map_lookup_map_has_next(struct blk_map *map)
 	if (map->mlookup->next_block)
 		return 1;
 
-	if (map->mlookup_entry_id != (map->mlookup->map_nrs - 1))
+	if (map->mlookup->map_nrs && map->mlookup_entry_id != (map->mlookup->map_nrs - 1))
 		return 1;
 
 	return 0;

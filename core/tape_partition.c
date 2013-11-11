@@ -735,7 +735,7 @@ tape_partition_validate_write(struct tape_partition *partition, uint32_t block_s
 	struct blk_map *map = partition->cur_map;
 
 	data_size = atomic_read(&partition->pending_size);
-	if (partition->tape->worm && !data_size && map) {
+	if (partition->tape->worm && !atomic_test_bit(PARTITION_DIR_WRITE, &partition->flags) && !data_size && map) {
 		if (map_lookup_map_has_next(map) || map->c_entry)
 			return OVERWRITE_WORM_MEDIA;
 	}
