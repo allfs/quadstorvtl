@@ -1488,15 +1488,16 @@ vdevice_add_volumes(struct vdevice *vdevice, struct group_info *group_info, int 
 		vinfo->tape_id = get_new_tape_id();
 		if (!vinfo->tape_id) {
 			sprintf(errmsg, "Reached maximum possible tape ids. A service restart might help. Number of VCartridges added are %d", i);
+			free(vinfo);
 			return -1;
 		}
 
 		retval = add_new_vcartridge(vinfo, errmsg);
 
 		if (retval != 0) {
-			free_tape_id(vinfo->tape_id);
 			char tmpstr[64];
 
+			free_tape_id(vinfo->tape_id);
 			sprintf(tmpstr, ". Number of VCartridges added are %d", i);
 			strcat(errmsg, tmpstr);
 
