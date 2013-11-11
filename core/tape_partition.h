@@ -301,7 +301,7 @@ int tape_partition_check_data_segment(struct tape_partition *partition, struct b
 struct blk_map * tape_partition_add_map(struct tape_partition *partition, uint64_t lid_start, uint64_t f_ids_start, uint64_t s_ids_start, struct map_lookup **ret_map_lookup, struct maplookup_list *mlookup_list, struct blkmap_list *map_list);
 int tape_partition_flush_buffers(struct tape_partition *partition);
 void tape_partition_unload(struct tape_partition *partition);
-void tape_partition_flush_writes(struct tape_partition *partition);
+int tape_partition_flush_writes(struct tape_partition *partition);
 void tape_partition_flush_reads(struct tape_partition *partition);
 int tape_partition_lookup_segments(struct tape_partition *partition);
 int tape_partition_lookup_segment(struct tape_partition *partition, int type, uint32_t segment_id, struct tsegment *tsegment);

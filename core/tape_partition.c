@@ -812,8 +812,10 @@ tape_partition_lookup_cur_meta_segment(struct tape_partition *partition)
 	}
 
 	retval = tape_partition_lookup_segment(partition, SEGMENT_TYPE_META, map->segment_id, &partition->msegment);
-	if (retval != 0 || !partition->msegment.b_start)
+	if (retval != 0 || !partition->msegment.b_start) {
+		debug_warn("Unexpected zero block start, retval %d\n", retval);
 		return MEDIA_ERROR;
+	}
 
 	partition->msegment.b_cur = map->b_start + (LBA_SIZE >> map->bint->sector_shift);
 	return 0;
@@ -859,12 +861,15 @@ tape_partition_lookup_cur_data_segment(struct tape_partition *partition)
 	/* Can never happen*/
 	if (cur_map->l_ids_start) {
 		tape_partition_print_cur_position(partition, "Invalid data segement position error");
+		debug_warn("Unexpected l_ids_start %llu should be zero\n", (unsigned long long)cur_map->l_ids_start);
 		return MEDIA_ERROR;
 	}
 
 	retval = tape_partition_lookup_segment(partition, SEGMENT_TYPE_DATA, 0, &partition->dsegment);
-	if (retval != 0 || !partition->dsegment.b_start)
+	if (retval != 0 || !partition->dsegment.b_start) {
+		debug_warn("Unexpected zero block start, retval %d\n", retval);
 		return MEDIA_ERROR;
+	}
 	return 0;
 set:
 	retval = tape_partition_lookup_segment(partition, SEGMENT_TYPE_DATA, entry_segment_id(cur_entry), &partition->dsegment);

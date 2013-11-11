@@ -1248,6 +1248,7 @@ blk_map_write_eod(struct blk_map *map)
 		blk_map_update_ids(map);
 		map_lookup_entry_update(map);
 		map_lookup_resync_ids(map->mlookup);
+		atomic_set_bit(META_IO_PENDING, &map->mlookup->flags);
 		retval = map_lookup_flush_meta(map->mlookup);
 		if (unlikely(retval != 0))
 			return MEDIA_ERROR;
@@ -1522,7 +1523,7 @@ blk_map_write_filemarks(struct tape_partition *partition, uint8_t wsmk)
 	if (unlikely(retval != 0))
 		goto err;
 
-	tape_partition_flush_writes(partition);
+	retval = tape_partition_flush_writes(partition);
 
 	map = partition->cur_map;
 
@@ -1537,7 +1538,7 @@ blk_map_write_filemarks(struct tape_partition *partition, uint8_t wsmk)
 	map_lookup_entry_update(map);
 	if (!entry->lid_start)
 		tape_update_volume_change_reference(partition->tape);
-	return 0;
+	return retval;
 err:
 	blk_entry_free_all(&entry_list);
 	return MEDIA_ERROR;
@@ -1736,15 +1737,19 @@ __tape_partition_flush_writes(struct tape_partition *partition, int wait)
 		}
 
 		retval = blk_map_flush_meta(map);
-		if (unlikely(retval != 0))
+		if (unlikely(retval != 0)) {
+			debug_warn("Flushing metadata for blk map at %llu failed\n", (unsigned long long)map->l_ids_start);
 			error = MEDIA_ERROR;
+		}
 
 		if (!error && !wait && atomic_test_bit(META_DATA_DIRTY, &map->flags))
 			continue;
 
 		wait_on_chan(map->blk_map_wait, !atomic_test_bit(META_DATA_DIRTY, &map->flags));
-		if (atomic_test_bit(META_DATA_ERROR, &map->flags))
+		if (atomic_test_bit(META_DATA_ERROR, &map->flags)) {
+			debug_warn("Flushing metadata for blk map at %llu failed\n", (unsigned long long)map->l_ids_start);
 			error = MEDIA_ERROR;
+		}
 
 		if (!atomic_test_bit(META_DATA_NEW, &map->flags) || error) {
 			blk_map_remove(partition, map);
@@ -1769,14 +1774,18 @@ __tape_partition_flush_writes(struct tape_partition *partition, int wait)
 		}
 
 		retval = map_lookup_flush_meta(mlookup);
-		if (unlikely(retval != 0))
+		if (unlikely(retval != 0)) {
+			debug_warn("Flushing metadata for map lookup at %llu failed\n", (unsigned long long)mlookup->l_ids_start);
 			error = MEDIA_ERROR;
+		}
 
 		if (wait || atomic_test_bit(META_DATA_NEW, &mlookup->flags))
 			wait_on_chan(mlookup->map_lookup_wait, !atomic_test_bit(META_DATA_DIRTY, &mlookup->flags));
 
-		if (atomic_test_bit(META_DATA_ERROR, &mlookup->flags))
+		if (atomic_test_bit(META_DATA_ERROR, &mlookup->flags)) {
+			debug_warn("Flushing metadata for map lookup at %llu failed\n", (unsigned long long)mlookup->l_ids_start);
 			error = MEDIA_ERROR;
+		}
 
 		if (!error && atomic_test_bit(META_DATA_NEW, &mlookup->flags)) {
 			if (!mlookup->map_nrs) { /* Can happen on error */
@@ -1792,21 +1801,26 @@ __tape_partition_flush_writes(struct tape_partition *partition, int wait)
 		if (atomic_test_bit(META_DATA_DIRTY, &mlookup->flags))
 			continue;
 
-		if (atomic_test_bit(META_DATA_ERROR, &mlookup->flags))
+		if (atomic_test_bit(META_DATA_ERROR, &mlookup->flags)) {
+			debug_warn("Flushing metadata for map lookup at %llu failed\n", (unsigned long long)mlookup->l_ids_start);
 			error = MEDIA_ERROR;
+		}
 
 		map_lookup_remove(partition, mlookup);
 	}
 	return error;
 }
 
-void
+int
 tape_partition_flush_writes(struct tape_partition *partition)
 {
+	int retval;
+
 	if (!atomic_test_bit(PARTITION_DIR_WRITE, &partition->flags))
-		return;
-	__tape_partition_flush_writes(partition, 1);
+		return 0;
+	retval = __tape_partition_flush_writes(partition, 1);
 	atomic_clear_bit(PARTITION_DIR_WRITE, &partition->flags);
+	return retval;
 }
 
 static int
