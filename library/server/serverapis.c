@@ -68,10 +68,11 @@ get_next_tape_id(void)
 	int i, retval;
 
 	for (i = 1; i < MAX_VTAPES; i++) {
-		if (!vcart_list[i])
+		if (!vcart_list[i]) {
 			retval = sql_virtvol_tapeid_unique(i);
 			if (retval == 0)
 				return i;
+		}
 	}
 	return 0;
 }
