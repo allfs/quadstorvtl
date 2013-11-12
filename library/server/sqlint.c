@@ -869,6 +869,33 @@ sql_virtvol_label_unique(char *label)
 }
 
 int
+sql_virtvol_tapeid_unique(uint32_t tape_id)
+{
+	char sqlcmd[128];
+	PGconn *conn;
+	PGresult *res;
+	int nrows;
+
+	snprintf(sqlcmd, sizeof(sqlcmd), "SELECT TAPEID FROM VCARTRIDGE WHERE TAPEID='%u'", tape_id);
+
+	res = pgsql_exec_query(sqlcmd, &conn);
+	if (res == NULL)
+	{
+		DEBUG_ERR("error occurred in executing sqlcmd %s\n", sqlcmd); 
+		return -1;
+	}
+
+	nrows = PQntuples(res);
+	PQclear(res);
+	PQfinish(conn);
+	if (nrows > 0)
+	{
+		return -1;
+	}
+	return 0;
+}
+
+int
 sql_query_fc_rules(struct fc_rule_list *fc_rule_list)
 {
 	char sqlcmd[128];

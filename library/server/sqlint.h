@@ -41,6 +41,7 @@ int sql_query_blkdevs(struct tl_blkdevinfo *bdev_list[]);
 int sql_virtvol_label_exists(char *label);
 int sql_get_last_range(char *prefix, char *suffix);
 int sql_virtvol_label_unique(char *label);
+int sql_virtvol_tapeid_unique(uint32_t tape_id);
 uint32_t sql_get_libid(struct physdevice *device, int devtype, int *enabled);
 uint32_t sql_get_driveid(struct physdevice *device, uint32_t libid);
 int sql_query_iscsiconf(int tl_id, uint32_t target_id, struct iscsiconf *iscsiconf);

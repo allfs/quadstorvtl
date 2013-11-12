@@ -63,13 +63,15 @@ extern struct d_list disk_list;
 struct mdaemon_info mdaemon_info;
 
 uint32_t
-get_new_tape_id(void)
+get_next_tape_id(void)
 {
-	int i;
+	int i, retval;
 
 	for (i = 1; i < MAX_VTAPES; i++) {
 		if (!vcart_list[i])
-			return i;
+			retval = sql_virtvol_tapeid_unique(i);
+			if (retval == 0)
+				return i;
 	}
 	return 0;
 }
@@ -1483,7 +1485,7 @@ vdevice_add_volumes(struct vdevice *vdevice, struct group_info *group_info, int 
 		strcpy(vinfo->group_name, group_info->name);
 		strcpy(vinfo->label, vollabel);
 		vinfo->use_free_slot = use_free_slot;
-		vinfo->tape_id = get_new_tape_id();
+		vinfo->tape_id = get_next_tape_id();
 		if (!vinfo->tape_id) {
 			sprintf(errmsg, "Reached maximum possible tape ids. A service restart might help. Number of VCartridges added are %d", i);
 			free(vinfo);
