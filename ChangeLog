@@ -1,3 +1,11 @@
+Release 2.2.15
+	* Default group WORM property was uninitalized
+	* Fix for false overwrite WORM media errors with WORM cartridges
+	* Fix for possible metadata corruptions in map lookups
+	* Add UseFreeSlot property to quadstor.conf to load new vcartridges
+	  directly into a free storage slot rather than an I/E port
+	* Add sync writes for metadata and when writing filemarks
+
 Release 2.2.14
 	* Misc fixes for new build and install system
 	* Fixes for x86 port regressions
