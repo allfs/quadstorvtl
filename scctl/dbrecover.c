@@ -38,6 +38,7 @@ extern struct tl_blkdevinfo *bdev_list[];
 extern struct d_list disk_list;
 extern struct group_info *group_list[];
 extern struct vdevice *device_list[];
+extern struct vcartridge *vcart_list[];
 int testmode = 0;
 
 #define LBA_SIZE 4096
@@ -265,13 +266,7 @@ mark_volumes_offline(struct vlist *vol_list)
 static struct vcartridge *
 __find_volume(struct vlist *vol_list, int tl_id, uint32_t tape_id)
 {
-	struct vcartridge *vinfo;
-
-	TAILQ_FOREACH(vinfo, vol_list, q_entry) {
-		if (vinfo->tape_id == tape_id)
-			return vinfo;
-	}
-	return NULL;
+	return vcart_list[tape_id];
 }
 
 void
@@ -329,9 +324,13 @@ scan_vcartridges()
 				continue;
 			}
 
+			vcartridge = alloc_buffer(sizeof(struct vcartridge));
+			if (!vcartridge) {
+				fprintf(stderr, "Memory allocation error\n");
+				exit(1);
+			}
+	
 			fprintf(stdout, "Adding VCartridge %s tape id %u\n", raw_tape->label, raw_tape->tape_id);
-			if (testmode)
-				continue;
 
 			memset(&vinfo, 0, sizeof(vinfo));
 			strcpy(vinfo.label, raw_tape->label);
@@ -342,6 +341,18 @@ scan_vcartridges()
 			vinfo.tape_id = raw_tape->tape_id;
 			vinfo.worm = raw_tape->worm;
 			
+			vcartridge->group_id = group_info->group_id;
+			strcpy(vcartridge->group_name, group_info->name);
+			vcartridge->tape_id = vinfo.tape_id;
+			vcartridge->tl_id = vinfo.tl_id;
+			vcartridge->type = vinfo.type;
+			strcpy(vcartridge->label, vinfo.label);
+			vcartridge->size = vinfo.size;
+			vcartridge->worm = vinfo.worm;
+			vcart_list[vinfo.tape_id] = vcartridge;
+			if (testmode)
+				continue;
+
 			conn = pgsql_begin();
 			if (!conn) {
 				fprintf(stdout, "Unable to connect to db\n");
