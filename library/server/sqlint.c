@@ -562,12 +562,13 @@ sql_add_vcartridge(PGconn *conn, struct vcartridge *vinfo)
 	char sqlcmd[512];
 	int error = -1;
 
-	snprintf(sqlcmd, sizeof(sqlcmd), "INSERT INTO VCARTRIDGE (GROUPID, TLID, VTYPE, LABEL, VSIZE, WORM) VALUES ('%u', '%u', '%d', '%s', '%llu', '%d')", vinfo->group_id, vinfo->tl_id, vinfo->type, vinfo->label, (unsigned long long)vinfo->size, vinfo->worm);
+	snprintf(sqlcmd, sizeof(sqlcmd), "INSERT INTO VCARTRIDGE (TAPEID, GROUPID, TLID, VTYPE, LABEL, VSIZE, WORM) VALUES ('%u', '%u', '%u', '%d', '%s', '%llu', '%d')", vinfo->tape_id, vinfo->group_id, vinfo->tl_id, vinfo->type, vinfo->label, (unsigned long long)vinfo->size, vinfo->worm);
 	pgsql_exec_query3(conn, sqlcmd, 0, &error, NULL, NULL);
 
 	return error;
 }
 
+extern struct vcartridge *vcart_list[];
 int
 sql_query_volumes(struct tl_blkdevinfo *binfo)
 {
@@ -578,7 +579,7 @@ sql_query_volumes(struct tl_blkdevinfo *binfo)
 	int i;
 	struct vcartridge *vinfo;
 
-	snprintf(sqlcmd, sizeof(sqlcmd), "SELECT TLID,VTYPE,LABEL,VSIZE,WORM,EADDRESS FROM VCARTRIDGE WHERE GROUPID='%u'", binfo->group->group_id);
+	snprintf(sqlcmd, sizeof(sqlcmd), "SELECT TLID,VTYPE,LABEL,VSIZE,WORM,EADDRESS,TAPEID FROM VCARTRIDGE WHERE GROUPID='%u'", binfo->group->group_id);
 
 	res = pgsql_exec_query(sqlcmd, &conn);
 	if (res == NULL)
@@ -596,18 +597,25 @@ sql_query_volumes(struct tl_blkdevinfo *binfo)
 		}
 		vinfo->group_id = binfo->group->group_id;
 		strcpy(vinfo->group_name, binfo->group->name);
-		vinfo->tape_id = get_new_tape_id();
-		if (!vinfo->tape_id) {
-			DEBUG_ERR_SERVER("Cannot get a new tape id\n");
-			goto err;
-		}
 		vinfo->tl_id = atoi(PQgetvalue(res, i, 0));
 		vinfo->type = atoi(PQgetvalue(res, i, 1));
 		memcpy(vinfo->label, PQgetvalue(res, i, 2), PQgetlength(res, i, 2));
 		vinfo->size = strtoull(PQgetvalue(res, i, 3), NULL, 10);
 		vinfo->worm = strtoul(PQgetvalue(res, i, 4), NULL, 10);
 		vinfo->elem_address = atoi(PQgetvalue(res, i, 5));
+		vinfo->tape_id = strtoul(PQgetvalue(res, i, 6), NULL, 10);
+		if (!vinfo->tape_id || vinfo->tape_id >= MAX_VTAPES) {
+			DEBUG_ERR("Got invalid tape id %d\n", vinfo->tape_id);
+			goto err;
+		}
+
+		if (vcart_list[vinfo->tape_id]) {
+			DEBUG_ERR("VCartridge at tape id %d exists, label is %s\n", vinfo->tape_id, vcart_list[vinfo->tape_id]->label);
+			goto err;
+		}
+
 		TAILQ_INSERT_TAIL(&binfo->vol_list, vinfo, q_entry);
+		vcart_list[vinfo->tape_id] = vinfo;
 	}
 
 	PQclear(res);
@@ -616,9 +624,9 @@ sql_query_volumes(struct tl_blkdevinfo *binfo)
 err:
 	PQclear(res);
 	PQfinish(conn);
-	while ((vinfo = TAILQ_FIRST(&binfo->vol_list)))
-	{
+	while ((vinfo = TAILQ_FIRST(&binfo->vol_list))) {
 		TAILQ_REMOVE(&binfo->vol_list, vinfo, q_entry);
+		vcart_list[vinfo->tape_id] = NULL;
 		free(vinfo);
 	}
 	return -1;

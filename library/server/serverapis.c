@@ -30,6 +30,7 @@
 #include "ietadm.h"
 #include "md5.h"
 
+struct vcartridge *vcart_list[MAX_VTAPES];
 struct group_info *group_list[TL_MAX_POOLS];
 struct fc_rule_list fc_rule_list = TAILQ_HEAD_INITIALIZER(fc_rule_list);  
 pthread_mutex_t pmap_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -61,20 +62,16 @@ static int check_blkdev_exists(char *devname);
 extern struct d_list disk_list;
 struct mdaemon_info mdaemon_info;
 
-static uint32_t gtape_id;
 uint32_t
 get_new_tape_id(void)
 {
-	if ((gtape_id + 1) == 0xFFFFFFFF)
-		return 0;
+	int i;
 
-	return (++gtape_id);
-}
-
-static void
-free_tape_id(uint32_t tape_id)
-{
-	gtape_id = tape_id;
+	for (i = 1; i < MAX_VTAPES; i++) {
+		if (!vcart_list[i])
+			return i;
+	}
+	return 0;
 }
 
 static int
@@ -650,6 +647,7 @@ tl_server_delete_vol_conf(struct tl_comm *comm, struct tl_msg *msg)
 
 	pgsql_commit(conn);
 	TAILQ_REMOVE(&vdevice->vol_list, vinfo, q_entry);
+	vcart_list[vinfo->tape_id] = NULL;
 	free(vinfo);
 	tl_server_msg_success(comm, msg);
 	return 0;
@@ -1497,7 +1495,6 @@ vdevice_add_volumes(struct vdevice *vdevice, struct group_info *group_info, int 
 		if (retval != 0) {
 			char tmpstr[64];
 
-			free_tape_id(vinfo->tape_id);
 			sprintf(tmpstr, ". Number of VCartridges added are %d", i);
 			strcat(errmsg, tmpstr);
 
@@ -1506,6 +1503,7 @@ vdevice_add_volumes(struct vdevice *vdevice, struct group_info *group_info, int 
 			break;
 		}
 		TAILQ_INSERT_TAIL(&vdevice->vol_list, vinfo, q_entry);
+		vcart_list[vinfo->tape_id] = vinfo;
 	}
 
 	if (result != 0)
@@ -1683,9 +1681,9 @@ delete_volumes(struct vdevice *vdevice)
 {
 	struct vcartridge *vinfo;
 
-	while ((vinfo = TAILQ_FIRST(&vdevice->vol_list)))
-	{
+	while ((vinfo = TAILQ_FIRST(&vdevice->vol_list))) {
 		TAILQ_REMOVE(&vdevice->vol_list, vinfo, q_entry);
+		vcart_list[vinfo->tape_id] = NULL;
 		free(vinfo);
 	}
 }
