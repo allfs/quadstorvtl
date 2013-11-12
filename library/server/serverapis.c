@@ -835,6 +835,7 @@ load_configured_groups(void)
 	TAILQ_INIT(&group_none->bdev_list);
 	strcpy(group_conf.name, group_none->name);
 	group_conf.group_id = group_none->group_id;
+	group_conf.worm = 0;
 	retval = tl_ioctl(TLTARGIOCADDGROUP, &group_conf);
 	if (retval != 0)
 		error = -1;
