@@ -52,7 +52,7 @@ bint_set_group_master(struct bdevint *bint)
 
 	debug_check(group->master_bint && group->master_bint != bint);
 	group->master_bint = bint;
-	if (atomic_test_bit(GROUP_FLAGS_WORM, &bint->group_flags)) {
+	if (group->group_id && atomic_test_bit(GROUP_FLAGS_WORM, &bint->group_flags)) {
 		debug_check(!group->worm);
 		group->worm = 1;
 	}
