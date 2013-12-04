@@ -28,6 +28,9 @@ chmod +x /quadstorvtl/lib/modules/ispmod.ko
 if [ -d /usr/local/www/apache22/ ]; then 
 	htdocs=/usr/local/www/apache22/data;
 	cgibin=/usr/local/www/apache22/cgi-bin;
+elif [ -d /usr/local/www/apache24/ ]; then 
+	htdocs=/usr/local/www/apache24/data;
+	cgibin=/usr/local/www/apache24/cgi-bin;
 elif [ -d /usr/local/www/ ]; then
 	htdocs=/usr/local/www/data;
 	cgibin=//usr/local/www/cgi-bin;
