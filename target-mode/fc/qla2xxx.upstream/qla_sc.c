@@ -372,12 +372,8 @@ static void qla_sc_release_session(struct kref *kref)
 static void
 qla_sc_put_sess(struct qla_tgt_sess *sess)
 {
-	struct qla_hw_data *ha = sess->vha->hw;
-	unsigned long flags;
-
-	spin_lock_irqsave(&ha->hardware_lock, flags);
+	assert_spin_locked(&sess->vha->hw->hardware_lock);
 	kref_put(&sess->se_sess->sess_kref, qla_sc_release_session);
-	spin_unlock_irqrestore(&ha->hardware_lock, flags);
 }
 
 static void
