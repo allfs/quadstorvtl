@@ -12,6 +12,7 @@
 #include "qla_gbl.h"
 
 #include <linux/delay.h>
+#include <linux/ratelimit.h>
 
 /* 8044 Flash Read/Write functions */
 uint32_t
