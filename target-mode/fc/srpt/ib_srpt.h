@@ -429,4 +429,10 @@ int srpt_queue_response(struct se_cmd *cmd);
 int srpt_write_pending(struct se_cmd *se_cmd);
 void srpt_release_cmd(struct se_cmd *se_cmd);
 
+#if (defined(RHEL_MAJOR) && RHEL_MAJOR == 6 && RHEL_MINOR < 3)
+enum ib_srq_type {
+	IB_SRQT_BASIC,
+	IB_SRQT_XRC
+};
+#endif
 #endif				/* IB_SRPT_H */
