@@ -483,6 +483,10 @@ pgdata_allocate_data(struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num
 int
 device_allocate_buffers(struct qsio_scsiio *ctio, uint32_t block_size, uint32_t num_blocks, allocflags_t flags)
 {
+#ifdef x86
+	if (ctio->init_int == TARGET_INT_LOCAL)
+		return -1;
+#endif
 	/* Allocate for the data transfer */
 	if (!num_blocks)
 		return 0;
