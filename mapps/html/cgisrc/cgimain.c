@@ -91,13 +91,9 @@ __cgi_print_header(char *title, char *jsfile, int nocache, char *meta, int refre
 	if (meta)
 		printf("%s", meta);
 
-#if 0
-	if (nocache) {
-		printf("<meta http-equiv=\"cache-control\" content=\"no-cache\" />\n");
-		printf("<meta http-equiv=\"pragma\" content=\"no-cache\" />\n");
-		printf("<meta http-equiv=\"expires\" content=\"-1\" />\n");
-	}
-#endif
+	printf("<meta http-equiv=\"cache-control\" content=\"no-cache\" />\n");
+	printf("<meta http-equiv=\"pragma\" content=\"no-cache\" />\n");
+	printf("<meta http-equiv=\"expires\" content=\"-1\" />\n");
 
 	if (refresh)
 		printf("<meta http-equiv=\"refresh\" content=\"%d\" />\n", refresh);
@@ -392,6 +388,9 @@ cgi_redirect(char *cgiscript)
 	printf("<html>\n");
 	printf("<head>\n");
 	printf("<meta http-equiv=\"content-type\" content=\"text/html;charset=UTF-8\" />\n");
+	printf("<meta http-equiv=\"cache-control\" content=\"no-cache\" />\n");
+	printf("<meta http-equiv=\"pragma\" content=\"no-cache\" />\n");
+	printf("<meta http-equiv=\"expires\" content=\"-1\" />\n");
 	if (strchr(cgiscript, '?'))
 		printf("<meta http-equiv=\"refresh\" content=\"0; url=%s&tjid=%ld.%ld\" />", cgiscript, (long)tv.tv_sec, (long)tv.tv_usec);
 	else
