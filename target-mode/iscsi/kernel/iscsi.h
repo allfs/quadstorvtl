@@ -289,8 +289,7 @@ struct iscsi_cmnd {
 	uint16_t orig_start_pg_offset;
 	uint16_t end_pg_idx;
 	uint16_t end_pg_offset;
-	uint16_t read_pg_idx;
-	uint16_t read_pg_offset;
+	uint32_t orig_read_size;
 
 	struct iscsi_cmnd *req;
 };

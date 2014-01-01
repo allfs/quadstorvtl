@@ -86,35 +86,29 @@ void digest_read_ctio(struct crypto_tfm *tfm, struct iscsi_cmnd *cmnd,
 	crypto_digest_init(tfm);
 	if (ctio->pglist_cnt && ctio->dxfer_len)
 	{
-		int i, j = 0, min, max;
+		int i, j = 0, min, todo;
 		int pg_offset;
 		struct scatterlist sg[8];
 		struct pgdata **pglist = (struct pgdata **)(ctio->data_ptr);
 
 		pg_offset = cmnd->orig_start_pg_offset;
-		if (pg_offset)
-			max = cmnd->read_pg_idx+1;
-		else
-			max = cmnd->read_pg_idx;
+		i = cmnd->orig_start_pg_idx;
+		todo = cmnd->orig_read_size;
 
-		for (i = cmnd->orig_start_pg_idx; i < max; i++)
-		{
+		while (todo) {
 			struct pgdata *pgtmp = pglist[i];
-			if (j == 8)
-			{
+			if (j == 8) {
 				crypto_digest_update(tfm, sg, j);
 				j = 0;
 			}
 
-			if (i == cmnd->read_pg_idx)
-				min = cmnd->read_pg_offset - pg_offset;
-			else
-				min = pgtmp->pg_len - pg_offset;
-
+			min = min_t(int, pgtmp->pg_len - pg_offset, todo);
 			sg[j].page = pgtmp->page;
 			sg[j].offset = pg_offset + pgtmp->pg_offset;
 			sg[j].length = min;
 			pg_offset = 0;
+			todo -= min;
+			i++;
 			j++;
 		}
 
@@ -159,6 +153,8 @@ void digest_write_ctio(struct hash_desc *hash, struct iscsi_cmnd *cmnd,
 	if (rsp_hdr->cmd_status == SAM_STAT_CHECK_CONDITION)
 	{
 		struct scatterlist sg[1];
+
+		sg_init_table(sg, 1);
 		sg_set_page(&sg[0], virt_to_page(ctio->sense_data), ctio->sense_len + 2,  page_offset(ctio->sense_data));
 		crypto_hash_update(hash, sg, ctio->sense_len+2);
 	}
@@ -170,6 +166,7 @@ void digest_write_ctio(struct hash_desc *hash, struct iscsi_cmnd *cmnd,
 		int pg_offset;
 		int min;
 
+		sg_init_table(sg, 8);
 		pg_offset = cmnd->orig_start_pg_offset;
 		for (i = cmnd->orig_start_pg_idx; i <= cmnd->end_pg_idx; i++)
 		{
@@ -197,6 +194,8 @@ void digest_write_ctio(struct hash_desc *hash, struct iscsi_cmnd *cmnd,
 	else
 	{
 		struct scatterlist sg[1];
+
+		sg_init_table(sg, 1);
 		sg_set_page(&sg[0], virt_to_page(ctio->data_ptr), ctio->dxfer_len, page_offset(ctio->data_ptr));
 		crypto_hash_update(hash, sg, ctio->dxfer_len);
 	}
@@ -225,36 +224,31 @@ void digest_read_ctio(struct hash_desc *hash, struct iscsi_cmnd *cmnd,
 	crypto_hash_init(hash);
 	if (ctio->pglist_cnt && ctio->dxfer_len)
 	{
-		int i, j = 0, nbytes = 0, min, max;
+		int i, j = 0, nbytes = 0, min, todo;
 		int pg_offset;
 		struct scatterlist sg[8];
 		struct pgdata **pglist = (struct pgdata **)(ctio->data_ptr);
 
 		pg_offset = cmnd->orig_start_pg_offset;
-		if (pg_offset)
-			max = cmnd->read_pg_idx+1;
-		else
-			max = cmnd->read_pg_idx;
+		i = cmnd->orig_start_pg_idx;
+		todo = cmnd->orig_read_size;
+		sg_init_table(sg, 8);
 
-		for (i = cmnd->orig_start_pg_idx; i < max; i++)
-		{
+		while (todo) {
 			struct pgdata *pgtmp = pglist[i];
-			if (j == 8)
-			{
+			if (j == 8) {
 				crypto_hash_update(hash, sg, nbytes);
 				j = 0;
 				nbytes = 0;
 			}
 
-			if (i == cmnd->read_pg_idx)
-				min = cmnd->read_pg_offset - pg_offset;
-			else
-				min = pgtmp->pg_len - pg_offset;
-
+			min = min_t(int, pgtmp->pg_len - pg_offset, todo);
 			sg_set_page(&sg[j], pgtmp->page, min, pgtmp->pg_offset + pg_offset);
 			nbytes += min;
 			pg_offset = 0;
 			j++;
+			i++;
+			todo -= min;
 		}
 
 		crypto_hash_update(hash, sg, nbytes);
@@ -263,6 +257,7 @@ void digest_read_ctio(struct hash_desc *hash, struct iscsi_cmnd *cmnd,
 	{
 		struct scatterlist sg[1];
 
+		sg_init_table(sg, 1);
 		sg_set_page(&sg[0], virt_to_page(ctio->data_ptr), ctio->dxfer_len, page_offset(ctio->data_ptr));
 		crypto_hash_update(hash, sg, ctio->dxfer_len);
 	}
@@ -274,6 +269,8 @@ void digest_read_ctio(struct hash_desc *hash, struct iscsi_cmnd *cmnd,
 		struct scatterlist sg[1];
 		memset(pad_bytes, 0, 4);
 		pad = 4 - pad;
+
+		sg_init_table(sg, 1);
 		sg_set_page(&sg[0], virt_to_page(pad_bytes), pad, page_offset(pad_bytes));
 		crypto_hash_update(hash, sg, pad);
 	}
@@ -343,27 +340,21 @@ void digest_read_ctio(struct chksum_ctx *mctx, struct iscsi_cmnd *cmnd,
 	chksum_init(mctx);
 	if (ctio->pglist_cnt && ctio->dxfer_len)
 	{
-		int i, min, max;
+		int i, min, todo;
 		int pg_offset;
 		struct pgdata **pglist = (struct pgdata **)(ctio->data_ptr);
 
 		pg_offset = cmnd->orig_start_pg_offset;
-		if (pg_offset)
-			max = cmnd->read_pg_idx+1;
-		else
-			max = cmnd->read_pg_idx;
-
-		for (i = cmnd->orig_start_pg_idx; i < max; i++)
-		{
+		i = cmnd->orig_start_pg_idx;
+		todo = cmnd->orig_read_size;
+		while (todo) {
 			struct pgdata *pgtmp = pglist[i];
 
-			if (i == cmnd->read_pg_idx)
-				min = cmnd->read_pg_offset - pg_offset;
-			else
-				min = pgtmp->pg_len - pg_offset;
-
+			min = min_t(int, pgtmp->pg_len - pg_offset, todo);
 			chksum_update(mctx, (u8 *)(pgdata_page_address(pgtmp)) + pgtmp->pg_offset + pg_offset, min);
 			pg_offset = 0;
+			i++;
+			todo -= min;
 		}
 	}
 	else if (ctio->dxfer_len)
@@ -723,8 +714,9 @@ iscsi_cmnd_recv_pdu(struct iscsi_conn *conn, struct qsio_scsiio *ctio, u32 offse
 	conn->read_offset = offset;
 
 	ctio_idx_offset(offset, &read_pg_idx, &read_pg_offset);
-	cmnd->orig_start_pg_idx = cmnd->read_pg_idx = read_pg_idx;
-	cmnd->orig_start_pg_offset = cmnd->read_pg_offset = read_pg_offset;
+	cmnd->orig_start_pg_idx = read_pg_idx;
+	cmnd->orig_start_pg_offset = read_pg_offset;
+	cmnd->orig_read_size = size;
 }
 
 static void
