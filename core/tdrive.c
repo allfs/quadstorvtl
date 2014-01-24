@@ -1618,7 +1618,7 @@ tdrive_cmd_validate_write6(struct tdrive *tdrive, struct qsio_scsiio *ctio)
 		tdrive_construct_vcartridge_overflow_sense(tdrive, ctio, fixed, num_blocks, 0, block_size);
 		return 0;
 	case EW_REACHED:
-		tdrive_construct_ew_reached_sense(tdrive, ctio, 1, num_blocks, num_blocks, block_size);
+		tdrive_construct_ew_reached_sense(tdrive, ctio, fixed, num_blocks, num_blocks, block_size);
 
 		if (tdrive_synchronize_at_ew(tdrive))
 			tdrive_empty_write_queue(tdrive);
