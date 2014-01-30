@@ -692,13 +692,13 @@ fc_initiator_check(uint64_t wwpn[], void *device)
 	}
 	mtx_unlock(glbl_lock);
 	debug_info("found match %llx %llx tdevice %s rule_wwpn %d rule_target %d rule all wwpn %d rule all target %d\n", (unsigned long long)wwpn[0], (unsigned long long)wwpn[1], tdevice_name(tdevice), rule_wwpn, rule_target, rule_all_wwpn, rule_all_target);
-	if (rule_wwpn > 0)
+	if (rule_wwpn != -1)
 		return rule_wwpn;
-	else if (rule_target > 0)
+	else if (rule_target != -1)
 		return rule_target;
-	else if (rule_all_wwpn > 0)
+	else if (rule_all_wwpn != -1)
 		return rule_all_wwpn;
-	else if (rule_all_target > 0)
+	else if (rule_all_target != -1)
 		return rule_all_target;
 	else
 		return FC_RULE_ALLOW;
