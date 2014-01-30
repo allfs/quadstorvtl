@@ -533,31 +533,22 @@ fcbridge_check_interface(void)
 static int
 fcbridge_cmd_report_luns(struct fcbridge *fcbridge, struct qsio_scsiio *ctio)
 {
-	uint32_t length;
-	int i;
 	uint8_t *ptr;
 	struct device_info *dinfo;
 	uint8_t *cdb = ctio->cdb;
-	uint32_t allocation_length;
-	int done = 0;
-	int avail = 0;
-	int retval;
+	uint32_t length, allocation_length, max_allocation_length;
+	int i, retval, done = 0, avail = 0;
 
 	allocation_length = be32toh(*((uint32_t *)(&cdb[6])));
-	if (allocation_length < 16) {
-		ctio_construct_sense(ctio, SSD_CURRENT_ERROR, SSD_KEY_ILLEGAL_REQUEST, 0, INVALID_FIELD_IN_CDB_ASC, INVALID_FIELD_IN_CDB_ASCQ);  
+	if (!allocation_length)
 		return 0;
-	}
 
-	length = ((MAX_DINFO_DEVICES + 1) * 8) + 16; /* 8 bytes for the header, 8 for lun 0 */
-	if (length > allocation_length)
-	{
-		length = allocation_length;
-	}
+	length = min_t(uint32_t, (((MAX_DINFO_DEVICES + 1) * 8) + 16), allocation_length);
 
-	ctio->data_ptr = malloc(length, M_DEVBUF, M_NOWAIT);
+	max_allocation_length = max_t(uint32_t, 16, length);
+	ctio->data_ptr = malloc(max_allocation_length, M_DEVBUF, M_NOWAIT);
 	if (unlikely(!ctio->data_ptr)) {
-		DEBUG_WARN_NEW("Cannot allocate for size %d\n", length);
+		DEBUG_WARN_NEW("Cannot allocate for size %d\n", max_allocation_length);
 		return -1;
 	}
 
@@ -583,7 +574,7 @@ fcbridge_cmd_report_luns(struct fcbridge *fcbridge, struct qsio_scsiio *ctio)
 			continue;
 		}
  
-		if ((done + 8) <= length) {
+		if ((done + 8) <= max_allocation_length) {
 			(*icbs.write_lun)(dinfo->device, ptr);
 			ptr += 8;
 			done += 8;
@@ -595,7 +586,7 @@ skip_luns:
 	sx_xunlock(&itf_lock);
 	ptr = (uint8_t *)(ctio->data_ptr);
 	*((uint32_t *)ptr) = htobe32((avail - 8));
-	ctio->dxfer_len = done;
+	ctio->dxfer_len = min_t(uint32_t, done, allocation_length);
 	return 0;
 }
 
