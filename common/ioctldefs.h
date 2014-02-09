@@ -36,5 +36,6 @@
 #define TLTARGIOCLOADDRIVE		_IOWR(TL_MAGIC, 52, struct vdeviceinfo)
 #define TLTARGIOCRELOADEXPORT		_IOWR(TL_MAGIC, 53, struct vcartridge)
 #define TLTARGIOCRESETSTATS		_IOWR(TL_MAGIC, 54, struct vdeviceinfo)
+#define TLTARGIOCQLOADDONE		_IO(TL_MAGIC, 55) 
 
 #endif

@@ -6,7 +6,8 @@
 enum {
 	TARGET_INT_LOCAL  = 0x01,
 	TARGET_INT_ISCSI  = 0x02,
-	TARGET_INT_FC     = 0x03,
+	TARGET_INT_INV1   = 0x03,
+	TARGET_INT_FC     = 0x04,
 };
 
 #define LDEV_RPORT_START	3
@@ -35,6 +36,7 @@ struct qs_interface_cbs {
 	void (*ctio_exec) (struct qsio_scsiio *);
 	int interface; /* Type of interface */
 	atomic_t itf_enabled;
+	volatile int qload_done;
 	
 	/* set by core */
 	struct qsio_scsiio* (*ctio_new) (allocflags_t flags);
@@ -197,6 +199,7 @@ struct qs_kern_cbs {
 	int (*vcartridge_info)(struct vcartridge *);
 	int (*vcartridge_reload)(struct vcartridge *);
 	int (*coremod_load_done)(void);
+	int (*coremod_qload_done)(void);
 	int (*coremod_check_disks)(void);
 	int (*coremod_exit)(void);
 	int (*target_add_fc_rule)(struct fc_rule_config *);

@@ -32,7 +32,9 @@ ctio_sglist_map(struct qsio_scsiio *ctio, struct qla_tgt_cmd *cmd)
 	int dxfer_len = ctio->dxfer_len;
 
 	DEBUG_BUG_ON(cmd->sg);
-	sglist = kmalloc(ctio->pglist_cnt * sizeof(struct scatterlist), GFP_KERNEL|__GFP_NOFAIL);
+	while ((sglist = kmalloc(ctio->pglist_cnt * sizeof(*sglist), GFP_KERNEL)) == NULL)
+		msleep(10);
+
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
 	sg_init_table(sglist, ctio->pglist_cnt);
 #endif
