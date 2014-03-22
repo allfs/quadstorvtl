@@ -442,7 +442,7 @@ map_lookup_find_last(struct tape_partition *partition)
 		struct map_lookup *new;
 
 		/* So what do we do in case of errors of load */	
-		new = map_lookup_load(partition, lookup_bid, lookup_start);
+		new = map_lookup_load(partition, lookup_start, lookup_bid);
 		if (!new)
 			return NULL;
 
