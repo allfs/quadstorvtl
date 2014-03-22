@@ -1,6 +1,6 @@
 Summary: QuadStor Virtual Tape Library
 Name: quadstor-vtl-itf
-Version: 2.2.15
+Version: 2.2.16
 Release: rhel5
 Source0: %{name}-%{version}.tar.gz
 License: None 
@@ -85,7 +85,7 @@ install -m 755 /quadstorvtl/quadstor/scripts/qlauninst $RPM_BUILD_ROOT/quadstorv
 	if [ ! -f /quadstorvtl/etc/iet/ietd.conf ]; then
 		cp /quadstorvtl/etc/iet/ietd.conf.sample /quadstorvtl/etc/iet/ietd.conf
 	fi
-	echo "2.2.15 for RHEL/CentOS 5.x" > /quadstorvtl/etc/quadstor-vtl-itf-version
+	echo "2.2.16 for RHEL/CentOS 5.x" > /quadstorvtl/etc/quadstor-vtl-itf-version
 	echo "Building required kernel modules"
 	echo "Running /quadstorvtl/bin/builditf"
 	sleep 2

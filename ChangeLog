@@ -1,3 +1,13 @@
+Release 2.2.16
+	* Fix for incorrect loading of map lookups when spacing to EOD
+	* Fix incorrect FC rule checks where allow rules were ignored
+	* Fix for Early Warning sense data, where the number of blocks
+	  specified as written was incorrect
+	* Fix for iSCSI read digest errors
+	* Instruct web browsers not to cache any pages
+	* Miscellaneous build fixes for newer kernels and distributions
+	* Merge to lz4 r109
+
 Release 2.2.15
 	* Default group WORM property was uninitalized
 	* Fix for false overwrite WORM media errors with WORM cartridges
